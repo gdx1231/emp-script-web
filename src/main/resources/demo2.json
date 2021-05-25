@@ -1,0 +1,58 @@
+{
+    "summary": "/*phy_path 物理路径 url_path url路径 list_url 列表url*/",
+    "phy_path": "/Volumes/b2b/b2b_imgs/schools/85024fcb-f72f-416b-ba51-0a9a45ced147/",
+    "url_path": "/b2b_imgs/schools/85024fcb-f72f-416b-ba51-0a9a45ced147/",
+    "list_part": {
+        "select": ".single-event a",
+        "select_method": "jq",
+        "next": ".pagination a"
+    },
+    "doc_parts": {
+        "title": {
+            "select": ".title>span",
+            "select_method": "jq",
+            "text": "text"
+        },
+        "content": {
+            "select": "#articleContnet",
+            "select_method": "jq",
+            "text": "html"
+        },
+        "content_text": {
+            "select": "#articleContnet",
+            "select_method": "jq",
+            "text": "text"
+        },
+        "delived_time": {
+            "select": ".title .info",
+            "select_method": "jq",
+            "text": "js",
+            "js": "function main(str){return str.split('发布时间：')[1].split('点击数：')[0].replace('年','-').replace('月','-').replace('日','-')}"
+        },
+        "author": {
+            "select": ".title .info",
+            "select_method": "jq",
+            "text": "js",
+            "js": "function main(str){return str.split('作者：')[1].split('来源：')[0]}"
+        },
+        "source": {
+            "select": ".title .info",
+            "select_method": "jq",
+            "text": "js",
+            "js": "function main(str){return str.split('来源：')[1].split('发布时间：')[0]}"
+        }
+    },
+    "list_url": [{
+        "url": "http://www.jnfls.cn/Category_19/Index.aspx",
+        "des": "学校动态"
+    }, {
+        "url": "http://www.jnfls.cn/Category_20/Index.aspx",
+        "des": "媒体报道"
+    }],
+    "doc_sql": {
+        "datasource": "spider",
+        "check": "select nws_id from nws_main where nws_guid=@hash_name and nws_auth2=@url",
+        "insert": "insert into nws_main(adm_id, nws_subject, nws_cnt, nws_cdate, nws_ddate, nws_guid, sup_id,nws_auth2,nws_auth1,NWS_CNT_TXT,nws_src1,nws_ref0,nws_ref1) values(0, @title, @content, @delived_time,@delived_time,@hash_name,3,@url,@author,@content_text,@source,'85024fcb-f72f-416b-ba51-0a9a45ced147','BAS_ESL_MAIN')",
+        "update": "update nws_main set nws_subject=@title, nws_cnt=@content, nws_cdate=@delived_time, nws_ddate=@delived_time, NWS_CNT_TXT=@context_text,nws_src1=@source,nws_ref0='85024fcb-f72f-416b-ba51-0a9a45ced147',nws_ref1='BAS_ESL_MAIN' where nws_id=@nws_id"
+    }
+}

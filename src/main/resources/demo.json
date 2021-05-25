@@ -1,0 +1,51 @@
+{
+    "summary": "/*phy_path 物理路径 url_path url路径 list_url 列表url*/",
+    "phy_path": "/Volumes/b2b/b2b_imgs/schools/2e6e5229-e9c6-4f01-bebb-3061f34d575c/",
+    "url_path": "/b2b_imgs/schools/2e6e5229-e9c6-4f01-bebb-3061f34d575c/",
+     "list_url": [{
+        "url": "http://www.yxyz.net.cn/Channel-6.aspx",
+        "des": "校园新闻"
+    }, {
+        "url": "http://www.yxyz.net.cn/Channel-3.aspx",
+        "des": "通知公告"
+    }
+    ]
+    ,"list_part": {
+        "select": "td>div>div .ymwz>a",
+        "select_method": "jq"
+    },
+    "doc_parts": {
+    	"init":{
+    		"removes":[
+    			]
+    	},
+        "title": {
+            "select": ".Content_t",
+            "select_method": "jq",
+            "text": "text"
+        },
+        "content": {
+            "select": ".Content>div",
+            "select_method": "jq",
+            "text": "html"
+        },
+        "content_text": {
+            "select": ".Content>div",
+            "select_method": "jq",
+            "text": "text"
+        },
+        "delived_time": {
+            "select": ".Content1",
+            "select_method": "jq",
+            "text": "js",
+            "js": "function main(str){return str.split('添加日期：')[1].split(' ')[0]}"
+        } 
+    },
+   
+    "doc_sql": {
+        "datasource": "spider",
+        "check": "select nws_id from nws_main where nws_guid=@hash_name and nws_auth2=@url",
+        "insert": "insert into nws_main(adm_id, nws_subject, nws_cnt, nws_cdate, nws_ddate, nws_guid, sup_id,nws_auth2,nws_auth1,NWS_CNT_TXT,nws_src1,nws_ref0,nws_ref1) values(0, @title, @content, @delived_time,@delived_time,@hash_name,3,@url,@author,@content_text,@source,'2e6e5229-e9c6-4f01-bebb-3061f34d575c','BAS_ESL_MAIN')",
+        "update": "update nws_main set nws_subject=@title, nws_cnt=@content, nws_cdate=@delived_time, nws_ddate=@delived_time, NWS_CNT_TXT=@context_text,nws_src1=@source,nws_ref0='2e6e5229-e9c6-4f01-bebb-3061f34d575c',nws_ref1='BAS_ESL_MAIN' where nws_id=@nws_id"
+    }
+}

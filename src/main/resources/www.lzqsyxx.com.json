@@ -1,0 +1,49 @@
+{
+    "summary": "/*phy_path 物理路径 url_path url路径 list_url 列表url*/",
+    "phy_path": "/Volumes/b2b/b2b_imgs/schools/0de02376-26d3-4845-b430-db75901add19/",
+    "url_path": "/b2b_imgs/schools/0de02376-26d3-4845-b430-db75901add19/",
+    "list_part": {
+        "select": ".left02 .title a",
+        "select_method": "jq" ,
+        "next": "#pagelist a.num"
+    },
+    "doc_parts": {
+    	"init":{
+    		"removes":[".newscontent div.pk"
+    			,".newscontent div.clear"
+    			,".newscontent .ct_box div:contains(关键字：)"
+    			]
+    	},
+        "title": {
+            "select": ".newscontent h1",
+            "select_method": "jq",
+            "text": "text"
+        },
+        "content": {
+            "select": ".newscontent .ct_box",
+            "select_method": "jq",
+            "text": "html"
+        },
+        "content_text": {
+            "select": ".newscontent .ct_box",
+            "select_method": "jq",
+            "text": "text"
+        },
+        "delived_time": {
+            "select": ".newscontent .dp",
+            "select_method": "jq",
+            "text": "js",
+            "js": "function main(str){return str.split(' ')[0]}"
+        } 
+    },
+    "list_url": [{
+        "url": "http://www.lzqsyxx.com/a/823.aspx",
+        "des": "学校动态"
+    }],
+    "doc_sql": {
+        "datasource": "spider",
+        "check": "select nws_id from nws_main where nws_guid=@hash_name and nws_auth2=@url",
+        "insert": "insert into nws_main(adm_id, nws_subject, nws_cnt, nws_cdate, nws_ddate, nws_guid, sup_id,nws_auth2,nws_auth1,NWS_CNT_TXT,nws_src1,nws_ref0,nws_ref1) values(0, @title, @content, @delived_time,@delived_time,@hash_name,3,@url,@author,@content_text,@source,'0de02376-26d3-4845-b430-db75901add19','BAS_ESL_MAIN')",
+        "update": "update nws_main set nws_subject=@title, nws_cnt=@content, nws_cdate=@delived_time, nws_ddate=@delived_time, NWS_CNT_TXT=@context_text,nws_src1=@source,nws_ref0='0de02376-26d3-4845-b430-db75901add19',nws_ref1='BAS_ESL_MAIN' where nws_id=@nws_id"
+    }
+}
