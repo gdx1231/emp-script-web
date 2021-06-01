@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- 处理WebSocket 消息的类定义 -->
+<handleMessages version="1">
+	<!-- 用于EWA的调用 -->
+	<handleMessage method="ewa" class="com.gdxsoft.web.websocket.HandleEwaImpl" />
+	<!-- 话题 -->
+	<handleMessage method="chat" class="com.gdxsoft.chatRoom.HandleChatImpl" />
+
+</handleMessages>
