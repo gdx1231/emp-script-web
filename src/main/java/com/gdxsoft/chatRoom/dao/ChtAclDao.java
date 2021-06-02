@@ -7,7 +7,7 @@ import com.gdxsoft.easyweb.script.RequestValue;
 import com.gdxsoft.easyweb.datasource.IClassDao;
 import com.gdxsoft.easyweb.datasource.ClassDaoBase;
 /** 表cht_acl操作类
- * @author gdx 时间：Tue Jun 01 2021 09:25:21 GMT+0800 (中国标准时间)
+ * @author gdx 时间：Wed Jun 02 2021 11:30:39 GMT+0800 (中国标准时间)
  */
 public class ChtAclDao extends ClassDaoBase<ChtAcl> implements IClassDao<ChtAcl>{
 

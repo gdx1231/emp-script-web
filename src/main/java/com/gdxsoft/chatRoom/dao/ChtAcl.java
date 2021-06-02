@@ -2,8 +2,11 @@ package com.gdxsoft.chatRoom.dao;
 
 import java.util.Date;
 import com.gdxsoft.easyweb.datasource.ClassBase;
+import io.swagger.annotations.ApiModel;
+import io.swagger.annotations.ApiModelProperty;
 /**表cht_acl映射类
-* @author gdx 时间：Tue Jun 01 2021 09:25:19 GMT+0800 (中国标准时间)*/
+* @author gdx 时间：Wed Jun 02 2021 11:30:37 GMT+0800 (中国标准时间)*/
+@ApiModel(value = "cht_acl", description = "表cht_acl映射类")
 public class ChtAcl extends ClassBase{private Long chtRomId_; // 房间号
 private Long chtUsrId_; // 用户
 private String chtAclMaster_; // 管理员
@@ -15,6 +18,7 @@ private Date chtAclTime_; // 加入时间
  *
 * @return 房间号
 */
+@ApiModelProperty(value = "房间号", required = true)
 public Long getChtRomId() {return this.chtRomId_;}
 /**
 * 赋值 房间号
@@ -34,6 +38,7 @@ public void setChtRomId(Long paraChtRomId){
  *
 * @return 用户
 */
+@ApiModelProperty(value = "用户", required = true)
 public Long getChtUsrId() {return this.chtUsrId_;}
 /**
 * 赋值 用户
@@ -53,6 +58,7 @@ public void setChtUsrId(Long paraChtUsrId){
  *
 * @return 管理员
 */
+@ApiModelProperty(value = "管理员", required = true)
 public String getChtAclMaster() {return this.chtAclMaster_;}
 /**
 * 赋值 管理员
@@ -72,6 +78,7 @@ public void setChtAclMaster(String paraChtAclMaster){
  *
 * @return 顶置话题
 */
+@ApiModelProperty(value = "顶置话题", required = true)
 public String getChtAclTop() {return this.chtAclTop_;}
 /**
 * 赋值 顶置话题
@@ -91,6 +98,7 @@ public void setChtAclTop(String paraChtAclTop){
  *
 * @return 加入时间
 */
+@ApiModelProperty(value = "加入时间", required = true)
 public Date getChtAclTime() {return this.chtAclTime_;}
 /**
 * 赋值 加入时间

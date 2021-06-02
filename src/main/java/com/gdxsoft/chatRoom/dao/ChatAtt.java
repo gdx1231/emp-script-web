@@ -2,8 +2,11 @@ package com.gdxsoft.chatRoom.dao;
 
 import java.util.Date;
 import com.gdxsoft.easyweb.datasource.ClassBase;
+import io.swagger.annotations.ApiModel;
+import io.swagger.annotations.ApiModelProperty;
 /**表chat_att映射类
-* @author gdx 时间：Tue Jun 01 2021 09:25:12 GMT+0800 (中国标准时间)*/
+* @author gdx 时间：Wed Jun 02 2021 11:30:51 GMT+0800 (中国标准时间)*/
+@ApiModel(value = "chat_att", description = "表chat_att映射类")
 public class ChatAtt extends ClassBase{private Long chtAttId_; // 附件编号
 private Long chtUsrId_; // 用户编号
 private Long chtId_; // 内容编号
@@ -22,6 +25,7 @@ private String chtAttUrl_; // 下载地址
  *
 * @return 附件编号
 */
+@ApiModelProperty(value = "附件编号", required = true)
 public Long getChtAttId() {return this.chtAttId_;}
 /**
 * 赋值 附件编号
@@ -41,6 +45,7 @@ public void setChtAttId(Long paraChtAttId){
  *
 * @return 用户编号
 */
+@ApiModelProperty(value = "用户编号", required = true)
 public Long getChtUsrId() {return this.chtUsrId_;}
 /**
 * 赋值 用户编号
@@ -60,6 +65,7 @@ public void setChtUsrId(Long paraChtUsrId){
  *
 * @return 内容编号
 */
+@ApiModelProperty(value = "内容编号", required = true)
 public Long getChtId() {return this.chtId_;}
 /**
 * 赋值 内容编号
@@ -79,6 +85,7 @@ public void setChtId(Long paraChtId){
  *
 * @return 文件名
 */
+@ApiModelProperty(value = "文件名", required = false)
 public String getChtAttName() {return this.chtAttName_;}
 /**
 * 赋值 文件名
@@ -98,6 +105,7 @@ public void setChtAttName(String paraChtAttName){
  *
 * @return 来源名称
 */
+@ApiModelProperty(value = "来源名称", required = false)
 public String getChtAttSrcName() {return this.chtAttSrcName_;}
 /**
 * 赋值 来源名称
@@ -117,6 +125,7 @@ public void setChtAttSrcName(String paraChtAttSrcName){
  *
 * @return 保存路径
 */
+@ApiModelProperty(value = "保存路径", required = true)
 public String getChtAttPath() {return this.chtAttPath_;}
 /**
 * 赋值 保存路径
@@ -136,6 +145,7 @@ public void setChtAttPath(String paraChtAttPath){
  *
 * @return 文件大小
 */
+@ApiModelProperty(value = "文件大小", required = true)
 public Integer getChtAttSize() {return this.chtAttSize_;}
 /**
 * 赋值 文件大小
@@ -155,6 +165,7 @@ public void setChtAttSize(Integer paraChtAttSize){
  *
 * @return 扩展名
 */
+@ApiModelProperty(value = "扩展名", required = true)
 public String getChtAttExt() {return this.chtAttExt_;}
 /**
 * 赋值 扩展名
@@ -174,6 +185,7 @@ public void setChtAttExt(String paraChtAttExt){
  *
 * @return md5
 */
+@ApiModelProperty(value = "md5", required = true)
 public String getChtAttMd5() {return this.chtAttMd5_;}
 /**
 * 赋值 md5
@@ -193,6 +205,7 @@ public void setChtAttMd5(String paraChtAttMd5){
  *
 * @return 创建时间
 */
+@ApiModelProperty(value = "创建时间", required = true)
 public Date getChtAttTime() {return this.chtAttTime_;}
 /**
 * 赋值 创建时间
@@ -212,6 +225,7 @@ public void setChtAttTime(Date paraChtAttTime){
  *
 * @return 状态
 */
+@ApiModelProperty(value = "状态", required = true)
 public String getChtAttStatus() {return this.chtAttStatus_;}
 /**
 * 赋值 状态
@@ -231,6 +245,7 @@ public void setChtAttStatus(String paraChtAttStatus){
  *
 * @return 下载地址
 */
+@ApiModelProperty(value = "下载地址", required = false)
 public String getChtAttUrl() {return this.chtAttUrl_;}
 /**
 * 赋值 下载地址

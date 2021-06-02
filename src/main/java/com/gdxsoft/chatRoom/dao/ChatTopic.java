@@ -2,8 +2,11 @@ package com.gdxsoft.chatRoom.dao;
 
 import java.util.Date;
 import com.gdxsoft.easyweb.datasource.ClassBase;
+import io.swagger.annotations.ApiModel;
+import io.swagger.annotations.ApiModelProperty;
 /**表chat_topic映射类
-* @author gdx 时间：Tue Jun 01 2021 09:25:03 GMT+0800 (中国标准时间)*/
+* @author gdx 时间：Wed Jun 02 2021 11:30:44 GMT+0800 (中国标准时间)*/
+@ApiModel(value = "chat_topic", description = "表chat_topic映射类")
 public class ChatTopic extends ClassBase{private Long chtId_; // 内容编号
 private Long chtRomId_; // 房间号
 private Integer chtLvl_; // 楼层
@@ -20,6 +23,7 @@ private String chtUa_; // 浏览器代理
  *
 * @return 内容编号
 */
+@ApiModelProperty(value = "内容编号", required = true)
 public Long getChtId() {return this.chtId_;}
 /**
 * 赋值 内容编号
@@ -39,6 +43,7 @@ public void setChtId(Long paraChtId){
  *
 * @return 房间号
 */
+@ApiModelProperty(value = "房间号", required = true)
 public Long getChtRomId() {return this.chtRomId_;}
 /**
 * 赋值 房间号
@@ -58,6 +63,7 @@ public void setChtRomId(Long paraChtRomId){
  *
 * @return 楼层
 */
+@ApiModelProperty(value = "楼层", required = true)
 public Integer getChtLvl() {return this.chtLvl_;}
 /**
 * 赋值 楼层
@@ -77,6 +83,7 @@ public void setChtLvl(Integer paraChtLvl){
  *
 * @return 类型
 */
+@ApiModelProperty(value = "类型", required = true)
 public String getChtType() {return this.chtType_;}
 /**
 * 赋值 类型
@@ -96,6 +103,7 @@ public void setChtType(String paraChtType){
  *
 * @return 状态
 */
+@ApiModelProperty(value = "状态", required = true)
 public String getChtStatus() {return this.chtStatus_;}
 /**
 * 赋值 状态
@@ -115,6 +123,7 @@ public void setChtStatus(String paraChtStatus){
  *
 * @return 创建时间
 */
+@ApiModelProperty(value = "创建时间", required = true)
 public Date getChtCtime() {return this.chtCtime_;}
 /**
 * 赋值 创建时间
@@ -134,6 +143,7 @@ public void setChtCtime(Date paraChtCtime){
  *
 * @return 修改时间
 */
+@ApiModelProperty(value = "修改时间", required = true)
 public Date getChtMtime() {return this.chtMtime_;}
 /**
 * 赋值 修改时间
@@ -153,6 +163,7 @@ public void setChtMtime(Date paraChtMtime){
  *
 * @return 发帖人
 */
+@ApiModelProperty(value = "发帖人", required = true)
 public Long getChtUsrId() {return this.chtUsrId_;}
 /**
 * 赋值 发帖人
@@ -172,6 +183,7 @@ public void setChtUsrId(Long paraChtUsrId){
  *
 * @return 来源ip
 */
+@ApiModelProperty(value = "来源ip", required = true)
 public String getChtIp() {return this.chtIp_;}
 /**
 * 赋值 来源ip
@@ -191,6 +203,7 @@ public void setChtIp(String paraChtIp){
  *
 * @return 浏览器代理
 */
+@ApiModelProperty(value = "浏览器代理", required = true)
 public String getChtUa() {return this.chtUa_;}
 /**
 * 赋值 浏览器代理

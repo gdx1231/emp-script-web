@@ -2,8 +2,11 @@ package com.gdxsoft.chatRoom.dao;
 
 import java.util.Date;
 import com.gdxsoft.easyweb.datasource.ClassBase;
+import io.swagger.annotations.ApiModel;
+import io.swagger.annotations.ApiModelProperty;
 /**表cht_user映射类
-* @author gdx 时间：Tue Jun 01 2021 09:24:53 GMT+0800 (中国标准时间)*/
+* @author gdx 时间：Wed Jun 02 2021 11:30:31 GMT+0800 (中国标准时间)*/
+@ApiModel(value = "cht_user", description = "表cht_user映射类")
 public class ChtUser extends ClassBase{private Long chtUsrId_; // 用户编号
 private String chtUsrUnid_; // 用户唯一编号
 private String chtUsrName_; // 用户名称
@@ -24,6 +27,7 @@ private String chtUsrMemo_; // 备注信息
  *
 * @return 用户编号
 */
+@ApiModelProperty(value = "用户编号", required = true)
 public Long getChtUsrId() {return this.chtUsrId_;}
 /**
 * 赋值 用户编号
@@ -43,6 +47,7 @@ public void setChtUsrId(Long paraChtUsrId){
  *
 * @return 用户唯一编号
 */
+@ApiModelProperty(value = "用户唯一编号", required = true)
 public String getChtUsrUnid() {return this.chtUsrUnid_;}
 /**
 * 赋值 用户唯一编号
@@ -62,6 +67,7 @@ public void setChtUsrUnid(String paraChtUsrUnid){
  *
 * @return 用户名称
 */
+@ApiModelProperty(value = "用户名称", required = true)
 public String getChtUsrName() {return this.chtUsrName_;}
 /**
 * 赋值 用户名称
@@ -81,6 +87,7 @@ public void setChtUsrName(String paraChtUsrName){
  *
 * @return 性别
 */
+@ApiModelProperty(value = "性别", required = true)
 public String getChtUsrGender() {return this.chtUsrGender_;}
 /**
 * 赋值 性别
@@ -100,6 +107,7 @@ public void setChtUsrGender(String paraChtUsrGender){
  *
 * @return 头像编号 chat_att.cht_att_id
 */
+@ApiModelProperty(value = "头像编号 chat_att.cht_att_id", required = false)
 public Long getChtUsrPicId() {return this.chtUsrPicId_;}
 /**
 * 赋值 头像编号 chat_att.cht_att_id
@@ -119,6 +127,7 @@ public void setChtUsrPicId(Long paraChtUsrPicId){
  *
 * @return 背景图片编号 chat_att.cht_att_id
 */
+@ApiModelProperty(value = "背景图片编号 chat_att.cht_att_id", required = false)
 public Long getChtUsrBgId() {return this.chtUsrBgId_;}
 /**
 * 赋值 背景图片编号 chat_att.cht_att_id
@@ -138,6 +147,7 @@ public void setChtUsrBgId(Long paraChtUsrBgId){
  *
 * @return 国家
 */
+@ApiModelProperty(value = "国家", required = false)
 public Integer getChtUsrNation() {return this.chtUsrNation_;}
 /**
 * 赋值 国家
@@ -157,6 +167,7 @@ public void setChtUsrNation(Integer paraChtUsrNation){
  *
 * @return 手机电话
 */
+@ApiModelProperty(value = "手机电话", required = false)
 public String getChtUsrMobile() {return this.chtUsrMobile_;}
 /**
 * 赋值 手机电话
@@ -176,6 +187,7 @@ public void setChtUsrMobile(String paraChtUsrMobile){
  *
 * @return 创建时间
 */
+@ApiModelProperty(value = "创建时间", required = false)
 public Date getChtUsrCtime() {return this.chtUsrCtime_;}
 /**
 * 赋值 创建时间
@@ -195,6 +207,7 @@ public void setChtUsrCtime(Date paraChtUsrCtime){
  *
 * @return 修改时间
 */
+@ApiModelProperty(value = "修改时间", required = false)
 public Date getChtUsrMtime() {return this.chtUsrMtime_;}
 /**
 * 赋值 修改时间
@@ -214,6 +227,7 @@ public void setChtUsrMtime(Date paraChtUsrMtime){
  *
 * @return 标语
 */
+@ApiModelProperty(value = "标语", required = false)
 public String getChtUsrSlogan() {return this.chtUsrSlogan_;}
 /**
 * 赋值 标语
@@ -233,6 +247,7 @@ public void setChtUsrSlogan(String paraChtUsrSlogan){
  *
 * @return 来源数据
 */
+@ApiModelProperty(value = "来源数据", required = false)
 public String getChtUsrRef() {return this.chtUsrRef_;}
 /**
 * 赋值 来源数据
@@ -252,6 +267,7 @@ public void setChtUsrRef(String paraChtUsrRef){
  *
 * @return 来源编号
 */
+@ApiModelProperty(value = "来源编号", required = false)
 public String getChtUsrRefId() {return this.chtUsrRefId_;}
 /**
 * 赋值 来源编号
@@ -271,6 +287,7 @@ public void setChtUsrRefId(String paraChtUsrRefId){
  *
 * @return 备注信息
 */
+@ApiModelProperty(value = "备注信息", required = false)
 public String getChtUsrMemo() {return this.chtUsrMemo_;}
 /**
 * 赋值 备注信息

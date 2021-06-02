@@ -117,12 +117,16 @@
 		</plugins>
 	</build>
 	<dependencies>
-		 <dependency>
+		<dependency>
 			<groupId>com.gdxsoft.easyweb</groupId>
 			<artifactId>emp-script</artifactId>
-			<version>[1.0.5,]</version>
+			<version>[1.0.6,]</version>
 		</dependency>
-
+		<dependency>
+			<groupId>io.swagger</groupId>
+			<artifactId>swagger-annotations</artifactId>
+			<version>1.5.20</version>
+		</dependency>
 		<!-- https://mvnrepository.com/artifact/javax.servlet/javax.servlet-api -->
 		<dependency>
 			<groupId>javax.servlet</groupId>
@@ -130,8 +134,8 @@
 			<version>4.0.1</version>
 			<scope>provided</scope>
 		</dependency>
-		 
-		 <!-- https://mvnrepository.com/artifact/javax.websocket/javax.websocket-api -->
+
+		<!-- https://mvnrepository.com/artifact/javax.websocket/javax.websocket-api -->
 		<dependency>
 			<groupId>javax.websocket</groupId>
 			<artifactId>javax.websocket-api</artifactId>

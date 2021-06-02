@@ -7,7 +7,7 @@ import com.gdxsoft.easyweb.script.RequestValue;
 import com.gdxsoft.easyweb.datasource.IClassDao;
 import com.gdxsoft.easyweb.datasource.ClassDaoBase;
 /** 表cht_user操作类
- * @author gdx 时间：Tue Jun 01 2021 09:24:55 GMT+0800 (中国标准时间)
+ * @author gdx 时间：Wed Jun 02 2021 11:30:34 GMT+0800 (中国标准时间)
  */
 public class ChtUserDao extends ClassDaoBase<ChtUser> implements IClassDao<ChtUser>{
 

@@ -2,8 +2,11 @@ package com.gdxsoft.chatRoom.dao;
 
 import java.util.Date;
 import com.gdxsoft.easyweb.datasource.ClassBase;
+import io.swagger.annotations.ApiModel;
+import io.swagger.annotations.ApiModelProperty;
 /**表chat_cnt映射类
-* @author gdx 时间：Tue Jun 01 2021 09:25:07 GMT+0800 (中国标准时间)*/
+* @author gdx 时间：Wed Jun 02 2021 11:30:48 GMT+0800 (中国标准时间)*/
+@ApiModel(value = "chat_cnt", description = "表chat_cnt映射类")
 public class ChatCnt extends ClassBase{private Long chtId_; // 内容编号
 private String chtCnt_; // 内容
 private String chtCntTxt_; // 内容（纯文本）
@@ -13,6 +16,7 @@ private String chtCntTxt_; // 内容（纯文本）
  *
 * @return 内容编号
 */
+@ApiModelProperty(value = "内容编号", required = true)
 public Long getChtId() {return this.chtId_;}
 /**
 * 赋值 内容编号
@@ -32,6 +36,7 @@ public void setChtId(Long paraChtId){
  *
 * @return 内容
 */
+@ApiModelProperty(value = "内容", required = true)
 public String getChtCnt() {return this.chtCnt_;}
 /**
 * 赋值 内容
@@ -51,6 +56,7 @@ public void setChtCnt(String paraChtCnt){
  *
 * @return 内容（纯文本）
 */
+@ApiModelProperty(value = "内容（纯文本）", required = true)
 public String getChtCntTxt() {return this.chtCntTxt_;}
 /**
 * 赋值 内容（纯文本）
