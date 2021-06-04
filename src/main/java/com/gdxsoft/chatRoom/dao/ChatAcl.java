@@ -4,10 +4,10 @@ import java.util.Date;
 import com.gdxsoft.easyweb.datasource.ClassBase;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
-/**表cht_acl映射类
-* @author gdx 时间：Wed Jun 02 2021 11:30:37 GMT+0800 (中国标准时间)*/
-@ApiModel(value = "cht_acl", description = "表cht_acl映射类")
-public class ChtAcl extends ClassBase{private Long chtRomId_; // 房间号
+/**表chat_acl映射类
+* @author gdx 时间：Fri Jun 04 2021 15:36:10 GMT+0800 (中国标准时间)*/
+@ApiModel(value = "chat_acl", description = "表chat_acl映射类")
+public class ChatAcl extends ClassBase{private Long chtRomId_; // 房间号
 private Long chtUsrId_; // 用户
 private String chtAclMaster_; // 管理员
 private String chtAclTop_; // 顶置话题

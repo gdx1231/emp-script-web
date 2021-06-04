@@ -4,10 +4,10 @@ import java.util.Date;
 import com.gdxsoft.easyweb.datasource.ClassBase;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
-/**表cht_user映射类
-* @author gdx 时间：Wed Jun 02 2021 11:30:31 GMT+0800 (中国标准时间)*/
-@ApiModel(value = "cht_user", description = "表cht_user映射类")
-public class ChtUser extends ClassBase{private Long chtUsrId_; // 用户编号
+/**表chat_user映射类
+* @author gdx 时间：Fri Jun 04 2021 16:18:09 GMT+0800 (中国标准时间)*/
+@ApiModel(value = "chat_user", description = "表chat_user映射类")
+public class ChatUser extends ClassBase{private Long chtUsrId_; // 用户编号
 private String chtUsrUnid_; // 用户唯一编号
 private String chtUsrName_; // 用户名称
 private String chtUsrGender_; // 性别
@@ -21,6 +21,8 @@ private String chtUsrSlogan_; // 标语
 private String chtUsrRef_; // 来源数据
 private String chtUsrRefId_; // 来源编号
 private String chtUsrMemo_; // 备注信息
+private Integer chtUsrSupId_; // 商户
+private String chtUsrStatus_; // 用户状态
 
 /**
  * 获取 用户编号
@@ -187,7 +189,7 @@ public void setChtUsrMobile(String paraChtUsrMobile){
  *
 * @return 创建时间
 */
-@ApiModelProperty(value = "创建时间", required = false)
+@ApiModelProperty(value = "创建时间", required = true)
 public Date getChtUsrCtime() {return this.chtUsrCtime_;}
 /**
 * 赋值 创建时间
@@ -207,7 +209,7 @@ public void setChtUsrCtime(Date paraChtUsrCtime){
  *
 * @return 修改时间
 */
-@ApiModelProperty(value = "修改时间", required = false)
+@ApiModelProperty(value = "修改时间", required = true)
 public Date getChtUsrMtime() {return this.chtUsrMtime_;}
 /**
 * 赋值 修改时间
@@ -247,7 +249,7 @@ public void setChtUsrSlogan(String paraChtUsrSlogan){
  *
 * @return 来源数据
 */
-@ApiModelProperty(value = "来源数据", required = false)
+@ApiModelProperty(value = "来源数据", required = true)
 public String getChtUsrRef() {return this.chtUsrRef_;}
 /**
 * 赋值 来源数据
@@ -267,7 +269,7 @@ public void setChtUsrRef(String paraChtUsrRef){
  *
 * @return 来源编号
 */
-@ApiModelProperty(value = "来源编号", required = false)
+@ApiModelProperty(value = "来源编号", required = true)
 public String getChtUsrRefId() {return this.chtUsrRefId_;}
 /**
 * 赋值 来源编号
@@ -299,5 +301,45 @@ public String getChtUsrMemo() {return this.chtUsrMemo_;}
 public void setChtUsrMemo(String paraChtUsrMemo){
   super.recordChanged("cht_usr_memo", this.chtUsrMemo_, paraChtUsrMemo);
   this.chtUsrMemo_ = paraChtUsrMemo;
+}
+
+
+/**
+ * 获取 商户
+ *
+* @return 商户
+*/
+@ApiModelProperty(value = "商户", required = true)
+public Integer getChtUsrSupId() {return this.chtUsrSupId_;}
+/**
+* 赋值 商户
+
+* @param paraChtUsrSupId
+* 商户
+ */
+
+public void setChtUsrSupId(Integer paraChtUsrSupId){
+  super.recordChanged("cht_usr_sup_id", this.chtUsrSupId_, paraChtUsrSupId);
+  this.chtUsrSupId_ = paraChtUsrSupId;
+}
+
+
+/**
+ * 获取 用户状态
+ *
+* @return 用户状态
+*/
+@ApiModelProperty(value = "用户状态", required = true)
+public String getChtUsrStatus() {return this.chtUsrStatus_;}
+/**
+* 赋值 用户状态
+
+* @param paraChtUsrStatus
+* 用户状态
+ */
+
+public void setChtUsrStatus(String paraChtUsrStatus){
+  super.recordChanged("cht_usr_status", this.chtUsrStatus_, paraChtUsrStatus);
+  this.chtUsrStatus_ = paraChtUsrStatus;
 }
 }

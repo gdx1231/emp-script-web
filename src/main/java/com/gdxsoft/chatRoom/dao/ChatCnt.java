@@ -5,7 +5,7 @@ import com.gdxsoft.easyweb.datasource.ClassBase;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 /**表chat_cnt映射类
-* @author gdx 时间：Wed Jun 02 2021 11:30:48 GMT+0800 (中国标准时间)*/
+* @author gdx 时间：Fri Jun 04 2021 15:34:41 GMT+0800 (中国标准时间)*/
 @ApiModel(value = "chat_cnt", description = "表chat_cnt映射类")
 public class ChatCnt extends ClassBase{private Long chtId_; // 内容编号
 private String chtCnt_; // 内容

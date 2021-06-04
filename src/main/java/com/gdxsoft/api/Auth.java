@@ -1,6 +1,7 @@
 package com.gdxsoft.api;
 
 import java.util.ArrayList;
+import java.util.Date;
 
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;
@@ -15,17 +16,25 @@ public class Auth {
 	private String errorMessage;
 	private SupMain supMain;
 	private ApiMain apiMain;
+	private DecodedJWT decodedJWT;
 
 	public boolean validJwtToken(String token) {
-		DecodedJWT jwt = null;
 		try {
-			jwt = JWT.decode(token);
+			decodedJWT = JWT.decode(token);
 		} catch (Exception e) {
 			this.errorMessage = e.getMessage();
 			return false;
 		}
 
-		String apiKey = jwt.getClaim("apiKey").asString();
+		String apiKey = decodedJWT.getClaim("apiKey").asString();
+		Date expire = decodedJWT.getExpiresAt();
+
+		// 过期检查
+		long diff = expire.getTime() - System.currentTimeMillis();
+		if (diff < 0) {
+			this.errorMessage = "Expired. (" + (diff * -1) + "ms)";
+			return false;
+		}
 
 		if (!this.loadApiAndSup(apiKey)) {
 			return false;
@@ -35,7 +44,7 @@ public class Auth {
 		Algorithm algorithm;
 		try {
 			algorithm = Algorithm.HMAC256(secret);
-			algorithm.verify(jwt);
+			algorithm.verify(decodedJWT);
 
 			return true;
 		} catch (Exception e) {
@@ -101,6 +110,10 @@ public class Auth {
 
 	public ApiMain getApiMain() {
 		return apiMain;
+	}
+
+	public DecodedJWT getDecodedJWT() {
+		return decodedJWT;
 	}
 
 }
