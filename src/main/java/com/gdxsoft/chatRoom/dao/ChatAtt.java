@@ -5,7 +5,7 @@ import com.gdxsoft.easyweb.datasource.ClassBase;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 /**表chat_att映射类
-* @author gdx 时间：Wed Jun 02 2021 11:30:51 GMT+0800 (中国标准时间)*/
+* @author gdx 时间：Fri Jun 04 2021 17:27:09 GMT+0800 (中国标准时间)*/
 @ApiModel(value = "chat_att", description = "表chat_att映射类")
 public class ChatAtt extends ClassBase{private Long chtAttId_; // 附件编号
 private Long chtUsrId_; // 用户编号
@@ -19,6 +19,7 @@ private String chtAttMd5_; // md5
 private Date chtAttTime_; // 创建时间
 private String chtAttStatus_; // 状态
 private String chtAttUrl_; // 下载地址
+private Integer chtAttSupId_; // 商户
 
 /**
  * 获取 附件编号
@@ -257,5 +258,25 @@ public String getChtAttUrl() {return this.chtAttUrl_;}
 public void setChtAttUrl(String paraChtAttUrl){
   super.recordChanged("cht_att_url", this.chtAttUrl_, paraChtAttUrl);
   this.chtAttUrl_ = paraChtAttUrl;
+}
+
+
+/**
+ * 获取 商户
+ *
+* @return 商户
+*/
+@ApiModelProperty(value = "商户", required = true)
+public Integer getChtAttSupId() {return this.chtAttSupId_;}
+/**
+* 赋值 商户
+
+* @param paraChtAttSupId
+* 商户
+ */
+
+public void setChtAttSupId(Integer paraChtAttSupId){
+  super.recordChanged("cht_att_sup_id", this.chtAttSupId_, paraChtAttSupId);
+  this.chtAttSupId_ = paraChtAttSupId;
 }
 }

@@ -7,14 +7,14 @@ import com.gdxsoft.easyweb.script.RequestValue;
 import com.gdxsoft.easyweb.datasource.IClassDao;
 import com.gdxsoft.easyweb.datasource.ClassDaoBase;
 /** 表chat_topic操作类
- * @author gdx 时间：Tue Jun 01 2021 09:25:04 GMT+0800 (中国标准时间)
+ * @author gdx 时间：Fri Jun 04 2021 17:26:53 GMT+0800 (中国标准时间)
  */
 public class ChatTopicDao extends ClassDaoBase<ChatTopic> implements IClassDao<ChatTopic>{
 
- private static String SQL_INSERT="INSERT INTO chat_topic(cht_id, cht_rom_id, cht_lvl, cht_type, cht_status, cht_ctime, cht_mtime, cht_usr_id, cht_ip, cht_ua) 	VALUES(@cht_id, @cht_rom_id, @cht_lvl, @cht_type, @cht_status, @cht_ctime, @cht_mtime, @cht_usr_id, @cht_ip, @cht_ua)";
+ private static String SQL_INSERT="INSERT INTO chat_topic(cht_id, cht_rom_id, cht_lvl, cht_type, cht_status, cht_ctime, cht_mtime, cht_usr_id, cht_ip, cht_ua, cht_sup_id) 	VALUES(@cht_id, @cht_rom_id, @cht_lvl, @cht_type, @cht_status, @cht_ctime, @cht_mtime, @cht_usr_id, @cht_ip, @cht_ua, @cht_sup_id)";
  public static String TABLE_NAME ="chat_topic";
  public static String[] KEY_LIST = { "cht_id"   };
- public static String[] FIELD_LIST = { "cht_id", "cht_rom_id", "cht_lvl", "cht_type", "cht_status", "cht_ctime", "cht_mtime", "cht_usr_id", "cht_ip", "cht_ua" };
+ public static String[] FIELD_LIST = { "cht_id", "cht_rom_id", "cht_lvl", "cht_type", "cht_status", "cht_ctime", "cht_mtime", "cht_usr_id", "cht_ip", "cht_ua", "cht_sup_id" };
  public ChatTopicDao(){ 
    // 设置数据库连接配置名称，在 ewa_conf.xml中定义
    // super.setConfigName("chat");

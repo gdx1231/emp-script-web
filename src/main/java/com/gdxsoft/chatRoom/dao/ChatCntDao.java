@@ -7,7 +7,7 @@ import com.gdxsoft.easyweb.script.RequestValue;
 import com.gdxsoft.easyweb.datasource.IClassDao;
 import com.gdxsoft.easyweb.datasource.ClassDaoBase;
 /** 表chat_cnt操作类
- * @author gdx 时间：Fri Jun 04 2021 15:34:43 GMT+0800 (中国标准时间)
+ * @author gdx 时间：Fri Jun 04 2021 17:26:59 GMT+0800 (中国标准时间)
  */
 public class ChatCntDao extends ClassDaoBase<ChatCnt> implements IClassDao<ChatCnt>{
 

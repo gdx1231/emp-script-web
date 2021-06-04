@@ -7,14 +7,14 @@ import com.gdxsoft.easyweb.script.RequestValue;
 import com.gdxsoft.easyweb.datasource.IClassDao;
 import com.gdxsoft.easyweb.datasource.ClassDaoBase;
 /** 表chat_att操作类
- * @author gdx 时间：Tue Jun 01 2021 09:25:14 GMT+0800 (中国标准时间)
+ * @author gdx 时间：Fri Jun 04 2021 17:27:10 GMT+0800 (中国标准时间)
  */
 public class ChatAttDao extends ClassDaoBase<ChatAtt> implements IClassDao<ChatAtt>{
 
- private static String SQL_INSERT="INSERT INTO chat_att(cht_att_id, cht_usr_id, cht_id, cht_att_name, cht_att_src_name, cht_att_path, cht_att_size, cht_att_ext, cht_att_md5, cht_att_time, cht_att_status, cht_att_url) 	VALUES(@cht_att_id, @cht_usr_id, @cht_id, @cht_att_name, @cht_att_src_name, @cht_att_path, @cht_att_size, @cht_att_ext, @cht_att_md5, @cht_att_time, @cht_att_status, @cht_att_url)";
+ private static String SQL_INSERT="INSERT INTO chat_att(cht_att_id, cht_usr_id, cht_id, cht_att_name, cht_att_src_name, cht_att_path, cht_att_size, cht_att_ext, cht_att_md5, cht_att_time, cht_att_status, cht_att_url, cht_att_sup_id) 	VALUES(@cht_att_id, @cht_usr_id, @cht_id, @cht_att_name, @cht_att_src_name, @cht_att_path, @cht_att_size, @cht_att_ext, @cht_att_md5, @cht_att_time, @cht_att_status, @cht_att_url, @cht_att_sup_id)";
  public static String TABLE_NAME ="chat_att";
  public static String[] KEY_LIST = { "cht_att_id"   };
- public static String[] FIELD_LIST = { "cht_att_id", "cht_usr_id", "cht_id", "cht_att_name", "cht_att_src_name", "cht_att_path", "cht_att_size", "cht_att_ext", "cht_att_md5", "cht_att_time", "cht_att_status", "cht_att_url" };
+ public static String[] FIELD_LIST = { "cht_att_id", "cht_usr_id", "cht_id", "cht_att_name", "cht_att_src_name", "cht_att_path", "cht_att_size", "cht_att_ext", "cht_att_md5", "cht_att_time", "cht_att_status", "cht_att_url", "cht_att_sup_id" };
  public ChatAttDao(){ 
    // 设置数据库连接配置名称，在 ewa_conf.xml中定义
    // super.setConfigName("chat");

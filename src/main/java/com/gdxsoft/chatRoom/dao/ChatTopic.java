@@ -5,7 +5,7 @@ import com.gdxsoft.easyweb.datasource.ClassBase;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 /**表chat_topic映射类
-* @author gdx 时间：Wed Jun 02 2021 11:30:44 GMT+0800 (中国标准时间)*/
+* @author gdx 时间：Fri Jun 04 2021 17:26:49 GMT+0800 (中国标准时间)*/
 @ApiModel(value = "chat_topic", description = "表chat_topic映射类")
 public class ChatTopic extends ClassBase{private Long chtId_; // 内容编号
 private Long chtRomId_; // 房间号
@@ -17,6 +17,7 @@ private Date chtMtime_; // 修改时间
 private Long chtUsrId_; // 发帖人
 private String chtIp_; // 来源ip
 private String chtUa_; // 浏览器代理
+private Integer chtSupId_; // 商户
 
 /**
  * 获取 内容编号
@@ -215,5 +216,25 @@ public String getChtUa() {return this.chtUa_;}
 public void setChtUa(String paraChtUa){
   super.recordChanged("cht_ua", this.chtUa_, paraChtUa);
   this.chtUa_ = paraChtUa;
+}
+
+
+/**
+ * 获取 商户
+ *
+* @return 商户
+*/
+@ApiModelProperty(value = "商户", required = true)
+public Integer getChtSupId() {return this.chtSupId_;}
+/**
+* 赋值 商户
+
+* @param paraChtSupId
+* 商户
+ */
+
+public void setChtSupId(Integer paraChtSupId){
+  super.recordChanged("cht_sup_id", this.chtSupId_, paraChtSupId);
+  this.chtSupId_ = paraChtSupId;
 }
 }
