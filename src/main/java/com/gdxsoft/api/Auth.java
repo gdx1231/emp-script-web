@@ -24,16 +24,6 @@ public class Auth {
 			this.errorMessage = e.getMessage();
 			return false;
 		}
-		String algorithmName = jwt.getAlgorithm();
-		if (!"HS256".equals(algorithmName)) {
-			errorMessage = "Invalid algorithm: " + algorithmName;
-			return false;
-		}
-
-		if (jwt.getExpiresAt().getTime() < System.currentTimeMillis()) {
-			errorMessage = "The token had expired";
-			return false;
-		}
 
 		String apiKey = jwt.getClaim("apiKey").asString();
 

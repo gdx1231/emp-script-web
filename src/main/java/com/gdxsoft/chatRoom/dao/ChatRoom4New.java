@@ -1,6 +1,5 @@
 package com.gdxsoft.chatRoom.dao;
 
-import java.util.Date;
 import com.gdxsoft.easyweb.datasource.ClassBase;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
@@ -8,51 +7,22 @@ import io.swagger.annotations.ApiModelProperty;
 /**
  * 表chat_room映射类
  * 
- * @author gdx 时间：Fri Jun 04 2021 12:54:42 GMT+0800 (中国标准时间)
+ * @author gdx 时间：Wed Jun 02 2021 11:30:07 GMT+0800 (中国标准时间)
  */
-@ApiModel(value = "chat_room", description = "表chat_room映射类")
-public class ChatRoom extends ClassBase {
-	private Long chtRomId_; // 聊天室
+@ApiModel(value = "com.gdxsoft.chatRoom.dao.ChatRoom4New", description = "表chat_room映射类")
+public class ChatRoom4New extends ClassBase {
 	private String chtRomName_; // 名称
 	private String chtRomNameEn_; // 名称英文
 	private String chtRomMemo_; // 备注
 	private String chtRomMemoEn_; // 备注英文
-	private String chtRomStatus_; // 状态
 	private Long chtRomCreator_; // 创建人
 	private Long chtRomOwner_; // 拥有人
-	private Date chtRomCtime_; // 创建时间
-	private Date chtRomMtime_; // 修改时间
-	private String chtRomUnid_; // 唯一编号
 	private String chtRomType_; // 类型
 	private String chtRomRef_; // 来源
 	private String chtRomRefId_; // 编号
 	private String chtRomTag0_; // 标记0
 	private String chtRomTag1_; // 标记1
 	private String chtRomTag2_; // 标记2
-	private Integer chtRomSupId_; // 商户
-	private Long chtLastId_; // 最后帖子编号
-	private Date chtLastTime_; // 最后帖子时间
-
-	/**
-	 * 获取 聊天室
-	 *
-	 * @return 聊天室
-	 */
-	@ApiModelProperty(value = "聊天室", required = true)
-	public Long getChtRomId() {
-		return this.chtRomId_;
-	}
-
-	/**
-	 * 赋值 聊天室
-	 * 
-	 * @param paraChtRomId 聊天室
-	 */
-
-	public void setChtRomId(Long paraChtRomId) {
-		super.recordChanged("cht_rom_id", this.chtRomId_, paraChtRomId);
-		this.chtRomId_ = paraChtRomId;
-	}
 
 	/**
 	 * 获取 名称
@@ -139,27 +109,6 @@ public class ChatRoom extends ClassBase {
 	}
 
 	/**
-	 * 获取 状态
-	 *
-	 * @return 状态
-	 */
-	@ApiModelProperty(value = "状态", required = true)
-	public String getChtRomStatus() {
-		return this.chtRomStatus_;
-	}
-
-	/**
-	 * 赋值 状态
-	 * 
-	 * @param paraChtRomStatus 状态
-	 */
-
-	public void setChtRomStatus(String paraChtRomStatus) {
-		super.recordChanged("cht_rom_status", this.chtRomStatus_, paraChtRomStatus);
-		this.chtRomStatus_ = paraChtRomStatus;
-	}
-
-	/**
 	 * 获取 创建人
 	 *
 	 * @return 创建人
@@ -199,69 +148,6 @@ public class ChatRoom extends ClassBase {
 	public void setChtRomOwner(Long paraChtRomOwner) {
 		super.recordChanged("cht_rom_owner", this.chtRomOwner_, paraChtRomOwner);
 		this.chtRomOwner_ = paraChtRomOwner;
-	}
-
-	/**
-	 * 获取 创建时间
-	 *
-	 * @return 创建时间
-	 */
-	@ApiModelProperty(value = "创建时间", required = true)
-	public Date getChtRomCtime() {
-		return this.chtRomCtime_;
-	}
-
-	/**
-	 * 赋值 创建时间
-	 * 
-	 * @param paraChtRomCtime 创建时间
-	 */
-
-	public void setChtRomCtime(Date paraChtRomCtime) {
-		super.recordChanged("cht_rom_ctime", this.chtRomCtime_, paraChtRomCtime);
-		this.chtRomCtime_ = paraChtRomCtime;
-	}
-
-	/**
-	 * 获取 修改时间
-	 *
-	 * @return 修改时间
-	 */
-	@ApiModelProperty(value = "修改时间", required = true)
-	public Date getChtRomMtime() {
-		return this.chtRomMtime_;
-	}
-
-	/**
-	 * 赋值 修改时间
-	 * 
-	 * @param paraChtRomMtime 修改时间
-	 */
-
-	public void setChtRomMtime(Date paraChtRomMtime) {
-		super.recordChanged("cht_rom_mtime", this.chtRomMtime_, paraChtRomMtime);
-		this.chtRomMtime_ = paraChtRomMtime;
-	}
-
-	/**
-	 * 获取 唯一编号
-	 *
-	 * @return 唯一编号
-	 */
-	@ApiModelProperty(value = "唯一编号", required = true)
-	public String getChtRomUnid() {
-		return this.chtRomUnid_;
-	}
-
-	/**
-	 * 赋值 唯一编号
-	 * 
-	 * @param paraChtRomUnid 唯一编号
-	 */
-
-	public void setChtRomUnid(String paraChtRomUnid) {
-		super.recordChanged("cht_rom_unid", this.chtRomUnid_, paraChtRomUnid);
-		this.chtRomUnid_ = paraChtRomUnid;
 	}
 
 	/**
@@ -342,7 +228,6 @@ public class ChatRoom extends ClassBase {
 	 * 
 	 * @param paraChtRomTag0 标记0
 	 */
-
 	public void setChtRomTag0(String paraChtRomTag0) {
 		super.recordChanged("cht_rom_tag0", this.chtRomTag0_, paraChtRomTag0);
 		this.chtRomTag0_ = paraChtRomTag0;
@@ -363,7 +248,6 @@ public class ChatRoom extends ClassBase {
 	 * 
 	 * @param paraChtRomTag1 标记1
 	 */
-
 	public void setChtRomTag1(String paraChtRomTag1) {
 		super.recordChanged("cht_rom_tag1", this.chtRomTag1_, paraChtRomTag1);
 		this.chtRomTag1_ = paraChtRomTag1;
@@ -384,72 +268,9 @@ public class ChatRoom extends ClassBase {
 	 * 
 	 * @param paraChtRomTag2 标记2
 	 */
-
 	public void setChtRomTag2(String paraChtRomTag2) {
 		super.recordChanged("cht_rom_tag2", this.chtRomTag2_, paraChtRomTag2);
 		this.chtRomTag2_ = paraChtRomTag2;
 	}
 
-	/**
-	 * 获取 商户
-	 *
-	 * @return 商户
-	 */
-	@ApiModelProperty(value = "商户", required = true)
-	public Integer getChtRomSupId() {
-		return this.chtRomSupId_;
-	}
-
-	/**
-	 * 赋值 商户
-	 * 
-	 * @param paraChtRomSupId 商户
-	 */
-
-	public void setChtRomSupId(Integer paraChtRomSupId) {
-		super.recordChanged("cht_rom_sup_id", this.chtRomSupId_, paraChtRomSupId);
-		this.chtRomSupId_ = paraChtRomSupId;
-	}
-
-	/**
-	 * 获取 最后帖子编号
-	 *
-	 * @return 最后帖子编号
-	 */
-	@ApiModelProperty(value = "最后帖子编号", required = false)
-	public Long getChtLastId() {
-		return this.chtLastId_;
-	}
-
-	/**
-	 * 赋值 最后帖子编号
-	 * 
-	 * @param paraChtLastId 最后帖子编号
-	 */
-
-	public void setChtLastId(Long paraChtLastId) {
-		super.recordChanged("cht_last_id", this.chtLastId_, paraChtLastId);
-		this.chtLastId_ = paraChtLastId;
-	}
-
-	/**
-	 * 获取 最后帖子时间
-	 *
-	 * @return 最后帖子时间
-	 */
-	@ApiModelProperty(value = "最后帖子时间", required = false)
-	public Date getChtLastTime() {
-		return this.chtLastTime_;
-	}
-
-	/**
-	 * 赋值 最后帖子时间
-	 * 
-	 * @param paraChtLastTime 最后帖子时间
-	 */
-
-	public void setChtLastTime(Date paraChtLastTime) {
-		super.recordChanged("cht_last_time", this.chtLastTime_, paraChtLastTime);
-		this.chtLastTime_ = paraChtLastTime;
-	}
 }
