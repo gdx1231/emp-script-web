@@ -26,6 +26,10 @@ public class AclBase {
     private String _ItemName;
     private String _GoToUrl;
 
+    
+    public String getDenyMessage() {
+		return null;
+	}
 
 
     /*
