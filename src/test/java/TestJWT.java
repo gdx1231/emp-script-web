@@ -2,6 +2,7 @@
 import org.junit.jupiter.api.Test;
 
 import com.auth0.jwt.interfaces.DecodedJWT;
+import com.gdxsoft.api.Auth;
 import com.gdxsoft.api.JwtUtils;
 
 public class TestJWT {
@@ -16,6 +17,16 @@ public class TestJWT {
 	@Test
 	public void test() {
 		this.test1();
+		this.test2(483);
+		this.test2(4831);
+	}
+	public void test2(int supId) {
+		Auth a = new Auth();
+		if(a.createJwtToken(supId)) {
+			System.out.println(a.getJwtToken());
+		} else {
+			System.out.println(a.getErrorMessage());
+		}
 	}
 
 	public void test1() {

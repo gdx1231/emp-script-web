@@ -1,5 +1,6 @@
 package com.gdxsoft.api;
 
+import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.Date;
 
@@ -17,8 +18,67 @@ public class Auth {
 	private SupMain supMain;
 	private ApiMain apiMain;
 	private DecodedJWT decodedJWT;
+	private String jwtToken;
 
+	private String databaseName;
+
+	/**
+	 * Create a super's token
+	 * 
+	 * @param supId
+	 * @return
+	 */
+	public boolean createJwtToken(int supId) {
+		RequestValue rv1 = new RequestValue();
+		rv1.addOrUpdateValue("sup_id", supId);
+
+		SupMainDao d1 = new SupMainDao();
+		d1.setDatabase(databaseName);
+		d1.setRv(rv1);
+		ArrayList<SupMain> al1 = d1.getRecords("sup_id = @sup_id");
+		if (al1.size() == 0) {
+			errorMessage = "NO supmain info with sup_id. (" + supId + ")";
+			return false;
+		}
+
+		this.supMain = al1.get(0);
+		if ("DEL".equalsIgnoreCase(this.supMain.getSupState())) {
+			errorMessage = "The supmain has deleted";
+			return false;
+		}
+
+		ApiMainDao d = new ApiMainDao();
+		d.setDatabase(databaseName);
+		rv1.addOrUpdateValue("sup_unid", this.supMain.getSupUnid());
+		d.setRv(rv1);
+		ArrayList<ApiMain> al = d.getRecords(" sup_unid=@sup_unid ");
+		if (al.size() == 0) {
+			errorMessage = "The sup NOT register api. (" + this.supMain.getSupName() + ")";
+			return false;
+		}
+		this.apiMain = al.get(0);
+		String apiKey = this.apiMain.getApiKey();
+		String apiSecret = this.apiMain.getApiSignCode();
+		try {
+			jwtToken = JwtUtils.createJwtToken(apiKey, apiSecret, 7200);
+			return true;
+		} catch (IllegalArgumentException e) {
+			errorMessage = e.getMessage();
+			return false;
+		} catch (UnsupportedEncodingException e) {
+			errorMessage = e.getMessage();
+			return false;
+		}
+	}
+
+	/**
+	 * Valid the token
+	 * 
+	 * @param token
+	 * @return true/false
+	 */
 	public boolean validJwtToken(String token) {
+		this.jwtToken = token;
 		try {
 			decodedJWT = JWT.decode(token);
 		} catch (Exception e) {
@@ -56,6 +116,7 @@ public class Auth {
 
 	private boolean loadApiAndSup(String apiKey) {
 		ApiMainDao d = new ApiMainDao();
+		d.setDatabase(databaseName);
 		RequestValue rv1 = new RequestValue();
 		rv1.addOrUpdateValue("API_KEY", apiKey);
 
@@ -78,9 +139,12 @@ public class Auth {
 			return false;
 		}
 
-		SupMainDao d1 = new SupMainDao();
 		rv1.addOrUpdateValue("sup_unid", apiMain.getSupUnid());
+
+		SupMainDao d1 = new SupMainDao();
+		d1.setDatabase(databaseName);
 		d1.setRv(rv1);
+
 		ArrayList<SupMain> al1 = d1.getRecords("sup_unid=@sup_unid");
 		if (al1.size() == 0) {
 			errorMessage = "NO supmain info with apikey";
@@ -114,6 +178,27 @@ public class Auth {
 
 	public DecodedJWT getDecodedJWT() {
 		return decodedJWT;
+	}
+
+	public String getJwtToken() {
+		return jwtToken;
+	}
+
+	public void setJwtToken(String jwtToken) {
+		this.jwtToken = jwtToken;
+	}
+
+	public String getDatabaseName() {
+		return databaseName;
+	}
+
+	/**
+	 * 指定查询的数据库名称
+	 * 
+	 * @param databaseName
+	 */
+	public void setDatabaseName(String databaseName) {
+		this.databaseName = databaseName;
 	}
 
 }

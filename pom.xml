@@ -120,7 +120,7 @@
 		<dependency>
 			<groupId>com.gdxsoft.easyweb</groupId>
 			<artifactId>emp-script</artifactId>
-			<version>[1.0.6,]</version>
+			<version>[1.1.0,]</version>
 		</dependency>
 		<dependency>
 			<groupId>io.swagger</groupId>
@@ -170,7 +170,12 @@
 			<version>2.14.1</version>
 			<scope>test</scope>
 		</dependency>
-
+		<dependency>
+			<groupId>mysql</groupId>
+			<artifactId>mysql-connector-java</artifactId>
+			<scope>test</scope>
+			<version>8.0.25</version>
+		</dependency>
 	</dependencies>
 
 
