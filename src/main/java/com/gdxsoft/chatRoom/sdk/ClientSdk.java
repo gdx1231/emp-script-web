@@ -18,11 +18,54 @@ public class ClientSdk {
 		String path = "/chatRooms/" + chatRomId + "/topics";
 		String url = this.createUrl(path);
 		UNet net = this.createNet();
-		String rst = net.postMsg(url, msg.toString());
+		String rst = net.postMsg(url, msg.optJSONObject("body").toString());
 
 		RestfulResult<Object> rr = new RestfulResult<>();
 		rr.parse(rst);
-		
+
+		return rr;
+	}
+
+	/**
+	 * 获取房间的帖子内容
+	 * 
+	 * @param chatRomId   房间号
+	 * @param lastTopicId 最后一个帖子号码
+	 * @return
+	 */
+	public RestfulResult<Object> getChatRoomTopics(long chatRomId, Long lastTopicId) {
+		String path = "/chatRooms/" + chatRomId + "/topics";
+		String url = this.createUrl(path);
+		if (lastTopicId != null) {
+			url += "?lastTopicId=" + lastTopicId;
+		}
+		UNet net = this.createNet();
+		String rst = net.doGet(url);
+
+		RestfulResult<Object> rr = new RestfulResult<>();
+		rr.parse(rst);
+
+		return rr;
+	}
+
+	/**
+	 * 获取房间的帖子内容
+	 * 
+	 * @param chatRomId   房间号
+	 * @param lastTopicId 最后一个帖子号码
+	 * @return
+	 */
+	public RestfulResult<Object> getChatRoomTopicUploaded(long chatRomId, String uploadRef, String uploadRefId) {
+		String path = "/chatRooms/" + chatRomId + "/topics";
+		String url = this.createUrl(path);
+		url += "?ref=" + uploadRef + "&Ref_Id=" + uploadRefId;
+
+		UNet net = this.createNet();
+		String rst = net.doGet(url);
+
+		RestfulResult<Object> rr = new RestfulResult<>();
+		rr.parse(rst);
+
 		return rr;
 	}
 
@@ -39,7 +82,7 @@ public class ClientSdk {
 
 		RestfulResult<Object> rr = new RestfulResult<>();
 		rr.parse(rst);
-		
+
 		return rr;
 	}
 
