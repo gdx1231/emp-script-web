@@ -13,9 +13,7 @@ import com.gdxsoft.easyweb.script.RequestValue;
 import com.gdxsoft.easyweb.script.servlets.RestfulResult;
 import com.gdxsoft.easyweb.utils.UJSon;
 import com.gdxsoft.easyweb.utils.UPath;
-import com.gdxsoft.web.websocket.IHandleMsg;
-import com.gdxsoft.web.websocket.IndexWebSocket;
-import com.gdxsoft.web.websocket.IndexWebSocketContainer;
+import com.gdxsoft.easyweb.websocket.*;
 
 /**
  * WebScocket 话题消息的处理
@@ -29,7 +27,7 @@ public class ClientChatWsImpl extends Thread implements IHandleMsg {
 	public final static String CHAT_BROAD_MSG_ID = "chat_broad_msg";
 	// 广播删除帖子
 	public final static String CHAT_BROAD_DELETE_ID = "chat_broad_delete_it";
-	private IndexWebSocket socket;
+	private EwaWebSocket socket;
 	private JSONObject command;
 	private String action;
 
@@ -39,13 +37,16 @@ public class ClientChatWsImpl extends Thread implements IHandleMsg {
 	/**
 	 * 初始化对象
 	 * 
-	 * @param socket  IndexWebSocket
+	 * @param socket  EwaWebSocket
 	 * @param command 调用的命令
 	 */
-	public ClientChatWsImpl(IndexWebSocket socket, JSONObject command) {
+	public ClientChatWsImpl(EwaWebSocket socket, JSONObject command) {
 		this.socket = socket;
 		this.command = command;
-		this.action = command.optString("ACTION");
+		this.action = command.optString("action");
+		if (StringUtils.isBlank(this.action)) {
+			this.action = command.optString("ACTION");
+		}
 		if (this.action == null) {
 			this.action = "";
 		}
@@ -64,12 +65,12 @@ public class ClientChatWsImpl extends Thread implements IHandleMsg {
 	}
 
 	private JSONObject doAction() {
-		JSONObject result = null;
-
 		// 首先用户要提交user_token
 		if ("user_token".equals(this.action)) {
 			this.userToken = command.optString("user_token");
-			return UJSon.rstTrue(this.userToken);
+			// 获取我的信息
+			this.action = "myinfo";
+			return this.doAction();
 		}
 
 		if (StringUtils.isBlank(this.userToken)) {
@@ -87,7 +88,9 @@ public class ClientChatWsImpl extends Thread implements IHandleMsg {
 		// 提交新帖子
 		if ("post".equals(this.action)) {
 			RestfulResult<Object> rst = client.newMessages(chnId, command);
-			result = new JSONObject(rst.getRawData());
+
+			// 原始数据
+			JSONObject result = new JSONObject(rst.getRawData().toString());
 			if (!rst.isSuccess()) {
 				result.put("RST", false);
 				return result;
@@ -98,10 +101,34 @@ public class ClientChatWsImpl extends Thread implements IHandleMsg {
 
 			return UJSon.rstTrue(null);
 		}
+		// 我的信息
+		if ("myinfo".equals(this.action)) {
+			RestfulResult<Object> rst = client.myInfo();
+			JSONObject result = new JSONObject(rst.getRawData().toString());
+			if (!rst.isSuccess()) {
+				result.put("RST", false);
+				return result;
+			}
 
-		result = new JSONObject();
+			JSONObject returnJson = UJSon.rstTrue(null);
+			returnJson.put("data", result);
+
+			return returnJson;
+		}
+
+		return notImplementsAction();
+	}
+
+	/**
+	 * 未实现的方法
+	 * 
+	 * @return
+	 */
+	private JSONObject notImplementsAction() {
+		JSONObject result = new JSONObject();
 		result.put("RST", false);
-		result.put("ERR", "Unknowed action: (" + this.action + ")");
+		result.put("ERR", "Not implements action: (" + this.action + ")");
+
 		return result;
 	}
 
@@ -119,7 +146,7 @@ public class ClientChatWsImpl extends Thread implements IHandleMsg {
 		ConcurrentHashMap<String, Boolean> map = TOPIC_USERS.get(this.chnId);
 		for (String key : map.keySet()) {
 			// 从真正的容器中找到socket
-			IndexWebSocket socket = IndexWebSocketContainer.getSocketByUnid(key);
+			EwaWebSocket socket = EwaWebSocketContainer.getSocketByUnid(key);
 			if (socket == null) {
 				map.remove(key);
 				continue;

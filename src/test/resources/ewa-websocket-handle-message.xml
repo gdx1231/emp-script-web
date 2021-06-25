@@ -4,6 +4,6 @@
 	<!-- 用于EWA的调用 -->
 	<handleMessage method="ewa" class="com.gdxsoft.web.websocket.HandleEwaImpl" />
 	<!-- 话题 -->
-	<handleMessage method="chat" class="com.gdxsoft.chatRoom.HandleChatImpl" />
+	<handleMessage method="chat" class="com.gdxsoft.chatRoom.ClientChatWsImpl" />
 
 </handleMessages>

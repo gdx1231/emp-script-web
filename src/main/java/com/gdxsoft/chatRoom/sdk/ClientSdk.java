@@ -22,7 +22,24 @@ public class ClientSdk {
 
 		RestfulResult<Object> rr = new RestfulResult<>();
 		rr.parse(rst);
+		
+		return rr;
+	}
 
+	/**
+	 * 获取我的信息
+	 * 
+	 * @return
+	 */
+	public RestfulResult<Object> myInfo() {
+		String path = "/chatUsers/myself";
+		String url = this.createUrl(path);
+		UNet net = this.createNet();
+		String rst = net.doGet(url);
+
+		RestfulResult<Object> rr = new RestfulResult<>();
+		rr.parse(rst);
+		
 		return rr;
 	}
 

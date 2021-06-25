@@ -1,9 +1,7 @@
 import org.json.JSONObject;
 import org.junit.jupiter.api.Test;
 
-import com.gdxsoft.web.websocket.IHandleMsg;
-import com.gdxsoft.web.websocket.IndexWebSocket;
-import com.gdxsoft.web.websocket.LoadHandleMessage;
+import com.gdxsoft.easyweb.websocket.*;
 
 public class TestWs {
 
@@ -20,7 +18,7 @@ public class TestWs {
 	}
 
 	public void test1() {
-		IndexWebSocket iws=new IndexWebSocket();
+		EwaWebSocket iws = new EwaWebSocket();
 		try {
 			IHandleMsg a = LoadHandleMessage.getInstance("chat", iws, new JSONObject());
 			System.out.println(a);
