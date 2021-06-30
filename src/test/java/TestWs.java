@@ -18,7 +18,7 @@ public class TestWs {
 	}
 
 	public void test1() {
-		EwaWebSocket iws = new EwaWebSocket();
+		EwaWebSocketBus iws = new EwaWebSocketBus();
 		try {
 			IHandleMsg a = LoadHandleMessage.getInstance("chat", iws, new JSONObject());
 			System.out.println(a);
