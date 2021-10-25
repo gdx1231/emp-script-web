@@ -1,4 +1,5 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<url>https://github.com/gdx1231/emp-script-web</url>
 	<modelVersion>4.0.0</modelVersion>
@@ -114,7 +115,7 @@
 					</additionalOptions>
 				</configuration>
 			</plugin>
-			
+
 			<plugin>
 				<artifactId>maven-antrun-plugin</artifactId>
 				<executions>
@@ -123,8 +124,10 @@
 						<phase>package</phase>
 						<configuration>
 							<tasks>
-								<echo>copy ${project.build.finalName}.jar to ${basedir}/../../workspace.newVersion/allclass/lib/</echo>
-								<copy todir="${basedir}/../../workspace.newVersion/allclass/lib/">
+								<echo>copy ${project.build.finalName}.jar to
+									${basedir}/../../workspace.newVersion/allclass/lib/</echo>
+								<copy
+									todir="${basedir}/../../workspace.newVersion/allclass/lib/">
 									<fileset dir="${project.build.directory}">
 										<include name="${project.build.finalName}*" />
 									</fileset>
@@ -145,7 +148,7 @@
 			<artifactId>emp-script</artifactId>
 			<version>[1.1.0,]</version>
 		</dependency>
-			<dependency>
+		<dependency>
 			<groupId>com.gdxsoft</groupId>
 			<artifactId>weixin</artifactId>
 			<version>[1.0.0,]</version>
@@ -160,6 +163,20 @@
 			<artifactId>java-jwt</artifactId>
 			<version>3.2.0</version>
 		</dependency>
+
+		<!-- https://mvnrepository.com/artifact/com.aliyun/aliyun-java-sdk-core -->
+		<dependency>
+			<groupId>com.aliyun</groupId>
+			<artifactId>aliyun-java-sdk-core</artifactId>
+			<version>4.4.0</version>
+		</dependency>
+		<!-- https://mvnrepository.com/artifact/com.aliyun/aliyun-java-sdk-dysmsapi -->
+		<dependency>
+			<groupId>com.aliyun</groupId>
+			<artifactId>aliyun-java-sdk-dysmsapi</artifactId>
+			<version>1.1.0</version>
+		</dependency>
+
 		<!-- https://mvnrepository.com/artifact/javax.servlet/javax.servlet-api -->
 		<dependency>
 			<groupId>javax.servlet</groupId>
@@ -209,9 +226,7 @@
 
 	<!-- 发布项目 -->
 	<!-- mvn clean deploy -P release -->
-	<!--
-		https://issues.sonatype.org/browse/OSSRH-65277
-	-->
+	<!-- https://issues.sonatype.org/browse/OSSRH-65277 -->
 	<profiles>
 		<profile>
 			<id>release</id> <!-- 部署要用到 -->
