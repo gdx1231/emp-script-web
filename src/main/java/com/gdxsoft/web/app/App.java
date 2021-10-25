@@ -10,59 +10,52 @@ import com.gdxsoft.easyweb.data.DTTable;
 import com.gdxsoft.easyweb.script.RequestValue;
 import com.gdxsoft.easyweb.utils.Utils;
 import com.gdxsoft.easyweb.utils.msnet.MStr;
-import com.gdxsoft.web.acl.Login;
 import com.gdxsoft.web.dao.*;
-
 
 public class App {
 	RequestValue rv;
 	SupMain supMain;
+	boolean inWeixin = false; // 微信
+
+	boolean inNativeApp = false; // 在原生App中
+	boolean iphone = false; // 是否iphone
+	boolean android = false; // 是否安卓手机
+	boolean inMini = false; // 是小程序调用
+
+	/**
+	 * 浏览器UserAgent头部包含的原生app标记
+	 */
+	public static String NATIVE_TAG = "/native";
 
 	public App(RequestValue rv) {
 		this.rv = rv;
-	}
 
-	/**
-	 * 获取代理的sup_id （-1表示未登录，0为 erp身份， >0为代理）
-	 * 
-	 * @return -1表示未登录，0为 erp身份， >0为代理
-	 */
-	public int getAgentSupId() {
-		int agentSupId = -1;
-		boolean isSupplyLogined = Login.isSupplyLogined(rv);
-
-		if (isSupplyLogined) {
-			if (rv.s("g_f_sup_id") != null) {
-				agentSupId = rv.getInt("g_f_sup_id");
-			} else {
-				agentSupId = 0;
-			}
+		if (rv.s("SYS_USER_AGENT") != null) {
+			String _g_user_agent = rv.s("SYS_USER_AGENT").toLowerCase();
+			inWeixin = _g_user_agent.indexOf("micromessenger") > 0;
+			inNativeApp = _g_user_agent.indexOf(NATIVE_TAG) > 0;
+			iphone = _g_user_agent.indexOf("android") > 0;
+			android = _g_user_agent.indexOf("iphone") > 0;
+			inMini = _g_user_agent.indexOf("miniprogram") > 0;
 		}
-		return agentSupId;
 	}
 
 	/**
-	 * 获取App权限
+	 * 创建App运行环境信息，小程序、微信、原生app、iphone，android信息
 	 * 
 	 * @return
 	 */
-	public String getRoleType() {
-		int agentSupId = this.getAgentSupId();
+	public String createAppEnvJs() {
+		MStr sb = new MStr();
 
-		boolean isSupplyLogined = Login.isSupplyLogined(rv);
-		// 用户角色
-		String roleType = "";
-		if (rv.s("GRP_COS_ID") != null) {
-			roleType = "CUSTOMER"; // 师生（学生/家长）
-		} else if (isSupplyLogined) {
-			if (agentSupId == -1) { // rv.s("g_f_sup_id");
-				roleType = "STAFF"; // 运营方
-			} else {
-				roleType = "AGENT"; // 代理
-			}
-		}
+		sb.al("var g_is_in_weixin = " + inWeixin + ";");
+		sb.al("var g_is_in_native = " + inNativeApp + ";");
+		sb.al("var g_is_in_mini = " + inMini + ";");
 
-		return roleType;
+		sb.al("var g_is_iphone = " + iphone + ";");
+		sb.al("var g_is_android = " + android + ";");
+
+		return sb.toString();
 	}
 
 	/**
@@ -105,89 +98,6 @@ public class App {
 			System.out.println("引荐人usr_lvl_id对应的usrid不一致：web_user[" + usrId + "]!=web_user_level[" + refUsrLvlId + "]");
 			return addScript(sbNo.toString());
 		}
-	}
-
-	/**
-	 * 启动打开课程 ，由分享页面创建
-	 * 
-	 * @param rv
-	 * @return
-	 * @throws Exception
-	 */
-	public String startEolLesson(RequestValue rv) throws Exception {
-		MStr sb = new MStr();
-
-		String sqlLesson = "select lesson_id, lesson_uid from camp_lesson where lesson_id=@STARTLESSONID"
-				+ " and STATUS='USED' ";
-		if (rv.s("preview_lesson_info") == null) {
-			// not in preview mode
-			// 对于预览的课程不限制发布状态和审核状态
-			sqlLesson += " and LESSON_DLV_STATUS='COM_YES' and LESSON_AUDIT_STATUS='COM_YES'";
-		}
-		DTTable tbLesson = DTTable.getJdbcTable(sqlLesson, rv);
-		if (tbLesson.getCount() > 0) {
-			// 获取相应的团，在销售中的
-			String sqlGrp = "select grp_unid from grp_main where GRP_TYPE='GRP_TYPE_CAMP_LESSON' "
-					+ " and GRP_STATE='USED' and GRP_FORM_ID=" + tbLesson.getCell(0, "lesson_id").toInt()
-					+ " and grp_sta='GRP_LESSON_STA_OK' and DESTINE_TIME<=@sys_date and DESTINE_END_TIME>@sys_date"
-					+ " order by grp_sdate desc";
-			DTTable tbGrp = DTTable.getJdbcTable(sqlGrp, "grp_id", 1, 1, "", rv);
-			if (tbGrp.getCount() > 0) {
-				sb.al("var g_startlessonuid = '" + tbLesson.getCell(0, "lesson_uid").toString() + "';");
-				sb.al("var g_startgrpunid = '" + tbGrp.getCell(0, "grp_unid").toString() + "';");
-			}
-		}
-
-		return addScript(sb.toString());
-	}
-
-	/**
-	 * 启动打开课程团
-	 * 
-	 * @param rv
-	 * @return
-	 * @throws Exception
-	 */
-	public String startEolGrp(RequestValue rv) throws Exception {
-		MStr sb = new MStr();
-		String sqlGrp = "select a.GRP_UNID,b.LESSON_UID from grp_main a\n"
-				+ " inner join camp_lesson b on a.GRP_FORM_ID = b.LESSON_ID\n";
-		/*
-		 * if(rv.s("agunid")!=""){ sqlGrp+
-		 * ="inner join sup_main c on a.SUP_DOWN_ID=c.SUP_ID and c.SUP_UNID=@agunid"; }
-		 */
-		sqlGrp += " where a.grp_state='USED' and a.grp_id=@STARTGRPID\n"
-				+ " and a.grp_sta='GRP_LESSON_STA_OK' and a.DESTINE_TIME<=@sys_date and a.DESTINE_END_TIME>@sys_date\n"
-				+ " and b.STATUS='USED' and b.LESSON_DLV_STATUS='COM_YES' and b.LESSON_AUDIT_STATUS='COM_YES'\n";
-		DTTable tbGrp = DTTable.getJdbcTable(sqlGrp, rv);
-		if (tbGrp.getCount() > 0) {
-			sb.al("var g_startlessonuid = '" + tbGrp.getCell(0, "LESSON_UID").toString() + "';");
-			sb.al("var g_startgrpunid = '" + tbGrp.getCell(0, "GRP_UNID").toString() + "';");
-		}
-
-		return addScript(sb.toString());
-	}
-
-	/**
-	 * 启动打开项目 ，由分享页面创建
-	 * 
-	 * @param rv
-	 * @return
-	 * @throws Exception
-	 */
-	public String startEolProject(RequestValue rv) throws Exception {
-		MStr sb = new MStr();
-
-		String sql = "select PRJ_ID,PRJ_UID from gyap_enroll_project\n"
-				+ "where PRJ_ID = @STARTPRJID and PRJ_STATUS = 'USED'\n"
-				+ "and (PRJ_EFFECTIVE is null or PRJ_EFFECTIVE<=@sys_date)\n"
-				+ "and (PRJ_EXPIRED is null or PRJ_EXPIRED>@sys_date)\n";
-		DTTable tb = DTTable.getJdbcTable(sql, rv);
-		if (tb.getCount() > 0) {
-			sb.al("var g_startprjuid = '" + tb.getCell(0, "PRJ_UID").toString() + "';");
-		}
-
-		return addScript(sb.toString());
 	}
 
 	public String addScript(String js) {
@@ -294,13 +204,14 @@ public class App {
 			}
 			// System.out.println(" 取消用户的语言设定 APP_LANG " + rv.s("ewa_lang"));
 
-			// 取消用户的语言设定 APP_LANG
-			javax.servlet.http.Cookie ck = new javax.servlet.http.Cookie("APP_LANG", "");
-			ck.setMaxAge(0);
-			ck.setPath("/");
+			if (response != null) {
+				// 取消用户的语言设定 APP_LANG
+				javax.servlet.http.Cookie ck = new javax.servlet.http.Cookie("APP_LANG", "");
+				ck.setMaxAge(0);
+				ck.setPath("/");
 
-			response.addCookie(ck);
-
+				response.addCookie(ck);
+			}
 		} else if (rv.s("APP_LANG") != null) { // cookie中设定的（language-setting.jsp）
 			lang = rv.s("APP_LANG");
 			if (!lang.equals("enus")) {
@@ -339,6 +250,51 @@ public class App {
 	 */
 	public SupMain getSupMain() {
 		return supMain;
+	}
+
+	/**
+	 * 在微信中
+	 * 
+	 * @return
+	 */
+	public boolean isInWeixin() {
+		return inWeixin;
+	}
+
+	/**
+	 * 在原生App中
+	 * 
+	 * @return
+	 */
+	public boolean isInNativeApp() {
+		return inNativeApp;
+	}
+
+	/**
+	 * 是iPhone
+	 * 
+	 * @return
+	 */
+	public boolean isIphone() {
+		return iphone;
+	}
+
+	/**
+	 * 是Android
+	 * 
+	 * @return
+	 */
+	public boolean isAndroid() {
+		return android;
+	}
+
+	/**
+	 * 在小程序中
+	 * 
+	 * @return
+	 */
+	public boolean isInMini() {
+		return inMini;
 	}
 
 }

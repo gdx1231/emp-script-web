@@ -1,0 +1,9 @@
+package com.gdxsoft.web.weixin;
+
+public class WeiXinWebSocket {
+
+	public WeiXinWebSocket() {
+		// TODO Auto-generated constructor stub
+	}
+
+}
