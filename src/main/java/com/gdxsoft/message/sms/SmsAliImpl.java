@@ -16,6 +16,12 @@ import com.aliyuncs.exceptions.ClientException;
 import com.aliyuncs.profile.DefaultProfile;
 import com.aliyuncs.profile.IClientProfile;
 
+/**
+ * 阿里云短信接口
+ * 
+ * @author admin
+ *
+ */
 public class SmsAliImpl extends SmsBase implements ISms {
 
 	// 产品名称:云通信短信API产品,开发者无需替换
@@ -96,7 +102,7 @@ public class SmsAliImpl extends SmsBase implements ISms {
 		return rst;
 	}
 
-	public JSONObject getSendResponseResult(SendSmsResponse response) {
+	private JSONObject getSendResponseResult(SendSmsResponse response) {
 		JSONObject rst = new JSONObject();
 
 		rst.put("SEND_COCDE", response.getCode());
