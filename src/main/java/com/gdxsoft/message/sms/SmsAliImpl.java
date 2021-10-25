@@ -16,17 +16,12 @@ import com.aliyuncs.exceptions.ClientException;
 import com.aliyuncs.profile.DefaultProfile;
 import com.aliyuncs.profile.IClientProfile;
 
-public class SmsAli {
-
+public class SmsAliImpl extends SmsBase implements ISms {
 
 	// 产品名称:云通信短信API产品,开发者无需替换
 	static final String product = "Dysmsapi";
 	// 产品域名,开发者无需替换
 	static final String domain = "dysmsapi.aliyuncs.com";
-
-	// TODO 此处需要替换成开发者自己的AK(在阿里云访问控制台寻找)
-	static final String accessKeyId = "LTAIIzzr5FuQOvnT";
-	static final String accessKeySecret = "zbxyF0vFa33MjVbMFwydqbGmTBjTCM";
 
 	/**
 	 * 发送短信并获得发送结果
@@ -37,19 +32,16 @@ public class SmsAli {
 	 * @param templateParam
 	 * @param outId
 	 * @return
-	 * @throws ClientException
-	 * @throws InterruptedException
+	 * @throws Exception
 	 */
-	public static JSONObject sendSmsAndGetResponse(String phoneNumber, String signName, String templateCode,
-			JSONObject templateParam, String outId) throws ClientException, InterruptedException {
+	public JSONObject sendSmsAndGetResponse(String phoneNumber, JSONObject templateParam, String outId)
+			throws Exception {
 
 		// 发短信
-		SendSmsResponse response = sendSmsAndReturnResponse(phoneNumber, signName, templateCode, templateParam, outId);
+		SendSmsResponse response = sendSmsAndReturnResponse(phoneNumber, templateParam, outId);
 		JSONObject rst = getSendResponseResult(response);
 
 		rst.put("PHONE_NUMBER", phoneNumber);
-		rst.put("SIGN_NAME", signName);
-		rst.put("TEMPLATE_CODE", templateCode);
 		rst.put("TEMPLATE_PARAM", templateParam);
 		rst.put("OUT_ID", outId);
 
@@ -90,26 +82,33 @@ public class SmsAli {
 		return rst;
 	}
 
-	public static JSONObject sendSms(String phoneNumber, String signName, String templateCode, JSONObject templateParam,
-			String outId) throws ClientException {
-		SendSmsResponse response = sendSmsAndReturnResponse(phoneNumber, signName, templateCode, templateParam, outId);
+	/**
+	 * 
+	 */
+	public JSONObject sendSms(String phoneNumber, JSONObject templateParam, String outId) throws Exception {
+		SendSmsResponse response = sendSmsAndReturnResponse(phoneNumber, templateParam, outId);
 		JSONObject rst = getSendResponseResult(response);
 		rst.put("PHONE_NUMBER", phoneNumber);
-		rst.put("SIGN_NAME", signName);
-		rst.put("TEMPLATE_CODE", templateCode);
+
 		rst.put("TEMPLATE_PARAM", templateParam);
 		rst.put("OUT_ID", outId);
 
 		return rst;
 	}
 
-	public static JSONObject getSendResponseResult(SendSmsResponse response) {
+	public JSONObject getSendResponseResult(SendSmsResponse response) {
 		JSONObject rst = new JSONObject();
 
 		rst.put("SEND_COCDE", response.getCode());
 		rst.put("SEND_MESSAGE", response.getMessage());
 		rst.put("SEND_REQUEST_ID", response.getRequestId());
 		rst.put("BIZ_ID", response.getBizId());
+
+		String signName = super.getSmsSignName();
+		String templateCode = super.getSmsTemplateCode();
+
+		rst.put("SIGN_NAME", signName);
+		rst.put("TEMPLATE_CODE", templateCode);
 
 		return rst;
 	}
@@ -118,22 +117,21 @@ public class SmsAli {
 	 * 发送短信 并返回发送对象，用于获取结果
 	 * 
 	 * @param phoneNumber
-	 * @param signName
-	 * @param templateCode
 	 * @param templateParam
 	 * @param outId
 	 * @return
 	 * @throws ClientException
 	 */
-	private static SendSmsResponse sendSmsAndReturnResponse(String phoneNumber, String signName, String templateCode,
-			JSONObject templateParam, String outId) throws ClientException {
+	private SendSmsResponse sendSmsAndReturnResponse(String phoneNumber, JSONObject templateParam, String outId)
+			throws ClientException {
 
 		// 可自助调整超时时间
 		System.setProperty("sun.net.client.defaultConnectTimeout", "10000");
 		System.setProperty("sun.net.client.defaultReadTimeout", "10000");
 
 		// 初始化acsClient,暂不支持region化
-		IClientProfile profile = DefaultProfile.getProfile("cn-hangzhou", accessKeyId, accessKeySecret);
+		IClientProfile profile = DefaultProfile.getProfile("cn-hangzhou", super.getAccessKeyId(),
+				super.getAccessKeySecret());
 		DefaultProfile.addEndpoint("cn-hangzhou", "cn-hangzhou", product, domain);
 		IAcsClient acsClient = new DefaultAcsClient(profile);
 
@@ -142,9 +140,9 @@ public class SmsAli {
 		// 必填:待发送手机号
 		request.setPhoneNumbers(phoneNumber);
 		// 必填:短信签名-可在短信控制台中找到
-		request.setSignName(signName); // "环球青少年大使计划"
+		request.setSignName(super.getSmsSignName());
 		// 必填:短信模板-可在短信控制台中找到
-		request.setTemplateCode(templateCode); // "SMS_96635008"
+		request.setTemplateCode(super.getSmsTemplateCode());
 		// 可选:模板中的变量替换JSON串,如模板内容为"亲爱的${name},您的验证码为${code}"时,此处的值为
 		request.setTemplateParam(templateParam.toString()); // "{\"name\":\"
 															// 湖南省长沙市外国语学校\"}"
@@ -169,14 +167,15 @@ public class SmsAli {
 	 * @return
 	 * @throws ClientException
 	 */
-	private static QuerySendDetailsResponse querySendDetails(String bizId, String phoneNumber) throws ClientException {
+	private QuerySendDetailsResponse querySendDetails(String bizId, String phoneNumber) throws ClientException {
 
 		// 可自助调整超时时间
 		System.setProperty("sun.net.client.defaultConnectTimeout", "10000");
 		System.setProperty("sun.net.client.defaultReadTimeout", "10000");
 
 		// 初始化acsClient,暂不支持region化
-		IClientProfile profile = DefaultProfile.getProfile("cn-hangzhou", accessKeyId, accessKeySecret);
+		IClientProfile profile = DefaultProfile.getProfile("cn-hangzhou", super.getAccessKeyId(),
+				super.getAccessKeySecret());
 		DefaultProfile.addEndpoint("cn-hangzhou", "cn-hangzhou", product, domain);
 		IAcsClient acsClient = new DefaultAcsClient(profile);
 

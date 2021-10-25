@@ -5,19 +5,21 @@ import java.util.Date;
 
 import org.json.JSONObject;
 
-import com.aliyuncs.exceptions.ClientException;
 import com.gdxsoft.easyweb.data.DTTable;
 import com.gdxsoft.easyweb.datasource.DataConnection;
 import com.gdxsoft.easyweb.script.RequestValue;
 import com.gdxsoft.easyweb.utils.UJSon;
-import com.gdxsoft.message.sms.SmsAli;
-
+import com.gdxsoft.message.sms.ISms;
 
 public class SmsValid extends ValidBase {
 	private static final String[] cnNums = "０,１,２,３,４,５,６,７,８,９".split(",");
 
-	public SmsValid(RequestValue rv) {
+	private ISms sms;
+
+	public SmsValid(RequestValue rv, ISms sms) {
 		super(rv);
+
+		this.sms = sms;
 	}
 
 	/**
@@ -92,17 +94,12 @@ public class SmsValid extends ValidBase {
 			return rst;
 		}
 
-		String sms_sign_name = "环球青少年大使计划"; // 短信签名
-		// https://dysms.console.aliyun.com/dysms.htm?spm=5176.2020520001.1001.15.dXr3B3#/template
-		// 阿里云短信服务接口
-		// 验证码${code}，您正在登录，若非本人操作，请勿泄露。
-		String sms_template_code = "SMS_95610127"; // 登录确认验证码
 		JSONObject templateParam = new JSONObject();
 		// 创建6位随机数字
 		String validCode = super.randomNumberCode(6);
 		templateParam.put("code", validCode);
 
-		rst = this.smsValid(usr_id, mobilePhone, sms_sign_name, sms_template_code, templateParam, validCode);
+		rst = this.smsValid(usr_id, mobilePhone, templateParam, validCode);
 
 		return rst;
 	}
@@ -128,13 +125,12 @@ public class SmsValid extends ValidBase {
 	 * @return
 	 */
 	public JSONObject smsValidCommon(int usrId, String mobilePhone, String smsSignName) {
-		String sms_template_code = "SMS_95610129"; // 身份验证验证码, 验证码${code}，您正在进行身份验证，打死不要告诉别人哦！
 		JSONObject templateParam = new JSONObject();
 		// 创建6位随机数字
 		String validCode = super.randomNumberCode(6);
 		templateParam.put("code", validCode);
 
-		JSONObject rst = this.smsValid(usrId, mobilePhone, smsSignName, sms_template_code, templateParam, validCode);
+		JSONObject rst = this.smsValid(usrId, mobilePhone, templateParam, validCode);
 		return rst;
 	}
 
@@ -149,23 +145,22 @@ public class SmsValid extends ValidBase {
 	 * @param validCode         验证码
 	 * @return
 	 */
-	public JSONObject smsValid(int usrId, String mobilePhone, String smsSignName, String smsTemplateCode,
-			JSONObject smsTemplateParams, String validCode) {
+	public JSONObject smsValid(int usrId, String mobilePhone, JSONObject smsTemplateParams, String validCode) {
 
 		JSONObject rst = this.checkMobilePhone(mobilePhone);
 		if (!rst.optBoolean("RST")) {
 			return rst;
 		}
 		// 检查频次
-		rst = this.checkSmsFrequency(mobilePhone, smsTemplateCode);
+		rst = this.checkSmsFrequency(mobilePhone, this.sms.getSmsTemplateCode());
 		if (!rst.optBoolean("RST")) {
 			return rst;
 		}
 
 		rst.put("USR_ID", usrId);
 		rst.put("PHONE", mobilePhone);
-		rst.put("SIGN_NAME", smsSignName);
-		rst.put("TEMPLATE_CODE", smsTemplateCode);
+		rst.put("SIGN_NAME", this.sms.getSmsSignName());
+		rst.put("TEMPLATE_CODE", this.sms.getSmsTemplateCode());
 
 		JSONObject recordRst = super.createValidRecord(usrId, validCode, VALID_TYPE_USER_LOGIN, 15, null);
 		if (!recordRst.optBoolean("RST")) {
@@ -180,28 +175,28 @@ public class SmsValid extends ValidBase {
 		if (this.rv_ == null || this.rv_.s("not_send_sms") == null) {
 			try {
 				// 正确的
-				// {"SEND_MESSAGE":"OK","SIGN_NAME":"环球青少年大使计划","TEMPLATE_PARAM":{"code":"9112111"},
+				// {"SEND_MESSAGE":"OK","SIGN_NAME":"计划","TEMPLATE_PARAM":{"code":"9112111"},
 				// "SEND_COCDE":"OK","SEND_REQUEST_ID":"920B7B3A-ABCE-4AEB-88DB-A0EA1C06CDD6",
 				// "OUT_ID":"","BIZ_ID":"603008608467712573^0","PHONE_NUMBER":"13910409333",
 				// "TEMPLATE_CODE":"SMS_95610127"}
 
 				// 错误的
 				// {"SEND_MESSAGE":"+8613910409333 invalid mobile number",
-				// "SIGN_NAME":"环球青少年大使计划",
+				// "SIGN_NAME":"计划",
 				// "TEMPLATE_PARAM":{"code":"9112111"},
 				// "SEND_COCDE":"isv.MOBILE_NUMBER_ILLEGAL",
 				// "SEND_REQUEST_ID":"AF938897-C9D8-4CAF-947F-63E2B89E3951",
 				// "OUT_ID":"","PHONE_NUMBER":"+8613910409333","TEMPLATE_CODE":"SMS_95610127"}
-				sendRst = SmsAli.sendSms(mobilePhone, smsSignName, smsTemplateCode, smsTemplateParams, "");
+				sendRst = this.sms.sendSms(mobilePhone, smsTemplateParams, "");
 				// 记录到日志中，用于检查频次
 				String sqlFrequency = "insert into SMS_JOB(SMS_PROVIDER, SMS_JSTATUS, SMS_JCDATE,SMS_REF_TABLE,SMS_REF_ID,SMS_TEMPLATE_CODE, SMS_PHONES)"
 						+ " values('ALI', 'SMS_JOB_SEND', getdate(), 'SMS_VALID', '" + mobilePhone.replace("'", "")
-						+ "','" + smsTemplateCode.replace("'", "") + "','"
+						+ "','" + this.sms.getSmsTemplateCode().replace("'", "") + "','"
 						+ smsTemplateParams.toString().replace("'", "''") + "')";
 				DataConnection.updateAndClose(sqlFrequency, "", null);
-			} catch (ClientException e) {
+			} catch (Exception e) {
 				rst.put("RST", false);
-				rst.put("ERR", "阿里云短信接口系统错误");
+				rst.put("ERR", "短信接口系统错误");
 				rst.put("ERR1", e.getMessage());
 				System.out.println(rst);
 				return rst;
@@ -293,9 +288,8 @@ public class SmsValid extends ValidBase {
 
 	public DTTable getGrpCostumerByPhone(String mobilePhone) {
 		String sql = "select b.USR_ID,a.COS_PHONE,a.COS_NAME,a.GRP_COS_ID from grp_costumer a\n"
-				+ "inner join web_user b on a.cos_id=b.usr_id\n" 
-				+ "where a.COS_STATUS = 'COS_NEW' and a.COS_PHONE='"+(mobilePhone.replace("'", ""))+"'\n"
-				+ "order by a.grp_cos_id desc\n";
+				+ "inner join web_user b on a.cos_id=b.usr_id\n" + "where a.COS_STATUS = 'COS_NEW' and a.COS_PHONE='"
+				+ (mobilePhone.replace("'", "")) + "'\n" + "order by a.grp_cos_id desc\n";
 		DTTable dt = DTTable.getJdbcTable(sql, "GRP_COS_ID", 1, 1, "");
 		return dt;
 	}
@@ -384,4 +378,5 @@ public class SmsValid extends ValidBase {
 		rst.put("RST", true);
 		return rst;
 	}
+
 }
