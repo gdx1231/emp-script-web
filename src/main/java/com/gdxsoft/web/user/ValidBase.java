@@ -10,7 +10,6 @@ import com.gdxsoft.easyweb.utils.Utils;
 public class ValidBase {
 	/**
 	 * web_user 自动登录使用的 FP_TYPE,
-	 * 参见XMLNAME=/2014_rob/app-2017/student.xml&ITEMNAME=student.login
 	 */
 	public static String VALID_TYPE_WEB_USER_LOGIN = "WEIXIN_LOGIN";
 
@@ -21,13 +20,11 @@ public class ValidBase {
 
 	/**
 	 * 管理员 登录验证 <br>
-	 * 参见 XMLNAME=/2014_rob/common/admin_users.xml&ITEMNAME=Login.Robert
 	 */
 	public static String VALID_TYPE_ADM_LOGIN = "B2B_ADM_LOGIN";
 
 	/**
 	 * 微信管理员登录<br>
-	 * 参见 XMLNAME=/2014_rob/common/admin_users.xml&ITEMNAME=Login.Robert
 	 */
 	public static String VALID_TYPE_ADM_WX_LOGIN = "WX_ADM_LOGIN";
 
@@ -83,7 +80,7 @@ public class ValidBase {
 	 * @param log
 	 * @return
 	 */
-	public JSONObject createValidRecord(int usrId, String validCode, String validType, long maxWaitMinitus,
+	public JSONObject createValidRecord(long usrId, String validCode, String validType, long maxWaitMinitus,
 			String log) {
 		JSONObject rst = this.createValidRecord(usrId, validCode, validType, maxWaitMinitus, log, null, null);
 
@@ -102,7 +99,7 @@ public class ValidBase {
 	 * @param refId          来源id
 	 * @return
 	 */
-	public JSONObject createValidRecord(int usrId, String validCode, String validType, long maxWaitMinitus, String log,
+	public JSONObject createValidRecord(long usrId, String validCode, String validType, long maxWaitMinitus, String log,
 			String refTable, String refId) {
 		JSONObject rst = new JSONObject();
 
@@ -378,20 +375,21 @@ public class ValidBase {
 
 	/**
 	 * 更改用户编号
+	 * 
 	 * @param fpUnid
-	 * @param usrId
+	 * @param userId
 	 */
-	public void changeValidUserId(String fpUnid, int usrId) {
+	public void changeValidUserId(String fpUnid, long userId) {
 		StringBuilder sb = new StringBuilder();
 		sb.append("UPDATE WEB_USER_FPWD SET USR_ID=");
-		sb.append(usrId);
+		sb.append(userId);
 		sb.append(", FP_UDATE = @sys_date where fp_unid='");
 		sb.append(fpUnid.replace("'", "''"));
 		sb.append("'");
 		String sql = sb.toString();
 		DataConnection.updateAndClose(sql, "", this.rv_);
 	}
-	
+
 	/**
 	 * 更新 log
 	 * 
@@ -453,18 +451,18 @@ public class ValidBase {
 	/**
 	 * 获取验证记录
 	 * 
-	 * @param usrId     用户编号
+	 * @param userId    用户编号
 	 * @param validCode 验证码
 	 * @param validType 类型
 	 * @return
 	 */
-	public DTTable getValidRecord(int usrId, String validCode, String validType) {
+	public DTTable getValidRecord(long userId, String validCode, String validType) {
 		StringBuilder sb = new StringBuilder();
 		sb.append("select * from WEB_USER_FPWD where FP_VALIDCODE='");
 		sb.append(validCode.replace("'", "''"));
 		sb.append("' and fp_type='");
 		sb.append(validType.replace("'", "''"));
-		sb.append("' and usr_id=" + usrId);
+		sb.append("' and usr_id=" + userId);
 		String sql = sb.toString();
 
 		DTTable tb = DTTable.getJdbcTable(sql);

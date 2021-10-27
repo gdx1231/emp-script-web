@@ -11,6 +11,33 @@ import org.json.JSONObject;
  */
 public interface ISms {
 	/**
+	 *  开发者自己的AK(阿里云在访问控制台寻找)
+	 * @return
+	 */
+	public String getAccessKeyId();
+
+	/**
+	 * 开发者自己的AK(阿里云在访问控制台寻找)
+	 * 
+	 * @param accessKeyId
+	 */
+	public void setAccessKeyId(String accessKeyId);
+
+	/**
+	 * 开发者自己的AK(阿里云在访问控制台寻找)
+	 * 
+	 * @return
+	 */
+	public String getAccessKeySecret();
+
+	/**
+	 * 开发者自己的AK(阿里云在访问控制台寻找)
+	 * 
+	 * @param accessKeySecret
+	 */
+	public void setAccessKeySecret(String accessKeySecret);
+
+	/**
 	 * 短信模板编码
 	 * 
 	 * @return 短信模板编码

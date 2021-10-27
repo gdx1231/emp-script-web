@@ -76,21 +76,24 @@ public class SmsValid extends ValidBase {
 			if (tb.getCount() == 0) {
 				rst.put("RST", false);
 				rst.put("ERR", "您的手机号没有注册");
+				rst.put("CODE", "404");
 				return rst;
 			}
 		}
 		if (tb.getCount() > 1) {
 			rst.put("RST", false);
 			rst.put("ERR", "此手机号重复，不能用于登录，请与客服联系");
+			rst.put("CODE", "400");
 			return rst;
 		}
 
-		int usr_id = -1;
+		long usr_id = -1;
 		try {
-			usr_id = tb.getCell(0, "USR_ID").toInt();
+			usr_id = tb.getCell(0, "USR_ID").toLong();
 		} catch (Exception e1) {
 			rst.put("RST", false);
 			rst.put("ERR", e1.getMessage());
+			rst.put("CODE", "500");
 			return rst;
 		}
 
@@ -105,18 +108,6 @@ public class SmsValid extends ValidBase {
 	}
 
 	/**
-	 * 短信通用身份验证[环球青少年大使计划] （身份验证验证码, 验证码${code}，您正在进行身份验证，打死不要告诉别人哦！）
-	 * 
-	 * @param usrId       用户
-	 * @param mobilePhone 电话
-	 * @return
-	 */
-	public JSONObject smsValidGyapCommon(int usrId, String mobilePhone) {
-		JSONObject rst = this.smsValidCommon(usrId, mobilePhone, "环球青少年大使计划");
-		return rst;
-	}
-
-	/**
 	 * 短信通用身份验证 （身份验证验证码, 验证码${code}，您正在进行身份验证，打死不要告诉别人哦！）
 	 * 
 	 * @param usrId       用户
@@ -124,7 +115,7 @@ public class SmsValid extends ValidBase {
 	 * @param smsSignName 签名
 	 * @return
 	 */
-	public JSONObject smsValidCommon(int usrId, String mobilePhone, String smsSignName) {
+	public JSONObject smsValidCommon(long usrId, String mobilePhone, String smsSignName) {
 		JSONObject templateParam = new JSONObject();
 		// 创建6位随机数字
 		String validCode = super.randomNumberCode(6);
@@ -145,7 +136,7 @@ public class SmsValid extends ValidBase {
 	 * @param validCode         验证码
 	 * @return
 	 */
-	public JSONObject smsValid(int usrId, String mobilePhone, JSONObject smsTemplateParams, String validCode) {
+	public JSONObject smsValid(long usrId, String mobilePhone, JSONObject smsTemplateParams, String validCode) {
 
 		JSONObject rst = this.checkMobilePhone(mobilePhone);
 		if (!rst.optBoolean("RST")) {
@@ -190,7 +181,7 @@ public class SmsValid extends ValidBase {
 				sendRst = this.sms.sendSms(mobilePhone, smsTemplateParams, "");
 				// 记录到日志中，用于检查频次
 				String sqlFrequency = "insert into SMS_JOB(SMS_PROVIDER, SMS_JSTATUS, SMS_JCDATE,SMS_REF_TABLE,SMS_REF_ID,SMS_TEMPLATE_CODE, SMS_PHONES)"
-						+ " values('ALI', 'SMS_JOB_SEND', getdate(), 'SMS_VALID', '" + mobilePhone.replace("'", "")
+						+ " values('ALI', 'SMS_JOB_SEND', @sys_date, 'SMS_VALID', '" + mobilePhone.replace("'", "")
 						+ "','" + this.sms.getSmsTemplateCode().replace("'", "") + "','"
 						+ smsTemplateParams.toString().replace("'", "''") + "')";
 				DataConnection.updateAndClose(sqlFrequency, "", null);
