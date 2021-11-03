@@ -18,7 +18,6 @@ public class SmsValid extends ValidBase {
 
 	public SmsValid(RequestValue rv, ISms sms) {
 		super(rv);
-
 		this.sms = sms;
 	}
 
@@ -370,4 +369,11 @@ public class SmsValid extends ValidBase {
 		return rst;
 	}
 
+	public ISms getSms() {
+		return sms;
+	}
+
+	public void setSms(ISms sms) {
+		this.sms = sms;
+	}
 }

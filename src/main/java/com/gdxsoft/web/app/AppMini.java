@@ -154,7 +154,7 @@ public class AppMini  {
 		if (wu == null) {
 			return;
 		}
-		int usrId = wu.getUsrId();
+		long usrId = wu.getUsrId();
 		String usr_name = wu.getUsrName();
 
 		String encode = this.createEncode(usrId);
@@ -164,7 +164,7 @@ public class AppMini  {
 
 	}
 
-	private String createEncode(int usrId) throws Exception {
+	private String createEncode(long usrId) throws Exception {
 		JSONObject codeJson = new JSONObject();
 		// b2b 的用户编号
 		codeJson.put("B2B_USR_ID", usrId);
