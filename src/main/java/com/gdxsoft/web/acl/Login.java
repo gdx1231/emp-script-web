@@ -50,7 +50,7 @@ public class Login {
 	 */
 	public static String gotoLogin(RequestValue rv, String loginUrl) {
 		String _tmp_lang = rv.getLang();
-		String uLoginLeft = loginUrl + "?EWA_LANG=" + _tmp_lang;
+		String uLoginLeft = loginUrl + (loginUrl.indexOf("?") < 0 ? "?" : "&") + "EWA_LANG=" + _tmp_lang;
 		String ref = rv.getRequest().getContextPath() + rv.getRequest().getServletPath();
 		if (rv.getRequest().getQueryString() != null) {
 			ref += "?" + rv.getRequest().getQueryString();
