@@ -59,6 +59,19 @@ public class WeiXin implements Serializable {
 	private static String DB_TYPE;
 
 	/**
+	 * 访问数据库的前缀
+	 */
+	private static String DbPrefix = "";
+	
+	/**
+	 * 设置访问数据库的前缀
+	 * @param dbPrefix
+	 */
+	public synchronized static void setDbPrefix(String dbPrefix) {
+		DbPrefix = dbPrefix;
+	}
+
+	/**
 	 * 清除所有配置缓存
 	 */
 	public static void clear() {
@@ -114,12 +127,7 @@ public class WeiXin implements Serializable {
 	 * @return
 	 */
 	public static String getDbPrefix() {
-		String dbtype = getDbType();
-		String db_prefix = "oneworld_main_data.";
-		if (dbtype.equals("mssql")) {
-			db_prefix = "oneworld_main_data..";
-		}
-		return db_prefix;
+		 return DbPrefix;
 	}
 
 	/**
