@@ -25,6 +25,7 @@ import com.gdxsoft.easyweb.utils.UFile;
 import com.gdxsoft.easyweb.utils.UPath;
 import com.gdxsoft.easyweb.utils.Utils;
 import com.gdxsoft.easyweb.utils.msnet.MStr;
+import com.gdxsoft.web.dao.WebUser;
 import com.gdxsoft.weixin.Config;
 import com.gdxsoft.weixin.Html;
 import com.gdxsoft.weixin.QyConfig;
@@ -62,9 +63,10 @@ public class WeiXin implements Serializable {
 	 * 访问数据库的前缀
 	 */
 	private static String DbPrefix = "";
-	
+
 	/**
 	 * 设置访问数据库的前缀
+	 * 
 	 * @param dbPrefix
 	 */
 	public synchronized static void setDbPrefix(String dbPrefix) {
@@ -127,7 +129,7 @@ public class WeiXin implements Serializable {
 	 * @return
 	 */
 	public static String getDbPrefix() {
-		 return DbPrefix;
+		return DbPrefix;
 	}
 
 	/**
@@ -1657,17 +1659,6 @@ public class WeiXin implements Serializable {
 
 		StringBuilder builder3 = new StringBuilder();
 		builder3.append("SELECT * FROM WX_USER  where WX_CFG_NO=@WX_CFG_NO and AUTH_WEIXIN_ID = @AUTH_WEIXIN_ID");
-		// sqlserver
-		// AUTH_WEIXIN_ID 大小写敏感，字符集是Chinese_PRC_CS_AI，大小写敏感
-		// alter table WX_USER ALTER COLUMN AUTH_WEIXIN_ID varchar(150)
-		// COLLATE Chinese_PRC_CS_AI not null
-		// 字符集是Chinese_PRC_CS_AI，大小写敏感
-
-		// mysql
-		// AUTH_WEIXIN_ID 大小写敏感， 设置字段未 utf8mb4_bin类型
-		// ALTER TABLE wx_user MODIFY COLUMN AUTH_WEIXIN_ID varchar(150) CHARACTER SET
-		// utf8mb4 COLLATE utf8mb4_bin NULL ;
-
 		String sql = builder3.toString();
 
 		DTTable tbUser = DTTable.getJdbcTable(sql, cnn);
@@ -1713,25 +1704,29 @@ public class WeiXin implements Serializable {
 		String sqlCheck = "select usr_id from web_user where usr_unid = @uid";
 		DTTable tbCheck = DTTable.getJdbcTable(sqlCheck, cnn);
 		StringBuilder builder = new StringBuilder();
+
+		String tagNewUser = "0";
 		if (tbCheck.getCount() == 0) {
 			// 当数据不完整时候，出现有微信用户但没有web_user，需要创建 web_user
 			LOGGER.warn("出现有微信用户但没有web_user，需要创建 web_user(" + u.getNickname() + ", " + u.getOpenid() + ")");
-			
+
 			String uid = cnn.getRequestValue().getString("uid");
 			this.webUserNew(uid, cnn);
+
+			tagNewUser = "1"; // 新用户标识
 		} else {
-			int usr_id = tbCheck.getCell(0, 0).toInt();
-			builder.append("UPDATE WEB_USER SET IS_WEIXIN_SUBSCRIBE='");
-			builder.append(IS_WEIXIN_SUBSCRIBE_para);
-			builder.append("', USR_PIC			= @USR_PIC");
+			String usr_id = tbCheck.getCell(0, 0).toString();
+			
+			builder.append("UPDATE WEB_USER SET  ");
+			builder.append("   USR_PIC			= @USR_PIC");
 			builder.append(" , USR_ADDR			= @USR_ADDR");
 			builder.append(" , USR_SEX			= @USR_SEX");
-			builder.append(" , AUTH_WEIXIN_JSON	= @AUTH_WEIXIN_JSON");
-			builder.append(" , WX_GRP			= @sweixn_grp_id ");
 			builder.append(" where usr_id=");
 			builder.append(usr_id);
+
+			String sqlUp = builder.toString();
+			cnn.executeUpdate(sqlUp);
 		}
-		String sqlUp = builder.toString();
 
 		StringBuilder builder2 = new StringBuilder();
 		builder2.append("UPDATE WX_USER SET IS_WEIXIN_SUBSCRIBE ='");
@@ -1745,10 +1740,9 @@ public class WeiXin implements Serializable {
 		builder2.append(" 		AND USR_UNID=@uid ");
 		String sqlUp1 = builder2.toString();
 
-		cnn.executeUpdate(sqlUp);
 		cnn.executeUpdate(sqlUp1);
 
-		String sql1 = "SELECT A.*, 0 AS NEW_USER FROM WEB_USER A where usr_unid=@uid";
+		String sql1 = "SELECT A.*, " + tagNewUser + " AS NEW_USER FROM WEB_USER A where usr_unid=@uid";
 		DTTable tbUser = DTTable.getJdbcTable(sql1, cnn);
 
 		return tbUser.getRow(0);
@@ -1807,14 +1801,14 @@ public class WeiXin implements Serializable {
 
 		StringBuilder sb = new StringBuilder();
 		sb.append("INSERT INTO WEB_USER (USR_LID, USR_PWD, USR_NAME, USR_PIC \n");
-		sb.append(" , USR_SEX, USR_ADDR , IS_WEIXIN_SUBSCRIBE, USR_UNID, \n");
+		sb.append(" , USR_SEX, USR_ADDR , USR_UNID, \n");
 		sb.append("  SUP_ID \n");
-		sb.append(" ,USR_CDATE,AUTH_WEIXIN_ID, AUTH_WEIXIN_JSON,WX_GRP) \n");
+		sb.append(" ,USR_CDATE, USR_MDATE,USR_ID) \n");
 
 		sb.append("values(  @USR_LID, @USR_PWD, @USR_NAME, @USR_PIC \n");
-		sb.append(" , @USR_SEX, @USR_ADDR, @IS_WEIXIN_SUBSCRIBE, @temp_usr_unid, ");
+		sb.append(" , @USR_SEX, @USR_ADDR, @temp_usr_unid, ");
 		sb.append(this.sup_id_);
-		sb.append(" , @SYS_DATE,@AUTH_WEIXIN_ID,@AUTH_WEIXIN_JSON,@sweixn_grp_id)");
+		sb.append(" , @SYS_DATE, @SYS_DATE, ewa_func.snowflake() )");
 		cnn.executeUpdate(sb.toString());
 	}
 
