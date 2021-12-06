@@ -9,28 +9,44 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 /**
  *
  */
-public class Modules {
-
-	static Map<String, Module> MAP = new ConcurrentHashMap<>();
+public class HtModules {
+	private static Logger LOGGER = LoggerFactory.getLogger(HtModules.class);
+	static Map<String, HtModule> MAP = new ConcurrentHashMap<>();
 
 	public String name;
 	public String memo;
 
-	public void addModule(Module mod) {
+	public void addModule(HtModule mod) {
 		removeModule(mod.getName());
 		MAP.put(mod.getName(), mod);
+		LOGGER.debug("add new module ", mod.toString());
 	}
 
-	public Module getModule(String name) {
-		return MAP.get(name);
+	public HtModule getModule(String name) {
+		if (!MAP.containsKey(name)) {
+			return null;
+		}
+		HtModule m = MAP.get(name);
+
+		try {
+			return m.clone();
+		} catch (CloneNotSupportedException e) {
+			LOGGER.error(e.getLocalizedMessage());
+			return null;
+		}
+
 	}
 
 	public void removeModule(String name) {
 		if (MAP.containsKey(name)) {
-			MAP.remove(name);
+			HtModule mod = MAP.remove(name);
+			LOGGER.debug("remove the module {}", mod.toString());
 		}
 	}
 
