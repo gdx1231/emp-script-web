@@ -7,6 +7,7 @@ import org.apache.commons.io.FilenameUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.gdxsoft.easyweb.script.servlets.FileOut;
 import com.gdxsoft.easyweb.utils.UFile;
 import com.gdxsoft.easyweb.utils.UPath;
 
@@ -65,8 +66,7 @@ public class UploadResources {
 		if (ext.equalsIgnoreCase("exe") || ext.equalsIgnoreCase("bat") || ext.equalsIgnoreCase("cmd")
 				|| ext.equalsIgnoreCase("sh") || ext.equalsIgnoreCase("dmg") || ext.equalsIgnoreCase("java")
 				|| ext.equalsIgnoreCase("jsp") || ext.equalsIgnoreCase("class") || ext.equalsIgnoreCase("jar")
-				|| ext.equalsIgnoreCase("properties") || ext.equalsIgnoreCase("js")
-		) {
+				|| ext.equalsIgnoreCase("properties") || ext.equalsIgnoreCase("js")) {
 			r.setPath(path);
 			r.setStatus(500);
 			LOGGER.error("Invalid ext. {}", r.toString());
@@ -89,26 +89,23 @@ public class UploadResources {
 			LOGGER.debug(r.toString());
 			return r;
 		}
-		boolean binary = false;
+		boolean binary = true;
+		String fileType = FileOut.MAP.getOrDefault(ext, "application/octet-stream");
+		r.setType(fileType);
 		if (ext.equalsIgnoreCase("js")) {
-			r.setType("text/javascript");
+			binary = false;
 		} else if (ext.equalsIgnoreCase("htm") || ext.equalsIgnoreCase("html")) {
-			r.setType("text/html");
+			binary = false;
 		} else if (ext.equalsIgnoreCase("txt") || ext.equalsIgnoreCase("csv")) {
-			r.setType("text/plain");
+			binary = false;
 		} else if (ext.equalsIgnoreCase("json")) {
-			r.setType("text/json");
+			binary = false;
 		} else if (ext.equalsIgnoreCase("css")) {
-			r.setType("text/css");
+			binary = false;
 		} else if (ext.equalsIgnoreCase("xml")) {
-			r.setType("text/xml");
-		} else if (ext.equalsIgnoreCase("jpg") || ext.equalsIgnoreCase("jpeg") || ext.equalsIgnoreCase("png")
-				|| ext.equalsIgnoreCase("gif")) {
-			r.setType("image/" + ext);
-			binary = true;
+			binary = false;
 		} else {
-			r.setType("application/octet-stream");
-			binary = true;
+			binary = fileType.indexOf("text/") == -1;
 		}
 		r.setBinary(binary);
 

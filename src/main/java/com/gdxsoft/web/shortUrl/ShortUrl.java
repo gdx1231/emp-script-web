@@ -1,6 +1,5 @@
 package com.gdxsoft.web.shortUrl;
 
-
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
@@ -61,8 +60,12 @@ public class ShortUrl {
 	 */
 	public static ArrayList<UrlShort> getUrls(String url, int admId) {
 		String md5 = Utils.md5(url);
+		return getUrlsByMd5(md5, admId);
+	}
+
+	public static ArrayList<UrlShort> getUrlsByMd5(String md5, int admId) {
 		UrlShortDao d1 = new UrlShortDao();
-		String where = " URL_MD5 = '" + md5 + "' and adm_id=" + admId + " order by URL_ID desc";
+		String where = " URL_MD5 = '" + md5 + "' and adm_id=" + admId + " and url_status='USED' order by URL_ID desc";
 		return d1.getRecords(where);
 	}
 
@@ -75,21 +78,25 @@ public class ShortUrl {
 	 * @return
 	 */
 	public UrlShort addUrl(String url, int supId, int admId) {
+		String md5 = Utils.md5(url);
 		UrlShortDao d1 = new UrlShortDao();
+		ArrayList<UrlShort> al = ShortUrl.getUrlsByMd5(md5, admId);
+
+		if (al.size() > 0) {
+			return al.get(0);
+		}
 
 		UrlShort o = new UrlShort();
 		o.setUrlId(USnowflake.nextId());
-		
+
 		o.setAdmId(admId);
 		o.setSupId(supId);
 		o.setUrlCdate(new Date());
 		o.setUrlFull(url);
 		o.setUrlStatus("USED");
-		
+
 		String paraUrlUid = this.createUid();
 		o.setUrlUid(paraUrlUid);
-
-		String md5 = Utils.md5(url);
 
 		o.setUrlMd5(md5);
 
@@ -106,8 +113,10 @@ public class ShortUrl {
 	public String createUid() {
 		int inc = 0;
 		String uid = null;
+		int len[] = { 4, 5, 6, 7, 8, 9, 10 };
 		while (uid == null) {
-			uid = this.chcekAndGetUnique();
+			int codeLen = inc < len.length ? len[inc] : 10;
+			uid = this.chcekAndGetUnique(codeLen);
 			inc++;
 			if (inc > 10) {
 				return "太多次的尝试";
@@ -121,16 +130,16 @@ public class ShortUrl {
 	 * 
 	 * @return
 	 */
-	private String chcekAndGetUnique() {
+	private String chcekAndGetUnique(int codeLen) {
 		Map<String, Boolean> unids = new HashMap<String, Boolean>();
-		for (int i = 0; i < 30; i++) {
-			String uid = Utils.randomStr(10);
+		for (int i = 0; i < 100; i++) {
+			String uid = Utils.randomStr(codeLen);
 			unids.put(uid, true);
 		}
 
 		UrlShortDao d1 = new UrlShortDao();
 		StringBuilder sb = new StringBuilder();
-		sb.append(" URL_STATUS='USED' AND URL_UID in (");
+		sb.append(" URL_UID in (");
 		int inc = 0;
 		String firstUnid = null;
 		for (String unid : unids.keySet()) {
