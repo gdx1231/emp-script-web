@@ -4,12 +4,41 @@ import com.gdxsoft.easyweb.script.HtmlControl;
 import com.gdxsoft.easyweb.script.PageValue;
 import com.gdxsoft.easyweb.script.PageValueTag;
 import com.gdxsoft.easyweb.script.RequestValue;
+import com.gdxsoft.easyweb.utils.UCookies;
 
+import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
+
+import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
+import java.util.Arrays;
+import java.util.Enumeration;
+import java.util.List;
 
 public class Login {
+
+	/**
+	 * 从Cookie和Session中清除登录凭证
+	 * 
+	 * @param request
+	 * @param response
+	 * @throws IOException
+	 */
+	public static void clearLoginCredentials(HttpServletRequest request, HttpServletResponse response)
+			throws IOException {
+		HttpSession session = request.getSession();
+		if (session != null) {
+			Enumeration<String> names = session.getAttributeNames();
+			while (names.hasMoreElements()) {
+				session.removeAttribute(names.nextElement());
+			}
+		}
+		List<String> skipNames = Arrays.asList("APP_LANG", "JSESSIONID", "EWA_TIMEDIFF");
+		UCookies.clearCookies(request, response, skipNames);
+
+	}
 
 	/**
 	 * 是否为英文系统

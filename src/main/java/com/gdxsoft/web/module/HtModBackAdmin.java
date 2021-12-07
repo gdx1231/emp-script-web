@@ -1,13 +1,13 @@
 package com.gdxsoft.web.module;
 
 public class HtModBackAdmin extends HtModules {
-
+	public static String PREFIX = "backAdmin";
 	private static HtModBackAdmin INST;
 
 	public static HtModBackAdmin getIntance() {
 		return INST;
 	}
-	
+
 	static {
 		INST = new HtModBackAdmin();
 		INST.setName("backAdmin");
@@ -18,11 +18,11 @@ public class HtModBackAdmin extends HtModules {
 
 	private void init() {
 		// 后台首页-调用菜单页面
-		HtModule mm = new HtModule("index", "/meta-data/menu/menu.xml", "adm_menu.Menu.Modify", null);
+		HtModule mm = new HtModule(PREFIX + "index", "/meta-data/menu/menu.xml", "adm_menu.Menu.Modify", null);
 		super.addModule(mm);
 
 		// 后台登录页面
-		HtModule login = new HtModule("login", "/meta-data/organization/admin.xml", "ADM_USER.F.Login", null);
+		HtModule login = new HtModule(PREFIX + "login", "/meta-data/organization/admin.xml", "ADM_USER.F.Login", null);
 		super.addModule(login);
 
 	}
@@ -33,7 +33,7 @@ public class HtModBackAdmin extends HtModules {
 	 * @return
 	 */
 	public HtModule getModelIndex() {
-		return this.getModule("index");
+		return this.getModule(PREFIX + "index");
 	}
 
 	/**
@@ -42,6 +42,6 @@ public class HtModBackAdmin extends HtModules {
 	 * @return
 	 */
 	public HtModule getModelLogin() {
-		return this.getModule("login");
+		return this.getModule(PREFIX + "login");
 	}
 }

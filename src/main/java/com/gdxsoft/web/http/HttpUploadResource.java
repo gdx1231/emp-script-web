@@ -1,4 +1,4 @@
-package com.gdxsoft.web.uploadResources;
+package com.gdxsoft.web.http;
 
 import java.io.IOException;
 
@@ -7,8 +7,10 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import com.gdxsoft.easyweb.utils.UUrl;
+import com.gdxsoft.web.uploadResources.UploadResource;
+import com.gdxsoft.web.uploadResources.UploadResources;
 
-public class WebUploadResource {
+public class HttpUploadResource implements IHttp {
 	public static final int ONE_HOYR = 3600;
 	public static final int ONE_DAY = 3600 * 24;
 	public static final int ONE_WEEK = 3600 * 24 * 7;
@@ -32,7 +34,7 @@ public class WebUploadResource {
 	 *                    对应的是/ups/
 	 * @param lifeSeconds 缓存时长（秒数）
 	 */
-	public WebUploadResource(String uploadContextPath, int lifeSeconds) {
+	public HttpUploadResource(String uploadContextPath, int lifeSeconds) {
 		if (!uploadContextPath.endsWith("/")) {
 			uploadContextPath = uploadContextPath + "/";
 		}
@@ -49,8 +51,9 @@ public class WebUploadResource {
 	 * @throws ServletException
 	 * @throws IOException
 	 */
-	public String readUploadResource(HttpServletRequest request, HttpServletResponse response)
-			throws ServletException, IOException {
+	@Override
+	public String response(HttpServletRequest request, HttpServletResponse response) throws Exception {
+
 		UUrl u = new UUrl(request);
 
 		String path = u.getName().replace(uploadContextPath, "/");
@@ -121,4 +124,5 @@ public class WebUploadResource {
 	public void setEncodingName(String encodingName) {
 		this.encodingName = encodingName;
 	}
+
 }
