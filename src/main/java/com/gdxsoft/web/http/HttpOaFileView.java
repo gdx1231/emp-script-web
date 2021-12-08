@@ -34,12 +34,16 @@ public class HttpOaFileView implements IHttp {
 	public HttpOaFileView(String pdfJs) {
 		this.pdfJs = pdfJs;
 	}
-	
+
 	@Override
 	public String response(HttpServletRequest request, HttpServletResponse response) throws Exception {
 		response.setCharacterEncoding("utf-8");
 
 		RequestValue rv = new RequestValue(request);
+
+		/*
+		 * App app = new App(rv); boolean isPc = !(app.isAndroid() || app.isIphone() || app.isIpad());
+		 */
 		String unid = rv.s("unid") == null ? "" : rv.s("unid").replace("'", "").replace(" ", "");
 
 		// * OA 文件查看
@@ -99,6 +103,9 @@ public class HttpOaFileView implements IHttp {
 		if (rv.s("download") != null) {
 			return this.downloadFile(isDl, file, title, request, response);
 		}
+		if (rv.s("inline") != null) {
+			return this.inlineFile(isDl, file, title, request, response);
+		}
 
 		String id = tb.getCell(0, "OAF_ID").toString();
 		String IfNoneMatch = request.getHeader("If-None-Match");
@@ -111,8 +118,7 @@ public class HttpOaFileView implements IHttp {
 
 		boolean skipHeader = rv.s("EWA_APP") != null || rv.s("EWA_AJAX") != null;
 		UUrl uu = new UUrl(request);
-		uu.add("download", "1");
-
+		uu.add("inline", "1");
 		url = uu.getUrl(true);
 
 		String fileType = FileOut.MAP.getOrDefault(ext, "");
@@ -148,6 +154,18 @@ public class HttpOaFileView implements IHttp {
 			response.setStatus(HttpServletResponse.SC_FORBIDDEN);
 			return "<html><body style='background-color:#fff'><div><div bgcolor='white'>不允许下载</div></div></body></html>";
 		}
+	}
+
+	private String inlineFile(String isDl, File file, String fileName, HttpServletRequest request,
+			HttpServletResponse response) {
+		FileOut fo = new FileOut(request, response);
+		fo.initFile(file);
+
+		long cachedLife = 3600 * 60 * 24; // 24小时
+
+		fo.outFileBytesInline(true, cachedLife);
+		return null;
+
 	}
 
 	/**
@@ -270,18 +288,22 @@ public class HttpOaFileView implements IHttp {
 	}
 
 	private String viewPdf(String title, String url, boolean skipHeader) {
-		String u = this.pdfJs + "?file=" + Utils.textToUrl(url);
 		StringBuilder sbHtml = new StringBuilder(skipHeader ? "" : this.createHtml(title));
-		sbHtml.append("<div style='height:100%'>");
-		sbHtml.append("<iframe height='100%' id='fra_pdf' frameborder=0 width='100%' src='" + u + "'></iframe>");
-		sbHtml.append("<script>(function(){ \n");
-		sbHtml.append("	window.onresize = function(){ \n");
-		sbHtml.append("		var h = $(\"body\").height() - 56; \n");
-		sbHtml.append("		$(\"#fra_pdf\").css(\"height\",h);	\n");
-		sbHtml.append("	}; \n");
-		sbHtml.append("	window.onresize(); \n");
-		sbHtml.append("})();</script>\n</div>");
+		String id = "pdf_" + System.currentTimeMillis();
 
+		sbHtml.append("<div id='" + id + "' style='height:100%'>");
+		// chrome edge safari
+		String embed = "<embed src=\"" + url + "\" class=\"pdfobject\" type=\"application/pdf\" title=\""
+				+ Utils.textToInputValue(title) + "\" style=\"overflow: auto; width: 100%; height: 100%;\">";
+		// firefox
+		String u = this.pdfJs + "?file=" + Utils.textToUrl(url);
+		String pdfJs = "<iframe id=\"fra_pdf\" height=\"100%\" frameborder=\"0\" width=\"100%\" src=\"" + u
+				+ "\"></iframe>";
+
+		// 根据 navigator.pdfViewerEnabled 进行输出
+		sbHtml.append("<script>(function(){ var s=navigator.pdfViewerEnabled?'" + embed + "':'" + pdfJs
+				+ "';document.getElementById('" + id + "').innerHTML = s; })();</script>");
+	
 		sbHtml.append(skipHeader ? "" : "</div></body></html>");
 
 		return sbHtml.toString();
