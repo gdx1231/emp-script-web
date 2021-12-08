@@ -90,7 +90,7 @@ public class UploadResources {
 			return r;
 		}
 		boolean binary = true;
-		String fileType = FileOut.MAP.getOrDefault(ext, "application/octet-stream");
+		String fileType = FileOut.MAP.getOrDefault(ext.toLowerCase(), "application/octet-stream");
 		r.setType(fileType);
 		if (ext.equalsIgnoreCase("js")) {
 			binary = false;

@@ -22,6 +22,7 @@ import com.gdxsoft.easyweb.utils.UPath;
 import com.gdxsoft.easyweb.utils.UUrl;
 import com.gdxsoft.easyweb.utils.Utils;
 import com.gdxsoft.easyweb.utils.fileConvert.File2Html;
+import com.gdxsoft.easyweb.utils.fileConvert.File2Pdf;
 
 /**
  * 下载或在线查看oa文件<br>
@@ -78,7 +79,7 @@ public class HttpOaFileView implements IHttp {
 					+ "文件呢？去哪遛弯拉(数据不存在)</div></div></body></html>");
 		}
 
-		String url = tb.getCell(0, "OAF_URL").toString();
+		String oafUrl = tb.getCell(0, "OAF_URL").toString();
 		String ext = tb.getCell(0, "OAF_EXT").toString();
 		if (ext == null) {
 			ext = "bin";
@@ -89,7 +90,7 @@ public class HttpOaFileView implements IHttp {
 			title += "." + ext;
 		}
 
-		String phy = url.replace(UPath.getPATH_UPLOAD_URL(), "").replace("//", "/");
+		String phy = oafUrl.replace(UPath.getPATH_UPLOAD_URL(), "").replace("//", "/");
 		String f1 = UPath.getPATH_UPLOAD() + phy;
 		File file = new File(f1);
 		f1 = file.getAbsolutePath();
@@ -99,11 +100,16 @@ public class HttpOaFileView implements IHttp {
 					+ "文件呢？去哪遛弯拉（物理文件缺失）</div></div></body></html>");
 		}
 
-		String isDl = tb.getCell(0, "OAF_IS_DL").isNull() ? "" : tb.getCell(0, "OAF_IS_DL").toString();
+		boolean isDl = "COM_YES".equalsIgnoreCase(tb.getCell(0, "OAF_IS_DL").toString());
 		if (rv.s("download") != null) {
 			return this.downloadFile(isDl, file, title, request, response);
 		}
 		if (rv.s("inline") != null) {
+
+			if (rv.s("pdf") != null) { // 查看文档转换的pdf文件
+				file = new File(file.getAbsolutePath() + ".pdf");
+			}
+
 			return this.inlineFile(isDl, file, title, request, response);
 		}
 
@@ -119,15 +125,16 @@ public class HttpOaFileView implements IHttp {
 		boolean skipHeader = rv.s("EWA_APP") != null || rv.s("EWA_AJAX") != null;
 		UUrl uu = new UUrl(request);
 		uu.add("inline", "1");
-		url = uu.getUrl(true);
+		String url = uu.getUrl(true);
 
-		String fileType = FileOut.MAP.getOrDefault(ext, "");
+		String fileType = FileOut.MAP.getOrDefault(ext.toLowerCase().trim(), "");
 		if (ext.trim().equalsIgnoreCase("doc") || ext.trim().equalsIgnoreCase("docx")
 				|| ext.trim().equalsIgnoreCase("rtf") || ext.trim().equalsIgnoreCase("xls")
 				|| ext.trim().equalsIgnoreCase("xlsx") || ext.trim().equalsIgnoreCase("ppt")
 				|| ext.trim().equalsIgnoreCase("pptx")) {
 			try {
-				return this.viewDocument(file, ext, title, url, skipHeader);
+				// return this.viewDocument(file, ext, title, url, skipHeader);
+				return this.viewDocumentAsPdf(file, ext, title, url, skipHeader);
 			} catch (Exception e11) {
 				LOGGER.error(e11.getLocalizedMessage());
 				return (e11.getMessage());
@@ -143,9 +150,19 @@ public class HttpOaFileView implements IHttp {
 		}
 	}
 
-	private String downloadFile(String isDl, File file, String fileName, HttpServletRequest request,
+	/**
+	 * 下载文件
+	 * 
+	 * @param isDl     是否允许下载
+	 * @param file     文件
+	 * @param fileName 文件名
+	 * @param request
+	 * @param response
+	 * @return
+	 */
+	public String downloadFile(boolean isDl, File file, String fileName, HttpServletRequest request,
 			HttpServletResponse response) {
-		if (isDl.equals("COM_YES")) {
+		if (isDl) {
 			FileOut fo = new FileOut(request, response);
 			fo.initFile(file);
 			fo.download(fileName);
@@ -156,7 +173,17 @@ public class HttpOaFileView implements IHttp {
 		}
 	}
 
-	private String inlineFile(String isDl, File file, String fileName, HttpServletRequest request,
+	/**
+	 * 在线输出文件二进制
+	 * 
+	 * @param isDl
+	 * @param file
+	 * @param fileName
+	 * @param request
+	 * @param response
+	 * @return
+	 */
+	public String inlineFile(boolean isDl, File file, String fileName, HttpServletRequest request,
 			HttpServletResponse response) {
 		FileOut fo = new FileOut(request, response);
 		fo.initFile(file);
@@ -178,8 +205,37 @@ public class HttpOaFileView implements IHttp {
 	 * @return
 	 * @throws IOException
 	 */
-	private String viewDocument(File file, String ext, String title, String url, boolean skipHeader)
+	public String viewDocumentAsPdf(File file, String ext, String title, String url, boolean skipHeader)
 			throws IOException {
+
+		File parentDir = file.getParentFile();
+		String filename = file.getName();
+
+		File2Pdf pdf = new File2Pdf();
+		String htmlPath = parentDir.getAbsolutePath() + "/" + filename + ".pdf";
+		File fPdf = new File(htmlPath);
+
+		if (!fPdf.exists()) {
+
+			pdf.convert2PDF(file, fPdf);
+		}
+
+		String urlPdf = url + "&pdf=" + filename + ".pdf";
+
+		return this.viewPdf(title, urlPdf, skipHeader);
+	}
+
+	/**
+	 * 在线查看文档
+	 * 
+	 * @param file
+	 * @param ext
+	 * @param title
+	 * @param url
+	 * @return
+	 * @throws IOException
+	 */
+	public String viewDocument(File file, String ext, String title, String url, boolean skipHeader) throws IOException {
 		String f1 = file.getAbsolutePath();
 
 		File parentDir = file.getParentFile();
@@ -269,7 +325,7 @@ public class HttpOaFileView implements IHttp {
 		return sbHtml.toString();
 	}
 
-	private String viewImage(String title, String url, boolean skipHeader) {
+	public String viewImage(String title, String url, boolean skipHeader) {
 		StringBuilder sbHtml = new StringBuilder(skipHeader ? "" : this.createHtml(title));
 		sbHtml.append("<div class='oa-doc-view EWA_TABLE' id='doc-view'>");
 		sbHtml.append("<div class='file-view-ppt' style='text-align:center'><img src='" + url + "'></div>");
@@ -278,7 +334,7 @@ public class HttpOaFileView implements IHttp {
 		return sbHtml.toString();
 	}
 
-	private String viewVideo(String title, String url, boolean skipHeader) {
+	public String viewVideo(String title, String url, boolean skipHeader) {
 		StringBuilder sbHtml = new StringBuilder(skipHeader ? "" : this.createHtml(title));
 		sbHtml.append("<div class='file-view-vod EWA_TABLE' id='doc-view'>");
 		sbHtml.append("<div style='text-align:center'><video src=\"" + url + "\" controls=\"controls\"></video></div>");
@@ -287,7 +343,7 @@ public class HttpOaFileView implements IHttp {
 		return sbHtml.toString();
 	}
 
-	private String viewPdf(String title, String url, boolean skipHeader) {
+	public String viewPdf(String title, String url, boolean skipHeader) {
 		StringBuilder sbHtml = new StringBuilder(skipHeader ? "" : this.createHtml(title));
 		String id = "pdf_" + System.currentTimeMillis();
 
@@ -303,13 +359,13 @@ public class HttpOaFileView implements IHttp {
 		// 根据 navigator.pdfViewerEnabled 进行输出
 		sbHtml.append("<script>(function(){ var s=navigator.pdfViewerEnabled?'" + embed + "':'" + pdfJs
 				+ "';document.getElementById('" + id + "').innerHTML = s; })();</script>");
-	
+
 		sbHtml.append(skipHeader ? "" : "</div></body></html>");
 
 		return sbHtml.toString();
 	}
 
-	private String createHtml(String title) {
+	public String createHtml(String title) {
 		StringBuilder sb = new StringBuilder();
 		sb.append("<!DOCTYPE HTML>\n");
 		sb.append("<html>\n");
