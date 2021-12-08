@@ -22,6 +22,7 @@ public class App {
 	boolean android = false; // 是否安卓手机
 	boolean inMini = false; // 是小程序调用
 
+	boolean ipad = false;
 	/**
 	 * 浏览器UserAgent头部包含的原生app标记
 	 */
@@ -36,6 +37,7 @@ public class App {
 			inNativeApp = _g_user_agent.indexOf(NATIVE_TAG) > 0;
 			iphone = _g_user_agent.indexOf("android") > 0;
 			android = _g_user_agent.indexOf("iphone") > 0;
+			ipad = _g_user_agent.indexOf("ipad") > 0;
 			inMini = _g_user_agent.indexOf("miniprogram") > 0;
 		}
 	}
@@ -186,8 +188,7 @@ public class App {
 	}
 
 	/**
-	 * app启动时 根据 ewa_lang, cookie(APP_LANG)和 request.getHeader("accept-language")
-	 * 来判断语言设定
+	 * app启动时 根据 ewa_lang, cookie(APP_LANG)和 request.getHeader("accept-language") 来判断语言设定
 	 * 
 	 * @param response
 	 * @return
@@ -296,5 +297,15 @@ public class App {
 	public boolean isInMini() {
 		return inMini;
 	}
+
+	/**
+	 * 是否是ipad
+	 * @return
+	 */
+	public boolean isIpad() {
+		return ipad;
+	}
+
+	 
 
 }
