@@ -328,8 +328,9 @@ public class HttpOaFileView implements IHttp {
 	public String viewImage(String title, String url, boolean skipHeader) {
 		StringBuilder sbHtml = new StringBuilder(skipHeader ? "" : this.createHtml(title));
 		sbHtml.append("<div class='oa-doc-view EWA_TABLE' id='doc-view'>");
-		sbHtml.append("<div class='file-view-ppt' style='text-align:center'><img src='" + url + "'></div>");
-		sbHtml.append("</div>");
+		sbHtml.append("<div class='file-view-image' style='text-align:center'>");
+		sbHtml.append("<img style='max-width:100%;max-height:100%' src='" + url + "'>");
+		sbHtml.append("</div></div>");
 		sbHtml.append(skipHeader ? "" : "</div></body></html>");
 		return sbHtml.toString();
 	}

@@ -5,10 +5,10 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>com.gdxsoft.easyweb</groupId>
 	<artifactId>emp-script-web</artifactId>
-	<version>1.0.0</version>
+	<version>1.1.1</version>
 	<name>Easy Web Appliaction Web</name>
-	<description></description>
-
+	<description>Web系统快速成型系统 - 模块部分</description>
+	
 	<developers>
 		<developer>
 			<id>guolei</id>
