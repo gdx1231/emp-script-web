@@ -13,6 +13,7 @@ import com.gdxsoft.easyweb.script.RequestValue;
 import com.gdxsoft.easyweb.script.servlets.FileOut;
 import com.gdxsoft.easyweb.utils.UPath;
 import com.gdxsoft.easyweb.utils.UUrl;
+import com.gdxsoft.web.acl.Login;
 
 /**
  * 下载或在线查看oa文件<br>
@@ -33,14 +34,15 @@ public class HttpOaSysAttView extends HttpOaFileView implements IHttp {
 		String unid = rv.s("File_UnId") == null ? "" : rv.s("File_UnId").replace("'", "").replace(" ", "");
 
 		StringBuilder sb = new StringBuilder();
-		sb.append("SELECT * from sys_atts WHERE file_id=@file_id \n");
-
+		if (rv.s("db") != null) {
+			sb.append("SELECT * from ~db. sys_atts WHERE file_id=@file_id \n");
+		} else {
+			sb.append("SELECT * from sys_atts WHERE file_id=@file_id \n");
+		}
 		if (unid.length() > 0) {
 			// unid不验证身份了
 			// 下载暂时不进行安全效验，但要修改
 			sb.append(" AND file_UNID = @File_UnId");
-		} else {
-			sb.append("	AND SUP_ID = @G_SUP_ID");
 		}
 
 		DTTable tb = DTTable.getJdbcTable(sb.toString(), "", rv);
@@ -48,7 +50,26 @@ public class HttpOaSysAttView extends HttpOaFileView implements IHttp {
 			return ("<html><body style='background-color:#fff'><div><div class='tip' bgcolor='white'>"
 					+ "文件呢？去哪遛弯拉(数据不存在)</div></div></body></html>");
 		}
-
+		// 是否为公开文件
+		boolean ispublicFile = "COM_YES".equalsIgnoreCase(tb.getCell(0, "file_para1").toString());
+		if (!ispublicFile) {
+			boolean right = false;
+			if (Login.isSupplyLogined(rv)) {
+				int supId = Login.getLoginedSupId(rv);
+				int fileSupId = tb.getCell(0, "sup_id").toInt();
+				if (supId == fileSupId) { //登录的sup_id和文件的sup_id一致
+					right = true;
+				}
+				if (!right) {
+					return ("<html><body style='background-color:#fff'><div><div class='tip' bgcolor='white'>"
+							+ "此文件您无权查看或下载，商户不一致</div></div></body></html>");
+				}
+			} else {
+				return ("<html><body style='background-color:#fff'><div><div class='tip' bgcolor='white'>"
+						+ "您需要登录商户系统后查看或下载</div></div></body></html>");
+			}
+			
+		}
 		String url = tb.getCell(0, "file_path").toString();
 		String ext = tb.getCell(0, "file_ext").toString();
 		if (ext == null) {

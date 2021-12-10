@@ -100,43 +100,86 @@ public class Login {
 	 * @return
 	 */
 	public static boolean isUserLogined(RequestValue rv) {
-		// 检查登录
-		boolean is_user_logined = false;
-		PageValue pv = rv.getPageValues().getPageValue("G_USR_ID");
-		if (pv == null || !(pv.getPVTag() == PageValueTag.SESSION || pv.getPVTag() == PageValueTag.COOKIE_ENCYRPT)) {
-			is_user_logined = false;
-
-		} else {
-			is_user_logined = true;
-
-		}
-		return is_user_logined;
+		Long userId = getLoginedUserId(rv);
+		return userId != null;
 	}
 
 	/**
-	 * 检查b2b供应商是否登录
+	 * 检查商户是否登录(G_SUP_ID和G_ADM_ID)
 	 * 
 	 * @return
 	 */
 	public static boolean isSupplyLogined(RequestValue rv) {
-		// 检查登录
-		boolean is_user_logined = false;
-		PageValue pv = rv.getPageValues().getPageValue("G_ADM_ID");
-		PageValue pv1 = rv.getPageValues().getPageValue("G_SUP_ID");
-		if (pv == null || !(pv.getPVTag() == PageValueTag.SESSION || pv.getPVTag() == PageValueTag.COOKIE_ENCYRPT)) {
-			is_user_logined = false;
-
-		} else {
-			is_user_logined = true;
-
+		Integer supId = getLoginedSupId(rv);
+		if (supId == null) {
+			return false;
 		}
-		if (is_user_logined) {
-			if (pv1 == null
-					|| !(pv1.getPVTag() == PageValueTag.SESSION || pv1.getPVTag() == PageValueTag.COOKIE_ENCYRPT)) {
-				is_user_logined = false;
+		Integer admId = getLoginedAdmId(rv);
+		if (admId == null) {
+			return false;
+		}
+
+		return true;
+
+	}
+
+	/**
+	 * 商户(G_SUP_ID)在session 或 COOKIE_ENCYRPT
+	 * @param rv
+	 * @return
+	 */
+	public static Integer getLoginedSupId(RequestValue rv) {
+		String v = getLoginedParameter(rv, "G_SUP_ID");
+		if (v != null) {
+			try {
+				return Integer.parseInt(v);
+			} catch (Exception err) {
+				return null;
 			}
 		}
-		return is_user_logined;
+		return null;
+	}
+
+	/**
+	 * 管理员(G_ADM_ID)在session 或 COOKIE_ENCYRPT
+	 * @param rv
+	 * @return
+	 */
+	public static Integer getLoginedAdmId(RequestValue rv) {
+		String v = getLoginedParameter(rv, "G_ADM_ID");
+		if (v != null) {
+			try {
+				return Integer.parseInt(v);
+			} catch (Exception err) {
+				return null;
+			}
+		}
+		return null;
+	}
+
+	/**
+	 * 用户(G_SUP_ID)在session 或 COOKIE_ENCYRPT
+	 * @param rv
+	 * @return
+	 */
+	public static Long getLoginedUserId(RequestValue rv) {
+		String v = getLoginedParameter(rv, "G_USR_ID");
+		if (v != null) {
+			try {
+				return Long.parseLong(v);
+			} catch (Exception err) {
+				return null;
+			}
+		}
+		return null;
+	}
+
+	public static String getLoginedParameter(RequestValue rv, String name) {
+		PageValue pv = rv.getPageValues().getPageValue(name);
+		if (pv != null && (pv.getPVTag() == PageValueTag.SESSION || pv.getPVTag() == PageValueTag.COOKIE_ENCYRPT)) {
+			return pv.getStringValue();
+		}
+		return null;
 	}
 
 	/**
