@@ -26,7 +26,6 @@ import com.gdxsoft.easyweb.utils.UFile;
 import com.gdxsoft.easyweb.utils.UPath;
 import com.gdxsoft.easyweb.utils.Utils;
 import com.gdxsoft.easyweb.utils.msnet.MStr;
-import com.gdxsoft.web.dao.WebUser;
 import com.gdxsoft.weixin.Config;
 import com.gdxsoft.weixin.Html;
 import com.gdxsoft.weixin.QyConfig;

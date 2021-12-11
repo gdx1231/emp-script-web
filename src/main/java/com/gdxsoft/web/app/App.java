@@ -229,12 +229,13 @@ public class App {
 		} else {
 			lang = rv.getLang();
 		}
-
-		Object obj_ewa_lang = session.getAttribute("SYS_EWA_LANG");
-		if (obj_ewa_lang == null || !lang.equals(obj_ewa_lang.toString())) {
-			// System.out.println("设定语言为：" + lang);
-			request.setAttribute("SYS_EWA_LANG", lang); // 设置英文
-			rv.addOrUpdateValue("SYS_EWA_LANG", lang); // 设置英文
+		if (session != null) {
+			Object obj_ewa_lang = session.getAttribute("SYS_EWA_LANG");
+			if (obj_ewa_lang == null || !lang.equals(obj_ewa_lang.toString())) {
+				// System.out.println("设定语言为：" + lang);
+				request.setAttribute("SYS_EWA_LANG", lang); // 设置英文
+				rv.addOrUpdateValue("SYS_EWA_LANG", lang); // 设置英文
+			}
 		}
 		return lang;
 	}
@@ -300,12 +301,11 @@ public class App {
 
 	/**
 	 * 是否是ipad
+	 * 
 	 * @return
 	 */
 	public boolean isIpad() {
 		return ipad;
 	}
-
-	 
 
 }
