@@ -11,11 +11,12 @@ import javax.script.ScriptEngine;
 import javax.script.ScriptEngineManager;
 import javax.script.ScriptException;
 
-import org.apache.log4j.Logger;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * 处理新闻文章
@@ -24,7 +25,7 @@ import org.jsoup.select.Elements;
  *
  */
 public class SpiderNewsContent extends SpiderBase {
-	private static Logger LOOGER = Logger.getLogger(SpiderNewsContent.class);
+	private static Logger LOOGER = LoggerFactory.getLogger(SpiderNewsContent.class);
 	private JSONObject result_;
 
 	private String addTag0_;
@@ -36,7 +37,7 @@ public class SpiderNewsContent extends SpiderBase {
 	public SpiderNewsContent(String url, String phyPath, String urlPath) {
 		super(url, phyPath, urlPath);
 		relativeImages_ = new ArrayList<String>();
-		
+
 	}
 
 	/**
@@ -72,8 +73,7 @@ public class SpiderNewsContent extends SpiderBase {
 	}
 
 	/**
-	 * 预先处理文件 "init":{ "removes":[".newscontent div.pk",".newscontent
-	 * div.clear"] },
+	 * 预先处理文件 "init":{ "removes":[".newscontent div.pk",".newscontent div.clear"] },
 	 * 
 	 * @param nodeCfg
 	 */
@@ -89,7 +89,7 @@ public class SpiderNewsContent extends SpiderBase {
 				try {
 					super.getDoc().select(jq).remove();
 				} catch (Exception err) {
-					LOOGER.error(err);
+					LOOGER.error(err.getMessage());
 				}
 			}
 		}
@@ -167,7 +167,7 @@ public class SpiderNewsContent extends SpiderBase {
 
 			return value.toString();
 		} catch (ScriptException | NoSuchMethodException e) {
-			LOOGER.error(e);
+			LOOGER.error(e.getMessage());
 			return null;
 		}
 
@@ -219,7 +219,6 @@ public class SpiderNewsContent extends SpiderBase {
 	private void parseImgs(Element ele) {
 		Elements imgs = ele.getElementsByTag("img");
 
-		
 		for (int m = 0; m < imgs.size(); m++) {
 			Element img = imgs.get(m);
 			String src = img.attr("src");
@@ -237,7 +236,7 @@ public class SpiderNewsContent extends SpiderBase {
 
 				relativeImages_.add(my_img_src);
 			} catch (Exception err) {
-				LOOGER.error(err);
+				LOOGER.error(err.getMessage());
 				relativeImages_.add(src1);
 			}
 
@@ -246,8 +245,7 @@ public class SpiderNewsContent extends SpiderBase {
 	}
 
 	/**
-	 * 获取分析文档的结果（如标题，正文，作者，发布时间...），附加上addTag1 和 addTag1, SPIDER_TITLE,
-	 * SPIDER_DELIVED_DATE
+	 * 获取分析文档的结果（如标题，正文，作者，发布时间...），附加上addTag1 和 addTag1, SPIDER_TITLE, SPIDER_DELIVED_DATE
 	 * 
 	 * @return the result_
 	 */
@@ -276,8 +274,7 @@ public class SpiderNewsContent extends SpiderBase {
 	/**
 	 * 附加属性0，用于数据库操作用
 	 * 
-	 * @param addTag0_
-	 *            the addTag0_ to set
+	 * @param addTag0_ the addTag0_ to set
 	 */
 	public void setAddTag0(String addTag0) {
 		this.addTag0_ = addTag0;
@@ -295,8 +292,7 @@ public class SpiderNewsContent extends SpiderBase {
 	/**
 	 * 附加属性1，用于数据库操作用
 	 * 
-	 * @param addTag1_
-	 *            the addTag1_ to set
+	 * @param addTag1_ the addTag1_ to set
 	 */
 	public void setAddTag1(String addTag1) {
 		this.addTag1_ = addTag1;

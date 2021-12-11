@@ -10,11 +10,12 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.log4j.Logger;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Attribute;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.gdxsoft.easyweb.utils.UFile;
 import com.gdxsoft.easyweb.utils.UNet;
@@ -30,7 +31,7 @@ public class SpiderBase {
 
 	private Map<String, String> hashNameMap_;
 
-	private static Logger LOOGER = Logger.getLogger(SpiderBase.class);
+	private static Logger LOOGER = LoggerFactory.getLogger(SpiderBase.class);
 
 	public SpiderBase(String url, String phyPath, String urlPath) {
 		this.url_ = url;
@@ -41,7 +42,7 @@ public class SpiderBase {
 	}
 
 	public void log(Object msg) {
-		LOOGER.info(msg);
+		LOOGER.info(msg.toString());
 	}
 
 	/**
@@ -90,7 +91,7 @@ public class SpiderBase {
 				byte[] buf = net.downloadData(sourceUrl);
 				this.saveCache(sourceUrl, buf);
 			} catch (Exception err) {
-				LOOGER.error(err);
+				LOOGER.error(err.getMessage());
 			}
 		} else {
 			// LOOGER.info("EXISTS: " + sourceUrl);

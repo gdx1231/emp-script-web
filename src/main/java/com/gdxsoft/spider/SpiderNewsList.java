@@ -3,11 +3,12 @@ package com.gdxsoft.spider;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.log4j.Logger;
 import org.json.JSONObject;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * 读取新闻列表
@@ -16,7 +17,7 @@ import org.jsoup.select.Elements;
  *
  */
 public class SpiderNewsList extends SpiderBase {
-	private static Logger LOOGER = Logger.getLogger(SpiderNewsList.class);
+	private static Logger LOOGER = LoggerFactory.getLogger(SpiderNewsList.class);
 	private List<SpiderLink> listLinks_;
 	private List<String> listNext_;
 	private JSONObject cfgListPart_; // 分解新闻列表的配置
@@ -41,10 +42,10 @@ public class SpiderNewsList extends SpiderBase {
 		} catch (Exception e) {
 			isError_ = true;
 			this.error_ = e.getMessage();
-			LOOGER.error(e);
+			LOOGER.error(e.getMessage());
 			return;
 		}
-		
+
 		Elements eles;
 		try {
 			String select = list_part.getString("select"); // jq exp
@@ -52,7 +53,7 @@ public class SpiderNewsList extends SpiderBase {
 		} catch (Exception e) {
 			isError_ = true;
 			this.error_ = e.getMessage();
-			LOOGER.error(e);
+			LOOGER.error(e.getMessage());
 			return;
 		}
 		// 需要移除的参数，比如t,r此类的随机参数，避免出现相同的文章的url的hash不一致
@@ -137,7 +138,7 @@ public class SpiderNewsList extends SpiderBase {
 
 			}
 		} catch (Exception err) {
-			LOOGER.error(err);
+			LOOGER.error(err.getMessage());
 		}
 
 	}
@@ -181,8 +182,7 @@ public class SpiderNewsList extends SpiderBase {
 	/**
 	 * 扫描新闻列表的json配置，例如 {url: xxx, des: xxx}
 	 * 
-	 * @param cfgUrl_
-	 *            the cfgUrl_ to set
+	 * @param cfgUrl_ the cfgUrl_ to set
 	 */
 	public void setCfgUrl(JSONObject cfgUrl) {
 		this.cfgUrl_ = cfgUrl;

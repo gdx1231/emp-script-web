@@ -3,8 +3,9 @@ package com.gdxsoft.spider;
 import java.io.IOException;
 import java.net.URISyntaxException;
 
-import org.apache.log4j.Logger;
 import org.json.JSONObject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.gdxsoft.easyweb.data.DTTable;
 import com.gdxsoft.easyweb.datasource.DataConnection;
@@ -16,7 +17,7 @@ import com.gdxsoft.easyweb.datasource.DataConnection;
  *
  */
 public class Esl {
-	private static Logger LOOGER = Logger.getLogger(Esl.class);
+	private static Logger LOOGER = LoggerFactory.getLogger(Esl.class);
 
 	/**
 	 * 预先处理添加数据库操作sql部分
@@ -90,9 +91,9 @@ public class Esl {
 		try {
 			sp.doScans();
 		} catch (IOException e) {
-			LOOGER.error(e);
+			LOOGER.error(e.getMessage());
 		} catch (URISyntaxException e) {
-			LOOGER.error(e);
+			LOOGER.error(e.getMessage());
 		}
 	}
 
@@ -156,7 +157,7 @@ public class Esl {
 			try {
 				cfg = new JSONObject(str);
 			} catch (Exception err) {
-				LOOGER.error(err);
+				LOOGER.error(err.getMessage());
 				continue;
 			}
 			// 重新获取或覆盖数据库里的文章信息

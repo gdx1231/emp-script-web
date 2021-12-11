@@ -13,9 +13,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-import org.apache.log4j.Logger;
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.gdxsoft.easyweb.data.DTRow;
 import com.gdxsoft.easyweb.data.DTTable;
@@ -47,7 +48,7 @@ import com.gdxsoft.weixin.WxCardGeneralCoupon;
 import com.gdxsoft.weixin.WxCardGift;
 
 public class WeiXin implements Serializable {
-	private static Logger LOGGER = Logger.getLogger(WeiXin.class);
+	private static Logger LOGGER = LoggerFactory.getLogger(WeiXin.class);
 	/**
 	 * 
 	 */
@@ -1562,8 +1563,7 @@ public class WeiXin implements Serializable {
 	}
 
 	/**
-	 * 根据 union_id 获取以前其它小程序/公众号注册的用户
-	 * 一个用户虽然对多个公众号和应用有多个不同的openid，但他对所有这些同一开放平台账号下的公众号和应用，只有一个unionid
+	 * 根据 union_id 获取以前其它小程序/公众号注册的用户 一个用户虽然对多个公众号和应用有多个不同的openid，但他对所有这些同一开放平台账号下的公众号和应用，只有一个unionid
 	 * 
 	 * @param u
 	 * @param cnn
@@ -1643,8 +1643,7 @@ public class WeiXin implements Serializable {
 		 * 为了识别用户，每个用户针对每个公众号会产生一个安全的openid。
 		 * 
 		 * 如果需要在多公众号、移动应用之间做用户共通，则需要前往微信开放平台，将这些公众号和应用绑定到一个开放平台账号下，绑定后，
-		 * 一个用户虽然对多个公众号和应用有多个不同的openid，但他对所有这些同一开放平台账号下的公众号和应用，只有一个unionid。
-		 * 一个微信开放平台只可以绑定10个公众号。
+		 * 一个用户虽然对多个公众号和应用有多个不同的openid，但他对所有这些同一开放平台账号下的公众号和应用，只有一个unionid。 一个微信开放平台只可以绑定10个公众号。
 		 * 
 		 */
 		rv.addValue("WX_UNION_ID", u.getUnionid());
@@ -1677,7 +1676,7 @@ public class WeiXin implements Serializable {
 			}
 			return rWebUser;
 		} catch (Exception err) {
-			LOGGER.error(err);
+			LOGGER.error(err.getMessage());
 			throw err;
 		} finally {
 			cnn.close();
@@ -1716,7 +1715,7 @@ public class WeiXin implements Serializable {
 			tagNewUser = "1"; // 新用户标识
 		} else {
 			String usr_id = tbCheck.getCell(0, 0).toString();
-			
+
 			builder.append("UPDATE WEB_USER SET  ");
 			builder.append("   USR_PIC			= @USR_PIC");
 			builder.append(" , USR_ADDR			= @USR_ADDR");
@@ -1977,7 +1976,7 @@ public class WeiXin implements Serializable {
 			}
 		} catch (Exception e) {
 			LOGGER.error("创建配置失败 (" + wx_cfg_no + ")");
-			LOGGER.error(e);
+			LOGGER.error(e.getMessage());
 		}
 	}
 

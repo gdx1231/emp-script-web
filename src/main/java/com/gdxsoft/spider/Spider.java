@@ -7,16 +7,17 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.log4j.Logger;
 import org.json.JSONArray;
 import org.json.JSONObject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.gdxsoft.easyweb.data.DTTable;
 import com.gdxsoft.easyweb.datasource.DataConnection;
 import com.gdxsoft.easyweb.script.RequestValue;
 
 public class Spider {
-	private static Logger LOOGER = Logger.getLogger(Spider.class);
+	private static Logger LOOGER = LoggerFactory.getLogger(Spider.class);
 	private JSONObject cfg_;
 	private JSONObject cfgCommonListPart_;
 	private JSONObject cfgCommonDocParts_;
