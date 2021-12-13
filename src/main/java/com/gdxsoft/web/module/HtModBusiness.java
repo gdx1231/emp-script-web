@@ -23,7 +23,7 @@ public class HtModBusiness extends HtModules {
 		super.addModule(mm);
 
 		// 后台登录页面
-		HtModule login = new HtModule(PREFIX + "login", "/business/orgniziation/admin.xml", "ADM_USER.F.Login", null);
+		HtModule login = new HtModule(PREFIX + "login", "/business/organization/admin.xml", "ADM_USER.F.Login", null);
 		super.addModule(login);
 
 	}

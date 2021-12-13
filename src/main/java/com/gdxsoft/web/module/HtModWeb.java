@@ -19,9 +19,9 @@ public class HtModWeb extends HtModules {
 
 	
 	private void init() {
-		String xmlName="/font-web/page.xml";
+		String xmlName="/front-web/page.xml";
 		// 网站页面，同时调用site_nav_cat数据和news_main数据（用于页脚）
-		HtModule mm = new HtModule(PREFIX + "index", xmlName, "sit_main.F.V", null);
+		HtModule mm = new HtModule(PREFIX + "index", xmlName, "sit_main.F.index", null);
 		super.addModule(mm);
 
 		// 后台登录页面
