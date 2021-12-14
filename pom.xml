@@ -168,6 +168,11 @@
 		</plugins>
 	</build>
 	<dependencies>
+	<dependency>
+			<groupId>com.gdxsoft.easyweb</groupId>
+			<artifactId>emp-script-utils</artifactId>
+			<version>[1.1.2,]</version>
+		</dependency>
 		<dependency>
 			<groupId>com.gdxsoft.easyweb</groupId>
 			<artifactId>emp-script</artifactId>

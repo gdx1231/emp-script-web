@@ -12,6 +12,7 @@ public class HtModule implements Cloneable {
 	private String parameters;
 	private String memo;
 	private String name;
+	private HtmlControl htmlControl ;
 
 	/**
 	 * Initialize the module
@@ -68,6 +69,8 @@ public class HtModule implements Cloneable {
 
 	public String executeHtmlControl(HttpServletRequest request, HttpServletResponse response) {
 		HtmlControl ht = this.createHtmlControl(request, response);
+		this.htmlControl = ht;
+		
 		String ajaxType = ht.getHtmlCreator().getAjaxCallType();
 		if (ajaxType != null) {
 			if ("ValidCode".equalsIgnoreCase(ajaxType)) {
@@ -81,6 +84,7 @@ public class HtModule implements Cloneable {
 
 	public String executeHtmlControl(RequestValue rv, HttpServletResponse response) {
 		HtmlControl ht = this.createHtmlControl(rv, response);
+		this.htmlControl = ht;
 		String ajaxType = ht.getHtmlCreator().getAjaxCallType();
 		if (ajaxType != null) {
 			if ("ValidCode".equalsIgnoreCase(ajaxType)) {
@@ -190,6 +194,10 @@ public class HtModule implements Cloneable {
 	public String toString() {
 		return "name=" + this.name + ", xmlName=" + xmlName + ", itemName=" + itemName + ", parameter="
 				+ this.parameters;
+	}
+
+	public HtmlControl getHtmlControl() {
+		return htmlControl;
 	}
 
 }
