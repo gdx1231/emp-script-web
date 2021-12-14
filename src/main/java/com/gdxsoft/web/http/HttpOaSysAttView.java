@@ -5,6 +5,7 @@ import java.io.File;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -31,15 +32,19 @@ public class HttpOaSysAttView extends HttpOaFileView implements IHttp {
 		response.setCharacterEncoding("utf-8");
 
 		RequestValue rv = new RequestValue(request);
-		String unid = rv.s("File_UnId") == null ? "" : rv.s("File_UnId").replace("'", "").replace(" ", "");
 
 		StringBuilder sb = new StringBuilder();
-		if (rv.s("db") != null) {
-			sb.append("SELECT * from ~db. sys_atts WHERE file_id=@file_id \n");
+		if (rv.s("db") != null && rv.s("db").trim().length() > 0) {
+			sb.append("SELECT * from ~db. sys_atts WHERE 1=1 \n");
 		} else {
-			sb.append("SELECT * from sys_atts WHERE file_id=@file_id \n");
+			sb.append("SELECT * from sys_atts WHERE 1=1 \n");
 		}
-		if (unid.length() > 0) {
+
+		if (StringUtils.isNotBlank(rv.s("file_id"))) {
+			sb.append(" AND file_id = @file_id ");
+		}
+		
+		if (StringUtils.isNotBlank(rv.s("File_UnId"))) {
 			// unid不验证身份了
 			// 下载暂时不进行安全效验，但要修改
 			sb.append(" AND file_UNID = @File_UnId");
@@ -57,7 +62,7 @@ public class HttpOaSysAttView extends HttpOaFileView implements IHttp {
 			if (Login.isSupplyLogined(rv)) {
 				int supId = Login.getLoginedSupId(rv);
 				int fileSupId = tb.getCell(0, "sup_id").toInt();
-				if (supId == fileSupId) { //登录的sup_id和文件的sup_id一致
+				if (supId == fileSupId) { // 登录的sup_id和文件的sup_id一致
 					right = true;
 				}
 				if (!right) {
@@ -68,7 +73,7 @@ public class HttpOaSysAttView extends HttpOaFileView implements IHttp {
 				return ("<html><body style='background-color:#fff'><div><div class='tip' bgcolor='white'>"
 						+ "您需要登录商户系统后查看或下载</div></div></body></html>");
 			}
-			
+
 		}
 		String url = tb.getCell(0, "file_path").toString();
 		String ext = tb.getCell(0, "file_ext").toString();
