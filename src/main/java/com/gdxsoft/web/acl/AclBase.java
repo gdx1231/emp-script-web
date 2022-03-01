@@ -3,6 +3,7 @@ package com.gdxsoft.web.acl;
 import com.gdxsoft.easyweb.script.PageValue;
 import com.gdxsoft.easyweb.script.PageValueTag;
 import com.gdxsoft.easyweb.script.RequestValue;
+import com.gdxsoft.easyweb.script.display.HtmlCreator;
 
 public class AclBase {
 	public static long getLongId(RequestValue rv, String key) {
@@ -49,6 +50,20 @@ public class AclBase {
 	private String _XmlName;
 	private String _ItemName;
 	private String _GoToUrl;
+	private HtmlCreator htmlCreator;
+	/**
+	 * @return the htmlCreator
+	 */
+	public HtmlCreator getHtmlCreator() {
+		return htmlCreator;
+	}
+
+	/**
+	 * @param htmlCreator the htmlCreator to set
+	 */
+	public void setHtmlCreator(HtmlCreator htmlCreator) {
+		this.htmlCreator = htmlCreator;
+	}
 
 	public String getDenyMessage() {
 		return null;
