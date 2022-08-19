@@ -11,6 +11,8 @@ import com.gdxsoft.easyweb.datasource.DataConnection;
 import com.gdxsoft.easyweb.script.HtmlControl;
 import com.gdxsoft.easyweb.script.RequestValue;
 import com.gdxsoft.easyweb.utils.UDes;
+import com.gdxsoft.easyweb.utils.Utils;
+import com.gdxsoft.web.user.ValidBase;
 
 /**
  * 微信与 ADM_USER的关系，绑定或验证登录 <br>
@@ -35,17 +37,12 @@ public class WeiXinBindAdm {
 	/**
 	 * 微信绑定ADM的绑定或登录方法
 	 * 
-	 * @param rv
-	 *            RequestValue
-	 * @param wxCfgNo
-	 *            微信格致 gh_xxxxx
-	 * @param roleType
-	 *            绑定类型 ERP/GUIDE/TEACHER ...
-	 * @param requestHttpRoot
-	 *            微信调用的域名，例如 "http://www.gyap.org"要和公众号一致<br>
-	 *            在微信公众平台，公众号设置->功能设置->网页授权域名设置
-	 * @param response
-	 *            执行登录，输出cookie
+	 * @param rv              RequestValue
+	 * @param wxCfgNo         微信格致 gh_xxxxx
+	 * @param roleType        绑定类型 ERP/GUIDE/TEACHER ...
+	 * @param requestHttpRoot 微信调用的域名，例如 "http://www.gyap.org"要和公众号一致<br>
+	 *                        在微信公众平台，公众号设置->功能设置->网页授权域名设置
+	 * @param response        执行登录，输出cookie
 	 */
 	public WeiXinBindAdm(RequestValue rv, String wxCfgNo, String roleType, String weixinRequestHttpRoot,
 			HttpServletResponse response) {
@@ -90,7 +87,7 @@ public class WeiXinBindAdm {
 		JSONObject objG1 = null;
 		String ming = null;
 		try {
-			ming = des.getDesString(g1);
+			ming = des.decrypt(g1);
 		} catch (Exception err) {
 			obj.put("ERR", "参数传递错误！(G1 DES)");
 			System.out.println(g1);
@@ -158,8 +155,7 @@ public class WeiXinBindAdm {
 	/**
 	 * 微信端执行
 	 * 
-	 * @param authWeiXinId
-	 *            open_id
+	 * @param authWeiXinId open_id
 	 * @return
 	 * @throws Exception
 	 */
@@ -245,7 +241,7 @@ public class WeiXinBindAdm {
 			obj.put("AUTH_TYPE", "LOGIN");
 
 			UDes des = new UDes();
-			String code = des.getEncString(obj.toString());
+			String code = des.encrypt(obj.toString());
 
 			// 微信调用的验证URL
 			String auth_url = this.getWeixinValidUrl(code);
@@ -291,7 +287,7 @@ public class WeiXinBindAdm {
 				obj = this.createVaildData("WX_ADM_BIND", rv_.getInt("G_ADM_ID"));
 				obj.put("AUTH_TYPE", "BIND");
 				UDes des = new UDes();
-				String code = des.getEncString(obj.toString());
+				String code = des.encrypt(obj.toString());
 
 				// 微信验证用url
 				String auth_url = this.getWeixinValidUrl(code);
@@ -387,8 +383,7 @@ public class WeiXinBindAdm {
 	/**
 	 * 获取创建的微信调用URL
 	 * 
-	 * @param code
-	 *            加密的json
+	 * @param code 加密的json
 	 * @return
 	 * @throws Exception
 	 */
@@ -407,24 +402,12 @@ public class WeiXinBindAdm {
 	 * 创建验证数据
 	 **/
 	private JSONObject createVaildData(String fpType, int admId) {
-		JSONObject obj = new JSONObject();
-		String FP_VALIDCODE = "" + Math.random() + "-" + Math.random();
-		if (FP_VALIDCODE.length() > 20) {
-			FP_VALIDCODE = FP_VALIDCODE.substring(0, 20);
-		}
-		StringBuilder sb = new StringBuilder();
-		sb.append("INSERT INTO WEB_USER_FPWD(FP_UNID, USR_ID, FP_CDATE, FP_EDATE");
-		sb.append(", FP_VALIDCODE, FP_TYPE) \n");
-		sb.append("values(@sys_unid, " + admId + ", @sys_date, @sys_date,'");
-		sb.append(FP_VALIDCODE);
-		sb.append("', '");
-		sb.append(fpType.replace("'", "''"));
-		sb.append("')");
-		String sql = sb.toString();
-		DataConnection.updateAndClose(sql, "", rv_);
+		String FP_VALIDCODE = Utils.randomStr(20);
 
-		obj.put("RST", true);
-		obj.put("FP_VALIDCODE", FP_VALIDCODE);
+		ValidBase vb = new ValidBase(rv_);
+
+		JSONObject obj = vb.createValidRecord(admId, FP_VALIDCODE, fpType, 20, "");
+
 		obj.put("FP_UNID", rv_.s("sys_unid"));
 		obj.put("ROLE_TYPE", roleType_);
 		return obj;
@@ -434,33 +417,17 @@ public class WeiXinBindAdm {
 	 * 移除验证数据
 	 **/
 	private void removeValidData(String fpUnid, String fpValidCode, String fpType) {
-		StringBuilder sb = new StringBuilder();
-		sb.append("delete from WEB_USER_FPWD where FP_UNID='");
-		sb.append(fpUnid.replace("'", "''"));
-		sb.append("' and FP_VALIDCODE='");
-		sb.append(fpValidCode.replace("'", "''"));
-		sb.append("' AND FP_TYPE='");
-		sb.append(fpType.replace("'", "''"));
-		sb.append("' ");
-		String sql = sb.toString();
-		// DataConnection.updateAndClose(sql, "", null);
+		ValidBase vb = new ValidBase(rv_);
+		vb.removeValidReocrd(fpUnid, fpType);
 	}
 
 	/**
 	 * 获取验证数据
 	 **/
 	private DTTable getVaildData(String fpUnid, String fpValidCode, String fpType) {
-		StringBuilder sb = new StringBuilder();
-		sb.append("select * from WEB_USER_FPWD where FP_UNID='");
-		sb.append(fpUnid.replace("'", "''"));
-		sb.append("' and FP_VALIDCODE='");
-		sb.append(fpValidCode.replace("'", "''"));
-		sb.append("' AND FP_TYPE='");
-		sb.append(fpType.replace("'", "''"));
-		sb.append("' ");
-		String sql = sb.toString();
-		DTTable tb = DTTable.getJdbcTable(sql);
-		return tb;
+		ValidBase vb = new ValidBase(rv_);
+		return vb.getValidRecord(fpUnid, fpType);
+
 	}
 
 	/**
