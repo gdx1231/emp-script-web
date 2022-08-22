@@ -409,11 +409,11 @@ public class WeiXin extends WeiXinBase implements Serializable {
 
 	public static WeiXin fromJson(JSONObject obj) throws Exception {
 		WeiXin w = new WeiXin();
-		w.setSupWeiXinAppId(obj.getString("SUP_WEIXIN_APPID"));
-		w.setSupWeiXinAppSecret(obj.getString("SUP_WEIXIN_APPSECRET"));
-		w.setSupWeiXinToken(obj.getString("SUP_WEIXIN_TOKEN"));
-		w.setSupWeiXinShopId(obj.getString("SUP_WEIXIN_SHOP_ID"));
-		w.setSupWeiXinShopKey(obj.getString("SUP_WEIXIN_SHOP_KEY"));
+		w.setWeiXinAppId(obj.getString("SUP_WEIXIN_APPID"));
+		w.setWeiXinAppSecret(obj.getString("SUP_WEIXIN_APPSECRET"));
+		w.setWeiXinToken(obj.getString("SUP_WEIXIN_TOKEN"));
+		w.setWeiXinShopId(obj.getString("SUP_WEIXIN_SHOP_ID"));
+		w.setWeiXinShopKey(obj.getString("SUP_WEIXIN_SHOP_KEY"));
 		w.setWxCfgNo(obj.getString("WX_CFG_NO"));
 		w.setWxCfgName(obj.getString("WX_CFG_NAME"));
 
@@ -440,11 +440,11 @@ public class WeiXin extends WeiXinBase implements Serializable {
 
 	public JSONObject toJson() throws Exception {
 		JSONObject obj = new JSONObject();
-		obj.put("SUP_WEIXIN_APPID", super.getSupWeiXinAppId());
-		obj.put("SUP_WEIXIN_APPSECRET", super.getSupWeiXinAppSecret());
-		obj.put("SUP_WEIXIN_TOKEN", super.getSupWeiXinToken());
-		obj.put("SUP_WEIXIN_SHOP_ID", super.getSupWeiXinShopId());
-		obj.put("SUP_WEIXIN_SHOP_KEY", super.getSupWeiXinShopKey());
+		obj.put("SUP_WEIXIN_APPID", super.getWeiXinAppId());
+		obj.put("SUP_WEIXIN_APPSECRET", super.getWeiXinAppSecret());
+		obj.put("SUP_WEIXIN_TOKEN", super.getWeiXinToken());
+		obj.put("SUP_WEIXIN_SHOP_ID", super.getWeiXinShopId());
+		obj.put("SUP_WEIXIN_SHOP_KEY", super.getWeiXinShopKey());
 		obj.put("WX_CFG_NO", super.getWxCfgNo());
 		obj.put("WX_CFG_NAME", super.getWxCfgName());
 
@@ -1823,7 +1823,7 @@ public class WeiXin extends WeiXinBase implements Serializable {
 
 		sb.append("	var weixin____cfg={\n");
 		sb.append("	debug : window.wx_debug || false,\n");
-		sb.append("	appId : '" + this.getSupWeiXinAppId() + "',\n");
+		sb.append("	appId : '" + this.getWeiXinAppId() + "',\n");
 		sb.append("	timestamp : " + map.get("timestamp") + ",\n");
 		sb.append("	nonceStr : '" + map.get("nonceStr") + "',\n");
 		sb.append("	signature : '" + map.get("signature") + "',\n");
@@ -1879,21 +1879,20 @@ public class WeiXin extends WeiXinBase implements Serializable {
 				if (tbSup.getCell(0, "WX_AGENT_ID").getValue() != null) {
 					// 外部定义的调用
 					int agentId = tbSup.getCell(0, "WX_AGENT_ID").toInt();
-					this.qyCfg_ = QyConfig.instance(super.getSupWeiXinAppId(), super.getSupWeiXinAppSecret(), agentId);
-					this.qyHtml_ = new QyHtml(super.getSupWeiXinAppId(), this.qyCfg_.getAccessToken(), agentId);
+					this.qyCfg_ = QyConfig.instance(super.getWeiXinAppId(), super.getWeiXinAppSecret(), agentId);
+					this.qyHtml_ = new QyHtml(super.getWeiXinAppId(), this.qyCfg_.getAccessToken(), agentId);
 				} else {
 					// 企业号内部调用的接口，例如 组织结构
-					this.qyCfg_ = QyConfig.instance(super.getSupWeiXinAppId(), super.getSupWeiXinAppSecret());
-					this.qyHtml_ = new QyHtml(super.getSupWeiXinAppId(), this.qyCfg_.getAccessToken(), -1);
+					this.qyCfg_ = QyConfig.instance(super.getWeiXinAppId(), super.getWeiXinAppSecret());
+					this.qyHtml_ = new QyHtml(super.getWeiXinAppId(), this.qyCfg_.getAccessToken(), -1);
 				}
 			} else {
 				// 用于获取微信用户认证
-				this.html_ = new Html(super.getSupWeiXinAppId(), super.getSupWeiXinAppSecret());
-				this.cfg_ = Config.instance(super.getSupWeiXinAppId(), super.getSupWeiXinAppSecret(),
-						super.getSupWeiXinToken());
+				this.html_ = new Html(super.getWeiXinAppId(), super.getWeiXinAppSecret());
+				this.cfg_ = Config.instance(super.getWeiXinAppId(), super.getWeiXinAppSecret(), super.getWeiXinToken());
 
-				this.cfg_.setShopKey(super.getSupWeiXinShopKey());
-				this.cfg_.setShopId(super.getSupWeiXinShopId());
+				this.cfg_.setShopKey(super.getWeiXinShopKey());
+				this.cfg_.setShopId(super.getWeiXinShopId());
 
 			}
 			// 微信支付数字证书
@@ -1908,8 +1907,6 @@ public class WeiXin extends WeiXinBase implements Serializable {
 			LOGGER.error("创建配置失败 ({}), {}", super.getWxCfgNo(), e.getLocalizedMessage());
 		}
 	}
-
-	 
 
 	/**
 	 * 获取H5用户验证对象
@@ -1929,7 +1926,6 @@ public class WeiXin extends WeiXinBase implements Serializable {
 		return cfg_;
 	}
 
-	 
 	/**
 	 * 序列化表
 	 * 
@@ -1987,5 +1983,4 @@ public class WeiXin extends WeiXinBase implements Serializable {
 		return qyCfg_;
 	}
 
-	 
 }

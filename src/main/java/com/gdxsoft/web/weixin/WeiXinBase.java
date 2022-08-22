@@ -13,6 +13,28 @@ public class WeiXinBase implements Serializable {
 	public static final String GONGSIHAO = "WX_TYPE_GONGSIHAO"; // 公司号
 	private static Logger LOGGER = LoggerFactory.getLogger(WeiXinBase.class);
 	private static final long serialVersionUID = 6417149511433528521L;
+	/**
+	 * 连接名称
+	 */
+	private static String ConnStr = "";
+
+	/**
+	 * 设置的数据库连接名称
+	 * 
+	 * @param connStr 连接名称
+	 */
+	public synchronized static void setConnStr(String connStr) {
+		ConnStr = connStr;
+	}
+
+	/**
+	 * 获取数据库连接名称，例如 ewa_main_data
+	 * 
+	 * @return 连接名称
+	 */
+	public static String getConnStr() {
+		return ConnStr;
+	}
 
 	/**
 	 * 访问数据库的前缀
@@ -40,10 +62,7 @@ public class WeiXinBase implements Serializable {
 	private String sup_unid_;
 
 	private String lastErr_;
-	private String appId_;
-	private String token_;
 	private Integer sup_id_;
-	private String wx_cfg_no_;
 	private boolean isOk_;
 
 	private DTTable tbSup;
@@ -51,12 +70,14 @@ public class WeiXinBase implements Serializable {
 
 	private boolean fwh_;
 	private boolean gsh_;
-	private String supWeiXinAppId_;
-	private String supWeiXinAppSecret_;
-	private String supWeiXinToken_;
-	private String supWeiXinShopId_;
-	private String supWeiXinShopKey_;
+
+	private String wx_cfg_no_;
+	private String weiXinAppSecret_;
+	private String weiXinToken_;
+	private String weiXinShopId_;
+	private String weiXinShopKey_;
 	private String wxCfgName_;
+	private String weiXinAppId_;
 
 	public DTTable getTbSup() {
 		return tbSup;
@@ -93,14 +114,14 @@ public class WeiXinBase implements Serializable {
 		rv.addOrUpdateValue("wx_cfg_no", wxCfgNo);
 
 		StringBuilder sb = new StringBuilder();
-		sb.append("select a.*,b.SUP_ID supid from ");
+		sb.append("select a.*,b.SUP_ID, b.sup_unid from ");
 		sb.append(db_prefix);
 		sb.append("bas_wx_cfg a");
 		sb.append(" inner join sup_main b on a.rel_sup_unid=b.sup_unid");
 		sb.append(" where a.rel_sup_unid=@sup_unid and wx_cfg_no=@wx_cfg_no");
 		String sql = sb.toString();
 
-		DTTable tbSup = DTTable.getJdbcTable(sql, rv);
+		DTTable tbSup = DTTable.getJdbcTable(sql, getConnStr(), rv);
 		if (tbSup.getCount() == 0) {
 			lastErr_ = "not this sup";
 			LOGGER.error(lastErr_);
@@ -108,7 +129,9 @@ public class WeiXinBase implements Serializable {
 			return false;
 		}
 
-		if (appId_ == null || appId_.trim().length() == 0) {
+		this.initParamters(tbSup);
+
+		if (this.getWeiXinAppId() == null || getWeiXinAppId().trim().length() == 0) {
 			lastErr_ = "WX_APP_ID not set";
 			LOGGER.error(lastErr_);
 			isOk_ = false;
@@ -116,28 +139,36 @@ public class WeiXinBase implements Serializable {
 		}
 
 		// 微信应用令牌
-		if (token_ == null || token_.trim().length() == 0) {
-			lastErr_ = "WX_APP_TOKEN not set";
-			LOGGER.error(lastErr_);
-			isOk_ = false;
-			return false;
-		}
+//		if (this.getWeiXinToken() == null || getWeiXinToken().trim().length() == 0) {
+//			lastErr_ = "WX_APP_TOKEN not set";
+//			LOGGER.error(lastErr_);
+//			isOk_ = false;
+//			return false;
+//		}
 
 		return true;
 	}
 
 	public void initParamters(DTTable tbSup) throws Exception {
-		this.appId_ = tbSup.getCell(0, "WX_APP_ID").toString();
-		// 微信应用令牌
-		this.token_ = tbSup.getCell(0, "WX_APP_TOKEN").toString();
-
-		this.sup_id_ = tbSup.getCell(0, "supid").toInt();
 		this.tbSup = tbSup;
 
+		this.sup_id_ = tbSup.getCell(0, "sup_id").toInt();
 		this.sup_unid_ = tbSup.getCell(0, "sup_unid").toString();
-		this.wx_cfg_no_ = tbSup.getCell(0, "wx_cfg_no").toString();
 
+		this.wx_cfg_no_ = tbSup.getCell(0, "wx_cfg_no").toString();
+		this.weiXinAppId_ = tbSup.getCell(0, "WX_APP_ID").toString();
+		// 微信应用密匙
+		this.weiXinAppSecret_ = tbSup.getCell(0, "WX_APP_SECRET").toString();
+		// 微信应用令牌
+		this.weiXinToken_ = tbSup.getCell(0, "WX_APP_TOKEN").toString();
+		// 微信商户编号（支付用）
+		this.weiXinShopId_ = tbSup.getCell(0, "WX_PAY_ID").toString();
+		// 微信商户key（支付用）
+		this.weiXinShopKey_ = tbSup.getCell(0, "WX_PAY_KEY").toString();
+		// 公众号名称
+		this.wxCfgName_ = tbSup.getCell(0, "WX_CFG_NAME").toString();
 		this.wxCfgType_ = tbSup.getCell(0, "WX_CFG_TYPE").toString();
+
 		if (this.wxCfgType_ == null) {
 			this.wxCfgType_ = "";
 		}
@@ -146,21 +177,6 @@ public class WeiXinBase implements Serializable {
 		} else if (GONGSIHAO.equalsIgnoreCase(wxCfgType_)) {
 			this.gsh_ = true; // 是公司号
 		}
-
-		this.supWeiXinAppId_ = tbSup.getCell(0, "WX_APP_ID").toString();
-
-		// 微信应用密匙
-		this.supWeiXinAppSecret_ = tbSup.getCell(0, "WX_APP_SECRET").toString();
-		// 微信应用令牌
-		this.supWeiXinToken_ = tbSup.getCell(0, "WX_APP_TOKEN").toString();
-
-		// 微信商户编号（支付用）
-		this.supWeiXinShopId_ = tbSup.getCell(0, "WX_PAY_ID").toString();
-		// 微信商户key（支付用）
-		this.supWeiXinShopKey_ = tbSup.getCell(0, "WX_PAY_KEY").toString();
-
-		// 公众号名称
-		this.wxCfgName_ = tbSup.getCell(0, "WX_CFG_NAME").toString();
 
 		isOk_ = true;
 	}
@@ -183,22 +199,6 @@ public class WeiXinBase implements Serializable {
 
 	public void setLastErr(String lastErr) {
 		this.lastErr_ = lastErr;
-	}
-
-	public String getAppId() {
-		return appId_;
-	}
-
-	public void setAppId(String appId) {
-		this.appId_ = appId;
-	}
-
-	public String getToken() {
-		return token_;
-	}
-
-	public void setToken(String token) {
-		this.token_ = token;
 	}
 
 	public Integer getSupId() {
@@ -241,12 +241,22 @@ public class WeiXinBase implements Serializable {
 		this.gsh_ = gsh;
 	}
 
-	public String getSupWeiXinAppId() {
-		return supWeiXinAppId_;
+	/**
+	 * 公众号AppId
+	 * 
+	 * @return
+	 */
+	public String getWeiXinAppId() {
+		return this.weiXinAppId_;
 	}
 
-	public void setSupWeiXinAppId(String supWeiXinAppId) {
-		this.supWeiXinAppId_ = supWeiXinAppId;
+	/**
+	 * 公众号AppId
+	 * 
+	 * @param weiXinAppId
+	 */
+	public void setWeiXinAppId(String weiXinAppId) {
+		this.weiXinAppId_ = weiXinAppId;
 	}
 
 	/**
@@ -254,17 +264,17 @@ public class WeiXinBase implements Serializable {
 	 * 
 	 * @return
 	 */
-	public String getSupWeiXinAppSecret() {
-		return supWeiXinAppSecret_;
+	public String getWeiXinAppSecret() {
+		return weiXinAppSecret_;
 	}
 
 	/**
 	 * 微信应用密匙
 	 * 
-	 * @param supWeiXinAppSecret 微信应用密匙
+	 * @param weiXinAppSecret 微信应用密匙
 	 */
-	public void setSupWeiXinAppSecret(String supWeiXinAppSecret) {
-		this.supWeiXinAppSecret_ = supWeiXinAppSecret;
+	public void setWeiXinAppSecret(String weiXinAppSecret) {
+		this.weiXinAppSecret_ = weiXinAppSecret;
 	}
 
 	/**
@@ -272,17 +282,17 @@ public class WeiXinBase implements Serializable {
 	 * 
 	 * @return
 	 */
-	public String getSupWeiXinToken() {
-		return supWeiXinToken_;
+	public String getWeiXinToken() {
+		return weiXinToken_;
 	}
 
 	/**
 	 * 微信应用令牌
 	 * 
-	 * @param supWeiXinToken 微信应用令牌
+	 * @param weiXinToken 微信应用令牌
 	 */
-	public void setSupWeiXinToken(String supWeiXinToken) {
-		this.supWeiXinToken_ = supWeiXinToken;
+	public void setWeiXinToken(String weiXinToken) {
+		this.weiXinToken_ = weiXinToken;
 	}
 
 	/**
@@ -290,17 +300,17 @@ public class WeiXinBase implements Serializable {
 	 * 
 	 * @return
 	 */
-	public String getSupWeiXinShopId() {
-		return supWeiXinShopId_;
+	public String getWeiXinShopId() {
+		return weiXinShopId_;
 	}
 
 	/**
 	 * 微信商户编号（支付用）
 	 * 
-	 * @param supWeiXinShopId
+	 * @param weiXinShopId
 	 */
-	public void setSupWeiXinShopId(String supWeiXinShopId) {
-		this.supWeiXinShopId_ = supWeiXinShopId;
+	public void setWeiXinShopId(String weiXinShopId) {
+		this.weiXinShopId_ = weiXinShopId;
 	}
 
 	/**
@@ -308,17 +318,17 @@ public class WeiXinBase implements Serializable {
 	 * 
 	 * @return
 	 */
-	public String getSupWeiXinShopKey() {
-		return supWeiXinShopKey_;
+	public String getWeiXinShopKey() {
+		return weiXinShopKey_;
 	}
 
 	/**
 	 * 微信商户key（支付用）
 	 * 
-	 * @param supWeiXinShopKey
+	 * @param weiXinShopKey
 	 */
-	public void setSupWeiXinShopKey(String supWeiXinShopKey) {
-		this.supWeiXinShopKey_ = supWeiXinShopKey;
+	public void setWeiXinShopKey(String weiXinShopKey) {
+		this.weiXinShopKey_ = weiXinShopKey;
 	}
 
 	/**

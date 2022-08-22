@@ -379,7 +379,7 @@ public class WeiXinRedPackage {
 
 			// 发送微信红包
 			WeiXinRedPackageResult result = this.weixin_.getWeiXinCfg()
-					.sendRegPackage(this.weixin_.getSupWeiXinShopId(), open_id,
+					.sendRegPackage(this.weixin_.getWeiXinShopId(), open_id,
 							isendMoney, redpack_user_idx, wishing, client_ip,
 							act_name, remark, nick_name, send_name);
 

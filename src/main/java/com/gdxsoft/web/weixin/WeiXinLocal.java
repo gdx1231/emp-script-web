@@ -196,7 +196,7 @@ public class WeiXinLocal extends WeiXinBase {
 		LOGGER.info("echostr:" + echostr);
 
 		WxCardSign sign = new WxCardSign();
-		sign.AddData(this.getToken());
+		sign.AddData(this.getWeiXinToken());
 		sign.AddData(timestamp);
 		sign.AddData(nonce);
 
