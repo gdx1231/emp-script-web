@@ -170,7 +170,7 @@ public class AppMini  {
 		codeJson.put("B2B_USR_ID", usrId);
 		// 混淆加密
 		codeJson.put("T", System.currentTimeMillis());
-		String encode = UAes.getInstance().encode(codeJson.toString());
+		String encode = UAes.getInstance().encrypt(codeJson.toString());
 
 		return encode;
 	}
