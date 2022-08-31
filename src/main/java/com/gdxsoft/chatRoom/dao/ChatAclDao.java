@@ -1,7 +1,6 @@
 package com.gdxsoft.chatRoom.dao;
 
 import java.util.ArrayList;
-import java.util.List;
 import java.util.HashMap;
 import com.gdxsoft.easyweb.script.RequestValue;
 import com.gdxsoft.easyweb.datasource.IClassDao;
