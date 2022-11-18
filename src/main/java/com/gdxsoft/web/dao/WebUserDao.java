@@ -142,6 +142,18 @@ public class WebUserDao extends ClassDaoBase<WebUser> implements IClassDao<WebUs
 		}
 	}
 
+	public WebUser getRecord(Long paraUsrId) {
+		RequestValue rv = new RequestValue();
+		rv.addValue("USR_ID", paraUsrId, "Long", 10);
+		ArrayList<WebUser> al = super.executeQuery(SQL_SELECT, rv, new WebUser(), FIELD_LIST);
+		if (al.size() > 0) {
+			WebUser o = al.get(0);
+			al.clear();
+			return o;
+		} else {
+			return null;
+		}
+	}
 	/**
 	 * 根据查询条件返回多条记录（限制为500条）
 	 * 

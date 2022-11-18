@@ -2,6 +2,8 @@ package com.gdxsoft.message.sms;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -24,11 +26,33 @@ import com.aliyuncs.profile.IClientProfile;
  */
 public class SmsAliImpl extends SmsBase implements ISms {
 
+	private static Map<String, IAcsClient> IMPLS = new ConcurrentHashMap<>();
+	
 	// 产品名称:云通信短信API产品,开发者无需替换
-	static final String product = "Dysmsapi";
+	public static final String product = "Dysmsapi";
 	// 产品域名,开发者无需替换
-	static final String domain = "dysmsapi.aliyuncs.com";
+	public static final String domain = "dysmsapi.aliyuncs.com";
 
+	private static IAcsClient getIAcsClient(String accessKeyId, String accessKeySecret) throws ClientException {
+
+		String key = accessKeyId+","+accessKeySecret;
+		if(IMPLS.containsKey(key)) {
+			return IMPLS.get(key);
+		}
+
+		// 可自助调整超时时间
+		System.setProperty("sun.net.client.defaultConnectTimeout", "10000");
+		System.setProperty("sun.net.client.defaultReadTimeout", "10000");
+
+		// 初始化acsClient,暂不支持region化
+		IClientProfile profile = DefaultProfile.getProfile("cn-hangzhou", accessKeyId ,
+				accessKeySecret );
+		DefaultProfile.addEndpoint("cn-hangzhou", "cn-hangzhou", product, domain);
+		IAcsClient acsClient = new DefaultAcsClient(profile);
+
+		IMPLS.put(key, acsClient);
+		return acsClient;
+	}
 	/**
 	 * 发送短信并获得发送结果
 	 * 
@@ -131,15 +155,8 @@ public class SmsAliImpl extends SmsBase implements ISms {
 	private SendSmsResponse sendSmsAndReturnResponse(String phoneNumber, JSONObject templateParam, String outId)
 			throws ClientException {
 
-		// 可自助调整超时时间
-		System.setProperty("sun.net.client.defaultConnectTimeout", "10000");
-		System.setProperty("sun.net.client.defaultReadTimeout", "10000");
-
-		// 初始化acsClient,暂不支持region化
-		IClientProfile profile = DefaultProfile.getProfile("cn-hangzhou", super.getAccessKeyId(),
-				super.getAccessKeySecret());
-		DefaultProfile.addEndpoint("cn-hangzhou", "cn-hangzhou", product, domain);
-		IAcsClient acsClient = new DefaultAcsClient(profile);
+		 
+		IAcsClient acsClient = getIAcsClient(super.getAccessKeyId(), super.getAccessKeySecret());
 
 		// 组装请求对象-具体描述见控制台-文档部分内容
 		SendSmsRequest request = new SendSmsRequest();
@@ -166,6 +183,8 @@ public class SmsAliImpl extends SmsBase implements ISms {
 		return sendSmsResponse;
 	}
 
+	
+
 	/**
 	 * 获取发送短信的结果
 	 * 
@@ -175,15 +194,8 @@ public class SmsAliImpl extends SmsBase implements ISms {
 	 */
 	private QuerySendDetailsResponse querySendDetails(String bizId, String phoneNumber) throws ClientException {
 
-		// 可自助调整超时时间
-		System.setProperty("sun.net.client.defaultConnectTimeout", "10000");
-		System.setProperty("sun.net.client.defaultReadTimeout", "10000");
+		IAcsClient acsClient = getIAcsClient(super.getAccessKeyId(), super.getAccessKeySecret());
 
-		// 初始化acsClient,暂不支持region化
-		IClientProfile profile = DefaultProfile.getProfile("cn-hangzhou", super.getAccessKeyId(),
-				super.getAccessKeySecret());
-		DefaultProfile.addEndpoint("cn-hangzhou", "cn-hangzhou", product, domain);
-		IAcsClient acsClient = new DefaultAcsClient(profile);
 
 		// 组装请求对象
 		QuerySendDetailsRequest request = new QuerySendDetailsRequest();
@@ -203,5 +215,10 @@ public class SmsAliImpl extends SmsBase implements ISms {
 		QuerySendDetailsResponse querySendDetailsResponse = acsClient.getAcsResponse(request);
 
 		return querySendDetailsResponse;
+	}
+
+	@Override
+	public String getProvider() {
+		return "ALI";
 	}
 }

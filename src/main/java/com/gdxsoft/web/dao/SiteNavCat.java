@@ -1,14 +1,13 @@
 package com.gdxsoft.web.dao;
 
-import com.gdxsoft.easyweb.datasource.ClassBase;
-
 import java.util.ArrayList;
 import java.util.Date;
+import com.gdxsoft.easyweb.datasource.ClassBase;
 
 /**
  * 表site_nav_cat映射类
  * 
- * @author gdx 时间：Sat Jul 11 2020 20:24:46 GMT+0800 (中国标准时间)
+ * @author gdx 时间：Tue Apr 19 2022 02:18:43 GMT+0000 (GMT)
  */
 public class SiteNavCat extends ClassBase {
 	private Integer sitNavId_; // SIT_NAV_ID
@@ -40,7 +39,11 @@ public class SiteNavCat extends ClassBase {
 	private String sitNavChilden_; // SIT_NAV_CHILDEN
 	private String sitNavCss_; // SIT_NAV_CSS
 	private String sitNavHot_; // SIT_NAV_HOT
+	private String sitNavUnid_; // SIT_NAV_UNID
+	private String sitNavChilrenIds_; // sit_nav_chilren_ids
+	private String sitNavTarget_; // sit_nav_target
 
+	// 以下属性用户自定义
 	private ArrayList<SiteNavCat> _Children;
 	private String _Breadcrumb;
 	private String _BreadcrumbEn;
@@ -669,5 +672,65 @@ public class SiteNavCat extends ClassBase {
 	public void setSitNavHot(String paraSitNavHot) {
 		super.recordChanged("SIT_NAV_HOT", this.sitNavHot_, paraSitNavHot);
 		this.sitNavHot_ = paraSitNavHot;
+	}
+
+	/**
+	 * 获取 SIT_NAV_UNID
+	 *
+	 * @return SIT_NAV_UNID
+	 */
+	public String getSitNavUnid() {
+		return this.sitNavUnid_;
+	}
+
+	/**
+	 * 赋值 SIT_NAV_UNID
+	 * 
+	 * @param paraSitNavUnid SIT_NAV_UNID
+	 */
+
+	public void setSitNavUnid(String paraSitNavUnid) {
+		super.recordChanged("SIT_NAV_UNID", this.sitNavUnid_, paraSitNavUnid);
+		this.sitNavUnid_ = paraSitNavUnid;
+	}
+
+	/**
+	 * 获取 sit_nav_chilren_ids
+	 *
+	 * @return sit_nav_chilren_ids
+	 */
+	public String getSitNavChilrenIds() {
+		return this.sitNavChilrenIds_;
+	}
+
+	/**
+	 * 赋值 sit_nav_chilren_ids
+	 * 
+	 * @param paraSitNavChilrenIds sit_nav_chilren_ids
+	 */
+
+	public void setSitNavChilrenIds(String paraSitNavChilrenIds) {
+		super.recordChanged("sit_nav_chilren_ids", this.sitNavChilrenIds_, paraSitNavChilrenIds);
+		this.sitNavChilrenIds_ = paraSitNavChilrenIds;
+	}
+
+	/**
+	 * 获取 sit_nav_target
+	 *
+	 * @return sit_nav_target
+	 */
+	public String getSitNavTarget() {
+		return this.sitNavTarget_;
+	}
+
+	/**
+	 * 赋值 sit_nav_target
+	 * 
+	 * @param paraSitNavTarget sit_nav_target
+	 */
+
+	public void setSitNavTarget(String paraSitNavTarget) {
+		super.recordChanged("sit_nav_target", this.sitNavTarget_, paraSitNavTarget);
+		this.sitNavTarget_ = paraSitNavTarget;
 	}
 }

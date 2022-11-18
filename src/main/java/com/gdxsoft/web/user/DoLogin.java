@@ -41,6 +41,8 @@ public class DoLogin {
 	private String loginXmlName;
 	private String loginItemName;
 
+	private boolean autoUserId;
+
 	/**
 	 * 执行登录
 	 * 
@@ -288,20 +290,35 @@ public class DoLogin {
 	 * @return
 	 */
 	public long createNewUser(String mobilePhone, String userName, String userPwd) {
+		long userId = -1;
 		StringBuilder sb = new StringBuilder();
-		long userId = USnowflake.nextId();
-		rv_.addOrUpdateValue("tmp_userId", userId);
+		StringBuilder sb1 = new StringBuilder();
+
 		rv_.addOrUpdateValue("tmp_mobilePhone", mobilePhone);
 		rv_.addOrUpdateValue("tmp_username", userName);
 		rv_.addOrUpdateValue("tmp_userpassword", userPwd);
 
-		sb.append("insert into web_user (usr_id, usr_lid, usr_pwd, USR_MOBILE \n");
-		sb.append("	, USR_CDATE, USR_MDATE, USR_UNID, usr_name) \n");
-		sb.append("values(@tmp_userId, '', ewa_func.password_hash(@usr_pwd) , @tmp_mobilePhone \n");
-		sb.append(", @sys_date, @sys_date, @sys_unid, @tmp_username)");
+		sb.append("insert into web_user (usr_lid, usr_pwd, USR_MOBILE \n");
+		sb.append("	, USR_CDATE, USR_MDATE, USR_UNID, usr_name");
+		sb1.append("values('', ewa_func.password_hash(@usr_pwd) , @tmp_mobilePhone \n");
+		sb1.append(", @sys_date, @sys_date, @sys_unid, @tmp_username");
 
-		// 此电话没有注册过，注册此电话的用户
-		DataConnection.updateAndClose(sb.toString(), "", rv_);
+		if (!this.autoUserId) {
+			sb.append(", usr_id)");
+			sb1.append(", @tmp_userId)");
+			sb.append(sb1);
+
+			// 雪花编号
+			userId = USnowflake.nextId();
+			rv_.addOrUpdateValue("tmp_userId", userId);
+			DataConnection.updateAndClose(sb.toString(), "", rv_);
+		} else {
+			sb.append(")");
+			sb1.append(")");
+			sb.append(sb1);
+			// 自增编号
+			userId = DataConnection.insertAndReturnAutoIdLong(sb.toString(), "", rv_);
+		}
 
 		return userId;
 	}
@@ -324,8 +341,9 @@ public class DoLogin {
 		}
 
 		/*
-		 * // 获取电话对应的用户 DTTable tb = sv.getWebUserByPhone(mobilePhone); if (tb.getCount() == 0) { long userId =
-		 * this.createNewUser(mobilePhone); rst.put("newUserId", userId); }
+		 * // 获取电话对应的用户 DTTable tb = sv.getWebUserByPhone(mobilePhone); if
+		 * (tb.getCount() == 0) { long userId = this.createNewUser(mobilePhone);
+		 * rst.put("newUserId", userId); }
 		 */
 		rst = sv.validWebUserCreate(mobilePhone);
 
@@ -479,13 +497,13 @@ public class DoLogin {
 					break;
 				}
 			}
-			
+
 			if (tbUser_ == null) {
 				rst.put("RST", false);
 				rst.put("ERR", "没有用户数据发现");
 				return rst;
 			}
-			
+
 			try {
 				// 记录输出的cookie值
 				this.lastCookies = ht.getHtmlCreator().getHtmlClass().getAction().getOutCookes();
@@ -598,6 +616,20 @@ public class DoLogin {
 
 	public void setLoginItemName(String loginItemName) {
 		this.loginItemName = loginItemName;
+	}
+
+	/**
+	 * @return the autoUserId
+	 */
+	public boolean isAutoUserId() {
+		return autoUserId;
+	}
+
+	/**
+	 * @param autoUserId the autoUserId to set
+	 */
+	public void setAutoUserId(boolean autoUserId) {
+		this.autoUserId = autoUserId;
 	}
 
 }

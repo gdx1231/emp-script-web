@@ -179,11 +179,14 @@ public class SmsValid extends ValidBase {
 				// "OUT_ID":"","PHONE_NUMBER":"+8613910409333","TEMPLATE_CODE":"SMS_95610127"}
 				sendRst = this.sms.sendSms(mobilePhone, smsTemplateParams, "");
 				// 记录到日志中，用于检查频次
+				RequestValue rv0 = new RequestValue();
+				rv0.addOrUpdateValue("mobilePhone", mobilePhone);
+				rv0.addOrUpdateValue("TemplateCode", this.sms.getSmsTemplateCode());
+				rv0.addOrUpdateValue("TemplateParams", smsTemplateParams.toString());
+				rv0.addOrUpdateValue("SMS_PROVIDER",  sms.getProvider());
 				String sqlFrequency = "insert into SMS_JOB(SMS_PROVIDER, SMS_JSTATUS, SMS_JCDATE,SMS_REF_TABLE,SMS_REF_ID,SMS_TEMPLATE_CODE, SMS_PHONES)"
-						+ " values('ALI', 'SMS_JOB_SEND', @sys_date, 'SMS_VALID', '" + mobilePhone.replace("'", "")
-						+ "','" + this.sms.getSmsTemplateCode().replace("'", "") + "','"
-						+ smsTemplateParams.toString().replace("'", "''") + "')";
-				DataConnection.updateAndClose(sqlFrequency, "", null);
+						+ " values(@SMS_PROVIDER, 'SMS_JOB_SEND', @sys_date, 'SMS_VALID', @mobilePhone, @TemplateCode, @TemplateParams)";
+				DataConnection.updateAndClose(sqlFrequency, "", rv0);
 			} catch (Exception e) {
 				rst.put("RST", false);
 				rst.put("ERR", "短信接口系统错误");
@@ -221,6 +224,9 @@ public class SmsValid extends ValidBase {
 	 * @return
 	 */
 	public JSONObject checkSmsFrequency(String mobilePhone, String smsTemplateCode) {
+		if (smsTemplateCode == null) {
+			smsTemplateCode = "null";
+		}
 		String w1 = " SMS_REF_TABLE='SMS_VALID' and SMS_REF_ID='" + mobilePhone.replace("'", "")
 				+ "' and SMS_TEMPLATE_CODE='" + smsTemplateCode.replace("'", "") + "'";
 		// 一个小时内

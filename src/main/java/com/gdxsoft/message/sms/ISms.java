@@ -10,6 +10,13 @@ import org.json.JSONObject;
  *
  */
 public interface ISms {
+	
+	/**
+	 * 获取供应商名称
+	 * @return
+	 */
+	public String getProvider();
+	
 	/**
 	 *  开发者自己的AK(阿里云在访问控制台寻找)
 	 * @return
