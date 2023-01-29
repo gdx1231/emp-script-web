@@ -26,7 +26,8 @@ import com.gdxsoft.easyweb.utils.fileConvert.File2Pdf;
 
 /**
  * 下载或在线查看oa文件<br>
- * 在调用程序里在requst.setAttribute(\"pdfjs\", \"/xxx/pdfjs-1.10.100-dist/web/viewer.html\")
+ * 在调用程序里在requst.setAttribute(\"pdfjs\",
+ * \"/xxx/pdfjs-1.10.100-dist/web/viewer.html\")
  */
 public class HttpOaFileView implements IHttp {
 	private static Logger LOGGER = LoggerFactory.getLogger(HttpOaFileView.class);
@@ -43,7 +44,8 @@ public class HttpOaFileView implements IHttp {
 		RequestValue rv = new RequestValue(request);
 
 		/*
-		 * App app = new App(rv); boolean isPc = !(app.isAndroid() || app.isIphone() || app.isIpad());
+		 * App app = new App(rv); boolean isPc = !(app.isAndroid() || app.isIphone() ||
+		 * app.isIpad());
 		 */
 		String unid = rv.s("unid") == null ? "" : rv.s("unid").replace("'", "").replace(" ", "");
 
@@ -327,10 +329,151 @@ public class HttpOaFileView implements IHttp {
 
 	public String viewImage(String title, String url, boolean skipHeader) {
 		StringBuilder sbHtml = new StringBuilder(skipHeader ? "" : this.createHtml(title));
-		sbHtml.append("<div class='oa-doc-view EWA_TABLE' id='doc-view'>");
-		sbHtml.append("<div class='file-view-image' style='text-align:center'>");
-		sbHtml.append("<img style='max-width:100%;max-height:100%' src='" + url + "'>");
-		sbHtml.append("</div></div>");
+
+		sbHtml.append(
+				"<link rel=\"stylesheet\" href=\"/EmpScriptV2/EWA_STYLE/skins/default/css.css\" type=\"text/css\" />\n");
+		sbHtml.append(
+				"<link rel=\"stylesheet\" href=\"/EmpScriptV2/third-party/font-awesome/font-awesome-4.7.0/css/font-awesome.min.css\" type=\"text/css\" />\n");
+		sbHtml.append("<script type=\"text/javascript\" src=\"/EmpScriptV2/EWA_STYLE/js/ewa.min.js\"></script>\n");
+		sbHtml.append(
+				"<script type=\"text/javascript\" src='/EmpScriptV2/third-party/jquery/jquery-3.6.0.min.js'></script>\n");
+		sbHtml.append("<script type=\"text/javascript\">EWA.RV_STATIC_PATH='/EmpScriptV2/';</script>\n");
+		sbHtml.append("<style type=\"text/css\">\n");
+		sbHtml.append("body {\n");
+		sbHtml.append("	background-color: rgb(38, 38, 38);\n");
+		sbHtml.append("	overflow: hidden;\n");
+		sbHtml.append("}\n");
+		sbHtml.append("\n");
+		sbHtml.append("#preview {\n");
+		sbHtml.append("	width: 100%;\n");
+		sbHtml.append("	height: 100%;\n");
+		sbHtml.append("	background-size: contain;\n");
+		sbHtml.append("	background-repeat: no-repeat;\n");
+		sbHtml.append("	background-position: center;\n");
+		sbHtml.append("	cursor: move;\n");
+		sbHtml.append("	position: absolute;\n");
+		sbHtml.append("	left: 0;\n");
+		sbHtml.append("	top: 0;\n");
+		sbHtml.append("}\n");
+		sbHtml.append("\n");
+		sbHtml.append("#controls {\n");
+		sbHtml.append("	position: fixed;\n");
+		sbHtml.append("	right: 40px;\n");
+		sbHtml.append("	bottom: 40px;\n");
+		sbHtml.append("	width: 40px;\n");
+		sbHtml.append("	z-index: 999999;\n");
+		sbHtml.append("}\n");
+		sbHtml.append("\n");
+		sbHtml.append("#controls div {\n");
+		sbHtml.append("	width: 50px;\n");
+		sbHtml.append("	height: 50px;\n");
+		sbHtml.append("	border-radius: 100%;\n");
+		sbHtml.append("	background-color: #f1f1f1;\n");
+		sbHtml.append("	box-shadow: 1px 1px 11px #fff;\n");
+		sbHtml.append("	line-height: 50px;\n");
+		sbHtml.append("	text-align: center;\n");
+		sbHtml.append("	font-size: 18px;\n");
+		sbHtml.append("	margin-bottom: 10px;\n");
+		sbHtml.append("	color: #999;\n");
+		sbHtml.append("	cursor: pointer\n");
+		sbHtml.append("}\n");
+		sbHtml.append("\n");
+		sbHtml.append("#controls div:hover {\n");
+		sbHtml.append("	color: #000;\n");
+		sbHtml.append("}\n");
+		sbHtml.append("\n");
+		sbHtml.append("#large_box {\n");
+		sbHtml.append("	position: absolute;\n");
+		sbHtml.append("	left: -9000px;\n");
+		sbHtml.append("	top: -9000px;\n");
+		sbHtml.append("	right: -9000px;\n");
+		sbHtml.append("	bottom: -9000px;\n");
+		sbHtml.append("	z-index: -1;\n");
+		sbHtml.append("}\n");
+		sbHtml.append("</style>\n");
+		sbHtml.append("	<div id=\"large_box\"></div>\n");
+		sbHtml.append("	<div id='preview' style='background-image:url(" + url + ")'></div>\n");
+		sbHtml.append("\n");
+		sbHtml.append("	<div id='controls'>\n");
+		sbHtml.append("		<div id='resize' class='fa fa-th-large'></div>\n");
+		sbHtml.append("		<div id='plus' class='fa fa-plus'></div>\n");
+		sbHtml.append("		<div id='minus' class='fa fa-minus'></div>\n");
+		sbHtml.append("		<div id='rotateLeft' class='fa fa-undo'></div>\n");
+		sbHtml.append("		<div id='rotateRight' class='fa fa-undo fa-flip-horizontal'></div>\n");
+		sbHtml.append("	</div>\n");
+		sbHtml.append("	<script type=\"text/javascript\">\n");
+		sbHtml.append("	\n");
+		sbHtml.append("		$('#controls div').on(\"click\", function (e) {\n");
+		sbHtml.append("			if(this.id=='resize'){\n");
+		sbHtml.append("				$('#preview').attr('deg',0).attr('scale',1);\n");
+		sbHtml.append("				$('#preview').css('top',0).css('left',0);\n");
+		sbHtml.append("				show_transform();\n");
+		sbHtml.append("			} else if (this.id == 'plus') {\n");
+		sbHtml.append("				scale(0.1);\n");
+		sbHtml.append("			} else if (this.id == 'minus') {\n");
+		sbHtml.append("				scale(-0.1);\n");
+		sbHtml.append("			} else if (this.id == 'rotateLeft') {\n");
+		sbHtml.append("				rotate(-90);\n");
+		sbHtml.append("			} else if (this.id == 'rotateRight') {\n");
+		sbHtml.append("				rotate(90);\n");
+		sbHtml.append("			}\n");
+		sbHtml.append("		});\n");
+		sbHtml.append("		function rotate(deg) {\n");
+		sbHtml.append("			var deg_prev = $('#preview').attr('deg') || 0;\n");
+		sbHtml.append("			var deg_new = deg_prev * 1 + deg;\n");
+		sbHtml.append("			if (deg_new > 360) {\n");
+		sbHtml.append("				deg_new -= 360;\n");
+		sbHtml.append("			} else if (deg_new < -360) {\n");
+		sbHtml.append("				deg_new += 360;\n");
+		sbHtml.append("			}\n");
+		sbHtml.append("			$('#preview').attr('deg', deg_new);\n");
+		sbHtml.append("			show_transform();\n");
+		sbHtml.append("		}\n");
+		sbHtml.append("		function scale(scale, ismousewheel) {\n");
+		sbHtml.append("			var scale_prev = $('#preview').attr('scale') || 1;\n");
+		sbHtml.append("			scale_new = scale_prev * 1 + scale;\n");
+		sbHtml.append("			if (scale_new > 3) {\n");
+		sbHtml.append("				scale_new = 3;\n");
+		sbHtml.append("			} else if (scale_new < 0.3) {\n");
+		sbHtml.append("				scale_new = 0.3;\n");
+		sbHtml.append("			}\n");
+		sbHtml.append("			$('#preview').attr('scale', scale_new);\n");
+		sbHtml.append("			show_transform(ismousewheel);\n");
+		sbHtml.append("		}\n");
+		sbHtml.append("		function show_transform(ismousewheel) {\n");
+		sbHtml.append("			var scale = $('#preview').attr('scale') || 1;\n");
+		sbHtml.append("			var deg = $('#preview').attr('deg') || 0;\n");
+		sbHtml.append("\n");
+		sbHtml.append("			var css={\n");
+		sbHtml.append("				\"transition-duration\": ismousewheel?0:\"0.5s\",\n");
+		sbHtml.append("				'transform': 'rotate(' + deg + 'deg) scale(' + scale + ')'\n");
+		sbHtml.append("			}\n");
+		sbHtml.append("			$('#preview').css(css);\n");
+		sbHtml.append("			setTimeout(function(){\n");
+		sbHtml.append("				$('#preview').css(\"transition-duration\",\"\");\n");
+		sbHtml.append("			},510)\n");
+		sbHtml.append("		}\n");
+		sbHtml.append("		(function(){\n");
+		sbHtml.append("			document.body.onmousewheel=function(e){\n");
+		sbHtml.append("				if(e.deltaY<0){ //向下\n");
+		sbHtml.append("					scale(0.1,true);\n");
+		sbHtml.append("				}	else {\n");
+		sbHtml.append("					scale(-0.1,true);\n");
+		sbHtml.append("				}\n");
+		sbHtml.append("			};\n");
+		sbHtml.append("	        window.mv2 = new EWA.UI.Move(),\n");
+		sbHtml.append("	        mv2.Init(mv2);\n");
+		sbHtml.append("	        var img = $X('preview');\n");
+		sbHtml.append("	        var p = $X('large_box');\n");
+		sbHtml.append("	        mv2.AddMoveObject(img, img, function() {\n");
+		sbHtml.append("	        }, p);\n");
+		sbHtml.append("		})();\n");
+		sbHtml.append("	</script>\n");
+
+//		sbHtml.append("<div class='oa-doc-view EWA_TABLE' id='doc-view'>");
+//		sbHtml.append("<div class='file-view-image' style='text-align:center'>");
+//		sbHtml.append("<img style='max-width:100%;max-height:100%' src='" + url + "'>");
+//		sbHtml.append("</div></div>");
 		sbHtml.append(skipHeader ? "" : "</div></body></html>");
 		return sbHtml.toString();
 	}
