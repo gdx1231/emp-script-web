@@ -18,10 +18,13 @@ public class CreateWebLinks {
 
 	public static void main(String[] args) throws IOException {
 
+		//FROM: E:\guolei\p1\oa-cm\src\main\webapp
+		// TO  : E:\java\apache-tomcat-9.0.43\wtpwebapps\oa-cm
 		if (args.length < 3) {
-			System.out.println("USAGE: PrjWebRoot TomcatWebAppRoot linux/mac/win");
+			System.out.println("USAGE: PrjWebApp TomcatWebAppRoot linux/mac/win");
 			System.out.println(
-					"Example: \"/Users/admin/java/workspace/myproject/src/main/webapp\" \"/Users/admin/java/apache-tomcat-8.5.38/webapps/myproject\" linux");
+					"Example: \"/Users/admin/pf/src/main/webapp\""
+					+ " \"/Users/admin/apache-tomcat-8.5.38/webapps/pf\" linux");
 			return;
 		}
 		String os = args[2];
@@ -35,46 +38,102 @@ public class CreateWebLinks {
 		if (isWin) {
 			mk.append("@echo off\r\n");
 			rm.append("@echo off\r\n");
+		} else {
+			mk.append("#!/bin/bash\n");
+			rm.append("#!/bin/bash\n");
 		}
 
-		// String root = "/Users/admin/java/workspace/myproject/src/main/webapp";
+		// E:\guolei\p1\oa-cm\src\main\webapp;
 		String root = args[0];
 		File fRoot = new File(root);
-		System.out.println("FROM: " + fRoot.getAbsolutePath());
-		// String target = "/Users/admin/java/apache-tomcat-8.5.38/webapps/myproject";
+		// E:\java\apache-tomcat-9.0.43\wtpwebapps\oa-cm";
 		String target = args[1];
 		File fTarget = new File(target);
+		
+		System.out.println("FROM: " + fRoot.getAbsolutePath());
 		System.out.println("TO  : " + fTarget.getAbsolutePath());
 
-		cmd(fRoot, fTarget, mk, rm, 0);
-
-		File allClassRoot = new File(root + "/../../allclass/classes");
+		// Tomcat的项目的WEB-INF/classes
 		File allClassTarget = new File(target + "/WEB-INF/classes");
 
-		cmd(allClassRoot, allClassTarget, mk, rm, 0);
+		// WebRoot下的所有文件，不包含WEB-INF
+		cmd(fRoot, fTarget, mk, rm, 0);
 
-		// 配置信息 ewa_conf.xml等
-		File prjSrc = new File(fRoot.getAbsolutePath() + "/../target/classes");
-		cmd(prjSrc, allClassTarget, mk, rm, 0); // 1-file
+		// 所有项目输出的classes文件目录
+		File allClassRoot = new File(root + "/../../../../allclass/classes");
+		if (allClassRoot.exists()) {
+			cmd(allClassRoot, allClassTarget, mk, rm, 0);
+		} else {
+			System.out.println("skip " + allClassRoot);
+		}
 
+		// WEB-INF下不含classes目录
 		File webInfRoot = new File(fRoot.getAbsolutePath() + "/WEB-INF");
+
 		File webInfTarget = new File(target + "/WEB-INF");
+
+		System.out.println(webInfRoot + " -> " + webInfTarget);
 		cmd(webInfRoot, webInfTarget, mk, rm, 2);
+
+		// WEB项目本身输出的目录，例如配置信息 ewa_conf.xml等
+		File prjSrc = new File(fRoot.getAbsolutePath() + "/../../../target/classes");
+
+		System.out.println(prjSrc + " -> " + allClassTarget);
+		cmd(prjSrc, allClassTarget, mk, rm, 1); // 1-file
 
 		if (isWin) {
 			mk.append("if exist after.bat (\r\n");
-			mk.append(" call after.bat \"" + fRoot.getAbsolutePath() +"\" \"" + fTarget.getAbsolutePath() +"\" \r\n");
+			mk.append(" call after.bat \"" + fRoot.getAbsolutePath() + "\" \"" + fTarget.getAbsolutePath() + "\" \r\n");
 			mk.append(")\r\n");
 
 			createNewTextFile("DelLinks.bat", rm.toString());
 			createNewTextFile("MkLinks.bat", mk.toString());
 		} else {
+			mk.append("file=after.sh \n");
+			mk.append("if [ -f \"$file\" ]; then\n");
+			mk.append("    source $file \"" + fTarget.getAbsolutePath() + "\"\n");
+			mk.append("fi\n");
 			createNewTextFile("dellinks.sh", rm.toString());
 			createNewTextFile("mklinks.sh", mk.toString());
 		}
 		try {
 			Thread.sleep(500);
 		} catch (InterruptedException e) {
+		}
+	}
+
+	private static void cmd(File fRoot, File target, StringBuilder mk, StringBuilder rm, int type) {
+		if (isWin) {
+			mk.append("\r\n\r\n\r\nREM from " + fRoot + "\r\nREM to " + target + " type=" + type);
+			mk.append("\r\n@echo from " + fRoot + " to " + target + " type=" + type);
+			mk.append("\r\n");
+		} else {
+			mk.append("\n\n\n# from " + fRoot + " to" + target + " type=" + type);
+			mk.append("\necho from " + fRoot + " to" + target + " type=" + type);
+			mk.append("\n");
+		}
+
+		File[] files = fRoot.listFiles();
+		for (int i = 0; i < files.length; i++) {
+			File f = files[i];
+			if (type == 2 && (f.getName().equals("classes") || f.getName().equals("lib"))) { // WEB-INF
+				continue;
+			} else if (type == 1 && f.isDirectory()) { // 仅文件
+				continue;
+			} else if (type == 0 && f.getName().equals("WEB-INF")) { // 目录和文件
+				continue;
+			}
+			String cmdRm, cmdMk;
+
+			String targetPath = f.getAbsolutePath(); // 原有文件
+			String linkName = target.getAbsolutePath() + (isWin ? "\\" : "/") + f.getName(); // 创建的符号文件
+
+			String[] cmds = createLink(linkName, targetPath, f.isDirectory());
+			cmdRm = cmds[0]; // 删除
+			cmdMk = cmds[1]; // 创建连接
+
+			rm.append(cmdRm);
+			mk.append(cmdMk);
 		}
 	}
 
@@ -98,32 +157,7 @@ public class CreateWebLinks {
 			cmdMk = "ln -s " + target + " " + linkName + "\n";
 		}
 
-		return new String[] { cmdRm, cmdMk };
-	}
-
-	private static void cmd(File fRoot, File target, StringBuilder mk, StringBuilder rm, int type) {
-		File[] files = fRoot.listFiles();
-		for (int i = 0; i < files.length; i++) {
-			File f = files[i];
-			if (type == 2 && f.getName().equals("classes")) { // WEB-INF
-				continue;
-			} else if (type == 1 && f.isDirectory()) { // 仅文件
-				continue;
-			} else if (type == 0 && f.getName().equals("WEB-INF")) { // 目录和文件
-				continue;
-			}
-			String cmdRm, cmdMk;
-
-			String targetPath = f.getAbsolutePath(); // 原有文件
-			String linkName = target.getAbsolutePath() + (isWin ? "\\" : "/") + f.getName(); // 创建的符号文件
-
-			String[] cmds = createLink(linkName, targetPath, f.isDirectory());
-			cmdRm = cmds[0]; // 删除
-			cmdMk = cmds[1]; // 创建连接
-
-			rm.append(cmdRm);
-			mk.append(cmdMk);
-		}
+		return new String[] { cmdRm, (isWin ? "\r\n" : "\n") + cmdRm + cmdMk };
 	}
 
 	private static void createNewTextFile(String fileName, String content) throws IOException {
@@ -141,6 +175,11 @@ public class CreateWebLinks {
 		} finally {
 			if (os != null)
 				os.close();
+			if (!isWin) {
+				file.setExecutable(true);
+			}
 		}
+
 	}
 }
+
