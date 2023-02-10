@@ -670,7 +670,7 @@ public class HttpFileViewBase {
 		StringBuilder sbHtml = new StringBuilder(skipHeader ? "" : this.createHtml(title));
 		String id = "pdf_" + System.currentTimeMillis();
 
-		sbHtml.append("<div id='" + id + "' style='height:100%'>");
+		sbHtml.append("<div id='" + id + "' style='height:100%; overflow:hidden'>");
 		// chrome edge safari
 		String embed = "<embed src=\"" + url + "\" class=\"pdfobject\" type=\"application/pdf\" title=\""
 				+ Utils.textToInputValue(title) + "\" style=\"overflow: auto; width: 100%; height: 100%;\">";
