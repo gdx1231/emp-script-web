@@ -1,6 +1,64 @@
 package com.gdxsoft.message.sms;
 
 public class SmsBase {
+	private static String[] HZ = { "０", "１", "２", "３", "４", "５", "６", "７", "８", "９" };
+
+	/**
+	 * 替换手机号中的中文数字
+	 * @param s
+	 * @return
+	 */
+	public static String replacePhoneHz(String s) {
+		if (s == null) {
+			return s;
+		}
+		s = s.trim();
+		if (s.length() == 0) {
+			return s;
+		}
+
+		for (int i = 0; i < HZ.length; i++) {
+			s = s.replace(HZ[i], i + "");
+		}
+		return s;
+	}
+
+	/**
+	 * 中国手机号加+86，例如腾讯
+	 * 
+	 * @param phone
+	 * @return
+	 */
+	public static String chinesePhoneAddPlus86(String phone) {
+		phone = phone.replace(" ", "");
+		phone = replacePhoneHz(phone);
+		if (phone.startsWith("+")) {
+			return phone;
+		} else {
+			return "+86" + phone;
+		}
+	}
+
+	/**
+	 * 中国手机号去除+86，例如阿里云
+	 * 
+	 * @param phone
+	 * @return
+	 */
+	public static String chinesePhoneRemovePlus86(String phone) {
+		phone = phone.replace(" ", "");
+		phone = replacePhoneHz(phone);
+		if (!phone.startsWith("+86")) {
+			return phone;
+		} else {
+			return phone.substring(3);
+		}
+	}
+	
+	private String regionId;
+
+	private String smsAppId;
+	
 	private String smsTemplateCode;
 	private String smsSignName;
 
@@ -78,5 +136,33 @@ public class SmsBase {
 	 */
 	public void setSmsSignName(String smsSignName) {
 		this.smsSignName = smsSignName;
+	}
+
+	/**
+	 * @return the smsAppId
+	 */
+	public String getSmsAppId() {
+		return smsAppId;
+	}
+
+	/**
+	 * @param smsAppId the smsAppId to set
+	 */
+	public void setSmsAppId(String smsAppId) {
+		this.smsAppId = smsAppId;
+	}
+
+	/**
+	 * @return the regionId
+	 */
+	public String getRegionId() {
+		return regionId;
+	}
+
+	/**
+	 * @param regionId the regionId to set
+	 */
+	public void setRegionId(String regionId) {
+		this.regionId = regionId;
 	}
 }

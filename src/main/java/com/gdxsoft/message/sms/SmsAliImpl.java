@@ -2,9 +2,11 @@ package com.gdxsoft.message.sms;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 
+import org.apache.commons.lang3.StringUtils;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
@@ -25,34 +27,65 @@ import com.aliyuncs.profile.IClientProfile;
  *
  */
 public class SmsAliImpl extends SmsBase implements ISms {
+	public static final String PROVIDER = "ALI";
 
-	private static Map<String, IAcsClient> IMPLS = new ConcurrentHashMap<>();
-	
 	// 产品名称:云通信短信API产品,开发者无需替换
-	public static final String product = "Dysmsapi";
+	public static final String PRODUCT = "Dysmsapi";
 	// 产品域名,开发者无需替换
-	public static final String domain = "dysmsapi.aliyuncs.com";
-
-	private static IAcsClient getIAcsClient(String accessKeyId, String accessKeySecret) throws ClientException {
-
-		String key = accessKeyId+","+accessKeySecret;
-		if(IMPLS.containsKey(key)) {
-			return IMPLS.get(key);
-		}
-
+	public static final String DOMAIN = "dysmsapi.aliyuncs.com";
+	public static final String DEF_REGION_ID = "cn-hangzhou";
+	static {
 		// 可自助调整超时时间
 		System.setProperty("sun.net.client.defaultConnectTimeout", "10000");
 		System.setProperty("sun.net.client.defaultReadTimeout", "10000");
+	}
+
+	@Override
+	public JSONObject sendSms(String[] phoneNumbers, JSONObject templateParam, String outId) throws Exception {
+		StringBuilder sb = new StringBuilder();
+		Map<String, Boolean> map = new HashMap<>();
+		for (int i = 0; i < phoneNumbers.length; i++) {
+			String phone = SmsBase.chinesePhoneRemovePlus86(phoneNumbers[i]);
+			if (map.containsKey(phone)) {
+				continue;
+			}
+			if (sb.length() > 0) {
+				sb.append(",");
+			}
+			sb.append(phone);
+			map.put(phone, true);
+		}
+
+		String phones = sb.toString();
+		SendSmsResponse response = sendSmsAndReturnResponse(phones, templateParam, outId);
+		JSONObject rst = getSendResponseResult(response);
+		rst.put("PHONE_NUMBER", phones);
+
+		rst.put("TEMPLATE_PARAM", templateParam);
+		rst.put("OUT_ID", outId);
+
+		return rst;
+	}
+
+	@Override
+	public JSONObject sendSms(List<String> phoneNumbers, JSONObject templateParam, String outId) throws Exception {
+		String[] phones = phoneNumbers.toArray(new String[phoneNumbers.size()]);
+		return this.sendSms(phones, templateParam, outId);
+	}
+
+	private IAcsClient getIAcsClient() throws ClientException {
+		String regionId = StringUtils.isBlank(super.getRegionId()) ? DEF_REGION_ID : super.getRegionId();
 
 		// 初始化acsClient,暂不支持region化
-		IClientProfile profile = DefaultProfile.getProfile("cn-hangzhou", accessKeyId ,
-				accessKeySecret );
-		DefaultProfile.addEndpoint("cn-hangzhou", "cn-hangzhou", product, domain);
+		IClientProfile profile = DefaultProfile.getProfile(regionId, super.getAccessKeyId(),
+				super.getAccessKeySecret());
+		// DefaultProfile.addEndpoint("cn-hangzhou", "cn-hangzhou", product, domain);
+		DefaultProfile.addEndpoint(regionId, PRODUCT, DOMAIN);
 		IAcsClient acsClient = new DefaultAcsClient(profile);
 
-		IMPLS.put(key, acsClient);
 		return acsClient;
 	}
+
 	/**
 	 * 发送短信并获得发送结果
 	 * 
@@ -155,8 +188,7 @@ public class SmsAliImpl extends SmsBase implements ISms {
 	private SendSmsResponse sendSmsAndReturnResponse(String phoneNumber, JSONObject templateParam, String outId)
 			throws ClientException {
 
-		 
-		IAcsClient acsClient = getIAcsClient(super.getAccessKeyId(), super.getAccessKeySecret());
+		IAcsClient acsClient = getIAcsClient();
 
 		// 组装请求对象-具体描述见控制台-文档部分内容
 		SendSmsRequest request = new SendSmsRequest();
@@ -183,8 +215,6 @@ public class SmsAliImpl extends SmsBase implements ISms {
 		return sendSmsResponse;
 	}
 
-	
-
 	/**
 	 * 获取发送短信的结果
 	 * 
@@ -193,10 +223,7 @@ public class SmsAliImpl extends SmsBase implements ISms {
 	 * @throws ClientException
 	 */
 	private QuerySendDetailsResponse querySendDetails(String bizId, String phoneNumber) throws ClientException {
-
-		IAcsClient acsClient = getIAcsClient(super.getAccessKeyId(), super.getAccessKeySecret());
-
-
+		IAcsClient acsClient = getIAcsClient();
 		// 组装请求对象
 		QuerySendDetailsRequest request = new QuerySendDetailsRequest();
 		// 必填-号码
@@ -219,6 +246,7 @@ public class SmsAliImpl extends SmsBase implements ISms {
 
 	@Override
 	public String getProvider() {
-		return "ALI";
+		return PROVIDER;
 	}
+
 }

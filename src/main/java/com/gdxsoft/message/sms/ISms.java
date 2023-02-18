@@ -3,6 +3,8 @@
  */
 package com.gdxsoft.message.sms;
 
+import java.util.List;
+
 import org.json.JSONObject;
 
 /**
@@ -10,15 +12,35 @@ import org.json.JSONObject;
  *
  */
 public interface ISms {
-	
+
+	public String getSmsAppId();
+
+	public void setSmsAppId(String smsAppId);
+
+	/**
+	 * 短信服务节点
+	 * 
+	 * @return
+	 */
+	public String getRegionId();
+
+	/**
+	 * 短信服务节点
+	 * 
+	 * @param regionId the regionId to set
+	 */
+	public void setRegionId(String regionId);
+
 	/**
 	 * 获取供应商名称
+	 * 
 	 * @return
 	 */
 	public String getProvider();
-	
+
 	/**
-	 *  开发者自己的AK(阿里云在访问控制台寻找)
+	 * 开发者自己的AK(阿里云在访问控制台寻找)
+	 * 
 	 * @return
 	 */
 	public String getAccessKeyId();
@@ -94,4 +116,8 @@ public interface ISms {
 	 * @throws Exception
 	 */
 	public JSONObject sendSms(String phoneNumber, JSONObject templateParam, String outId) throws Exception;
+	
+	public JSONObject sendSms(String[] phoneNumbers, JSONObject templateParam, String outId) throws Exception;
+	
+	public JSONObject sendSms(List<String> phoneNumbers, JSONObject templateParam, String outId) throws Exception;
 }
