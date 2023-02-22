@@ -1,6 +1,4 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0"
-	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<url>https://github.com/gdx1231/emp-script-web</url>
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>com.gdxsoft.easyweb</groupId>
@@ -8,7 +6,7 @@
 	<version>1.1.5</version>
 	<name>Easy Web Appliaction Web</name>
 	<description>Web系统快速成型系统 - 模块部分</description>
-	
+
 	<developers>
 		<developer>
 			<id>guolei</id>
@@ -151,8 +149,7 @@
 							<tasks>
 								<echo>copy ${project.build.finalName}.jar to
 									${basedir}/../../workspace.newVersion/allclass/lib/</echo>
-								<copy
-									todir="${basedir}/../../workspace.newVersion/allclass/lib/">
+								<copy todir="${basedir}/../../workspace.newVersion/allclass/lib/">
 									<fileset dir="${project.build.directory}">
 										<include name="${project.build.finalName}*" />
 									</fileset>
@@ -165,7 +162,7 @@
 					</execution>
 				</executions>
 			</plugin>
-			
+
 			<plugin>
 				<groupId>com.coderplus.maven.plugins</groupId>
 				<artifactId>copy-rename-maven-plugin</artifactId>
@@ -187,7 +184,7 @@
 		</plugins>
 	</build>
 	<dependencies>
-	<dependency>
+		<dependency>
 			<groupId>com.gdxsoft.easyweb</groupId>
 			<artifactId>emp-script-utils</artifactId>
 			<version>[1.1.5,]</version>
@@ -202,6 +199,13 @@
 			<artifactId>weixin</artifactId>
 			<version>[1.0.0,]</version>
 		</dependency>
+		<!-- https://mvnrepository.com/artifact/org.mnode.ical4j/ical4j -->
+		<dependency>
+			<groupId>org.mnode.ical4j</groupId>
+			<artifactId>ical4j</artifactId>
+			<version>1.0.3</version>
+		</dependency>
+
 		<dependency>
 			<groupId>com.google.guava</groupId>
 			<artifactId>guava</artifactId>
@@ -219,12 +223,12 @@
 		</dependency>
 
 		<!-- https://mvnrepository.com/artifact/com.tencentcloudapi/tencentcloud-sdk-java-sms -->
-<!-- 腾讯短信接口 -->
-<dependency>
-    <groupId>com.tencentcloudapi</groupId>
-    <artifactId>tencentcloud-sdk-java-sms</artifactId>
-    <version>3.1.694</version>
-</dependency>
+		<!-- 腾讯短信接口 -->
+		<dependency>
+			<groupId>com.tencentcloudapi</groupId>
+			<artifactId>tencentcloud-sdk-java-sms</artifactId>
+			<version>3.1.694</version>
+		</dependency>
 
 
 		<!-- https://mvnrepository.com/artifact/com.aliyun/aliyun-java-sdk-core -->
@@ -276,13 +280,13 @@
 			<scope>test</scope>
 		</dependency>
 
-		 <dependency>
-		    <groupId>org.slf4j</groupId>
-		    <artifactId>slf4j-jdk14</artifactId>
-		    <version>1.7.32</version>
-		    <scope>test</scope>
+		<dependency>
+			<groupId>org.slf4j</groupId>
+			<artifactId>slf4j-jdk14</artifactId>
+			<version>1.7.32</version>
+			<scope>test</scope>
 		</dependency>
-		
+
 		<dependency>
 			<groupId>mysql</groupId>
 			<artifactId>mysql-connector-java</artifactId>
@@ -337,7 +341,8 @@
 						</configuration>
 					</plugin>
 					<!-- GPG -->
-					<plugin> <!-- 进行延签 -->
+					<plugin>
+						<!-- 进行延签 -->
 						<groupId>org.apache.maven.plugins</groupId>
 						<artifactId>maven-gpg-plugin</artifactId>
 						<version>1.6</version>

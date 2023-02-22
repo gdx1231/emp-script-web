@@ -6,6 +6,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.json.JSONArray;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -14,6 +15,7 @@ import com.gdxsoft.easyweb.data.DTTable;
 import com.gdxsoft.easyweb.datasource.DataConnection;
 import com.gdxsoft.easyweb.script.RequestValue;
 import com.gdxsoft.easyweb.script.display.HtmlCreator;
+import com.gdxsoft.easyweb.utils.UJSon;
 import com.gdxsoft.easyweb.utils.UPath;
 import com.gdxsoft.easyweb.utils.Utils;
 import com.gdxsoft.easyweb.utils.msnet.MList;
@@ -32,6 +34,94 @@ public class SendSms {
 	}
 
 	private static Logger LOGGER = LoggerFactory.getLogger(SendSms.class);
+
+	public static JSONObject checkExistsContent(DataConnection cnn, String templateCode, String template,
+			long beforeSeconds, int skipSMSJID) {
+		String md5 = Utils.md5(templateCode + "GDX" + template);
+		JSONObject rst = UJSon.rstTrue();
+		rst.put("sms_check_md5", md5);
+
+		RequestValue rv = cnn.getRequestValue();
+		// 24小时前
+		Date refDate = new Date(System.currentTimeMillis() - beforeSeconds * 1000); // 1天
+		rv.addOrUpdateValue("ref_date", refDate, "date", 100);
+
+		String sqlMd5 = "select SMS_JID from sms_job a where a.SMS_JTITLE=@sms_check_md5 and SMS_JCDATE>@ref_date";
+		if(skipSMSJID>0) {
+			sqlMd5+=" and sms_jid != "+ skipSMSJID;
+		}
+		DTTable tb = DTTable.getJdbcTable(sqlMd5, cnn);
+		if (tb.getCount() == 0) {
+			rst.put("repeat", false);
+
+		} else {
+			String smsJIds = tb.joinIds("SMS_JID", false);
+			rst.put("repeat", true);
+			rst.put("sms_jids", smsJIds);
+		}
+		cnn.close();
+		return rst;
+	}
+
+	public static JSONObject checkExists(DataConnection cnn, String templateCode, String template, long beforeSeconds,
+			Map<String, Integer> phones, int skipSMSJID) {
+		JSONObject rst = checkExistsContent(cnn, templateCode, template, beforeSeconds, skipSMSJID);
+		if (rst.optBoolean("repeat")) {
+			return rst;
+		}
+
+		String smsJIds = rst.getString("sms_jids");
+
+		StringBuilder sb = new StringBuilder();
+		RequestValue rv = cnn.getRequestValue();
+		phones.forEach((phone, v) -> {
+			String name = "_phone_" + sb.length();
+			if (sb.length() > 0) {
+				sb.append(", @").append(name);
+			} else {
+				sb.append("@").append(name);
+			}
+			rv.addOrUpdateValue(name, phone);
+		});
+
+		String sql2 = "select SMS_JL_PHONE, SMS_JL_ID from sms_job_lst b where b.SMS_JID in (" + smsJIds
+				+ ") and SMS_JL_PHONE in ( " + sb.toString() + ")";
+		DTTable tb2 = DTTable.getJdbcTable(sql2, cnn);
+		cnn.close();
+
+		JSONArray arr = new JSONArray();
+		rst.put("phones", arr);
+		for (int i = 0; i < tb2.getCount(); i++) {
+			String phone = tb2.getCell(i, 0).toString();
+			int jlId = tb2.getCell(i, 1).toInt();
+			if (phones.containsKey(phone)) {
+				phones.put(phone, jlId);
+				arr.put(phone);
+				rst.put(phone, jlId);
+			}
+
+		}
+
+		return rst;
+	}
+
+	/**
+	 * 检查已发重复短信
+	 * 
+	 * @param cnn
+	 * @param templateCode
+	 * @param template
+	 * @param beforeSeconds
+	 * @param phone
+	 * @return
+	 */
+	public static JSONObject checkExists(DataConnection cnn, String templateCode, String template, long beforeSeconds,
+			String phone, int skipSMSJID) {
+		Map<String, Integer> phones = new HashMap<>();
+		phones.put(phone, 0);
+
+		return checkExists(cnn, templateCode, template, beforeSeconds, phones, skipSMSJID);
+	}
 
 	/**
 	 * 立即发送短信，利用当前的HtmlCreator
@@ -133,7 +223,7 @@ public class SendSms {
 		sb.append(", SMS_PROVIDER, SMS_TEMPLATE_CODE, SMS_SIGN_NAME \n");
 		sb.append(", SMS_TEMPLATE_JSON, SMS_OUT_ID, MQ_MSG_ID, MQ_MSG \n");
 		sb.append(") values ( \n");
-		sb.append("  @md5, @SMS_JCNT, @sys_DATE, @MESSAGE_STATUS \n");
+		sb.append("  @sms_check_md5, @SMS_JCNT, @sys_DATE, @MESSAGE_STATUS \n");
 		sb.append(", @SMS_PHONES, @G_ADM_ID, @G_SUP_ID, @MSG_REF_TABLE.100, @MSG_REF_ID \n");
 		sb.append(", @SMS_PROVIDER, @SMS_TEMPLATE_CODE, @SMS_SIGN_NAME \n");
 		sb.append(", @SMS_TEMPLATE_JSON, @SMS_OUT_ID, @MQ_MSG_ID, @MESSSAGE_LOG \n");
@@ -178,49 +268,11 @@ public class SendSms {
 
 	private void checkExists() {
 		rv.addOrUpdateValue("MESSAGE_STATUS", "NO");
-
-		String md5 = Utils.md5(sms.getSmsTemplateCode() + "GDX" + this.smsTemplateParameter.toString());
-		rv.addOrUpdateValue("md5", md5);
-		this.messageMd5 = md5;
-
 		DataConnection cnn = new DataConnection(rv);
 		// 24小时前
-		Date refDate = new Date(System.currentTimeMillis() - 24 * 60 * 60 * 1000); // 1天
-		rv.addOrUpdateValue("ref_date", refDate, "date", 100);
-
-		String sqlMd5 = "select SMS_JID from sms_job a where a.SMS_JTITLE=@md5 and SMS_JCDATE>@ref_date";
-		DTTable tb = DTTable.getJdbcTable(sqlMd5, cnn);
-		if (tb.getCount() == 0) {
-			this.smsJId = -1;
-			cnn.close();
-			return;
-		}
-		String smsJIds = tb.joinIds("SMS_JID", false);
-
-		StringBuilder sb = new StringBuilder();
-
-		this.phones.forEach((phone, v) -> {
-			String name = "_phone_" + sb.length();
-			if (sb.length() > 0) {
-				sb.append(", @").append(name);
-			} else {
-				sb.append("@").append(name);
-			}
-			rv.addOrUpdateValue(name, phone);
-		});
-
-		String sql2 = "select SMS_JL_PHONE, SMS_JL_ID from sms_job_lst b where b.SMS_JID in (" + smsJIds
-				+ ") and SMS_JL_PHONE in ( " + sb.toString() + ")";
-		DTTable tb2 = DTTable.getJdbcTable(sql2, cnn);
-		cnn.close();
-
-		for (int i = 0; i < tb2.getCount(); i++) {
-			String phone = tb2.getCell(i, 0).toString();
-			int jlId = tb2.getCell(i, 1).toInt();
-			if (this.phones.containsKey(phone)) {
-				this.phones.put(phone, jlId);
-			}
-		}
+		long before = 24 * 60 * 60;
+		SendSms.checkExists(cnn, this.sms.getSmsTemplateCode(), this.smsTemplateParameter.toString(), before,
+				this.phones, -1);
 	}
 
 	public void init(HtmlCreator hc) {
