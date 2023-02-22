@@ -46,6 +46,7 @@ public class JobCheckAndSendMessages {
 	public void runJobOaReq(DataConnection cnn ) {
 		log.info("工作任务跟踪");
 		JobOaReq job = new JobOaReq(cnn);
+	
 		job.setRowSup(_row);
 		try {
 			job.runTask();

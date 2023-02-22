@@ -16,6 +16,14 @@ import com.gdxsoft.easyweb.utils.msnet.MStr;
 import com.gdxsoft.web.message.email.SendMessage;
 
 public class OaReqMails extends JobBase {
+	/**
+	 * 任务邮件默认发件人邮件
+	 */
+	public static final String OA_REQ_SENDER = "oa_req_sender";
+	/**
+	 * 任务邮件的默认发件人名称
+	 */
+	public static final String OA_REQ_SENDER_NAME = "oa_req_sender_name";
 	private static Logger LOGGER = LoggerFactory.getLogger(OaReqMails.class);
 
 	private static final String MAIL_HEAD = "<table style='font-size:14px' width=600 border=\"0\" cellpadding=1 cellspacing=1 bgcolor='darkgray'>\n"
@@ -249,6 +257,17 @@ public class OaReqMails extends JobBase {
 
 	}
 
+	/**
+	 * 保存到sys_message_info中
+	 * 
+	 * @param tos
+	 * @param ccs
+	 * @param subject
+	 * @param content
+	 * @param atts
+	 * @return
+	 * @throws Exception
+	 */
 	private String sendMail(HashMap<String, String> tos, HashMap<String, String> ccs, String subject, String content,
 			HashMap<String, String> atts) throws Exception {
 
@@ -259,8 +278,24 @@ public class OaReqMails extends JobBase {
 
 		SendMessage sm = new SendMessage();
 		sm.setCnn(_Conn);
-		
-		int messageId = sm.saveToQueue(subject, content, tos, ccs, atts);
+		sm.setRv(_Conn.getRequestValue());
+
+		_Conn.getRequestValue().addOrUpdateValue("MSG_REF_ID", this._ReqId);
+		_Conn.getRequestValue().addOrUpdateValue("MSG_REF_TABLE", "oa_req");
+
+		String from;
+		String fromName;
+		if (this.sender == null) {
+			// OA_REQ 发件人
+			from = UPath.getInitPara(OA_REQ_SENDER);
+			fromName = UPath.getInitPara(OA_REQ_SENDER_NAME);
+			this.sender = new Addr(from, fromName);
+		} else {
+			from = this.sender.getEmail();
+			fromName = this.sender.getName();
+		}
+
+		int messageId = sm.saveToQueue(from, fromName, subject, content, tos, ccs, atts);
 		if (sm.isRepeat()) {
 			return "重复邮件：" + messageId;
 		} else {

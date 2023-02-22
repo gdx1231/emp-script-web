@@ -3,6 +3,8 @@ package com.gdxsoft.web.message.email;
 import java.util.Map;
 
 import org.apache.commons.lang3.StringUtils;
+import org.json.JSONArray;
+import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -154,16 +156,18 @@ public class SendMessage {
 	/**
 	 * 保存到队列
 	 * 
-	 * @param subject 邮件标题
-	 * @param content 正文
-	 * @param tos     收件人(email, name)
-	 * @param ccs     抄送人(email, name)
-	 * @param atts    附件(name, path)
+	 * @param from     发件人
+	 * @param fromName 发件人姓名
+	 * @param subject  邮件标题
+	 * @param content  正文
+	 * @param tos      收件人(email, name)
+	 * @param ccs      抄送人(email, name)
+	 * @param atts     附件(name, path)
 	 * @return messageId
 	 */
-	public int saveToQueue(String subject, String content, Map<String, String> tos, Map<String, String> ccs,
-			Map<String, String> atts) {
-		this.sendMail.setFrom(DEFAULT_EMAIL, DEFAULT_NAME).setSubject(subject).setHtmlContent(content);
+	public int saveToQueue(String from, String fromName, String subject, String content, Map<String, String> tos,
+			Map<String, String> ccs, Map<String, String> atts) {
+		this.sendMail.setFrom(from, fromName).setSubject(subject).setHtmlContent(content);
 		tos.forEach((email, name) -> {
 			this.sendMail.addTo(email, name);
 		});
@@ -249,6 +253,16 @@ public class SendMessage {
 		rv.addOrUpdateValue("CC_NAMES", ccName.toString());
 		sbMd5.append(ccName.toString()).append("GDX");
 
+		//附件
+		JSONArray atts = new JSONArray();
+		this.sendMail.getAtts().forEach((k, v) -> {
+			 JSONObject obj = new JSONObject();
+			 obj.put(v.getAttachName(), v.getSavePathAndName());
+			 atts.put(obj);
+		});
+		rv.addOrUpdateValue("ATTS", atts.toString());
+		sbMd5.append(atts.toString()).append("GDX");
+		
 		this.messageMd5 = Utils.md5(sbMd5.toString());
 		rv.addOrUpdateValue("MESSAGE_MD5", this.messageMd5);
 
@@ -419,5 +433,12 @@ public class SendMessage {
 
 	public void setCnn(DataConnection cnn) {
 		this.cnn = cnn;
+	}
+
+	/**
+	 * @param rv the rv to set
+	 */
+	public void setRv(RequestValue rv) {
+		this.rv = rv;
 	}
 }

@@ -8,6 +8,7 @@ import org.slf4j.LoggerFactory;
 import com.gdxsoft.easyweb.data.DTRow;
 import com.gdxsoft.easyweb.data.DTTable;
 import com.gdxsoft.easyweb.datasource.DataConnection;
+import com.gdxsoft.easyweb.utils.Mail.Addr;
 import com.gdxsoft.easyweb.utils.msnet.MListStr;
 
 /**
@@ -21,8 +22,9 @@ import com.gdxsoft.easyweb.utils.msnet.MListStr;
  */
 public class JobOaReq extends JobBase {
 	private static Logger LOGGER = LoggerFactory.getLogger(JobOaReq.class);
+	private Addr sender; // 发件人
 
-	public JobOaReq(DataConnection cnn ) {
+	public JobOaReq(DataConnection cnn) {
 		super(cnn, null);
 	}
 
@@ -45,12 +47,12 @@ public class JobOaReq extends JobBase {
 	public void oaReqSendDelaysMails(DataConnection conn) throws Exception {
 		final long oneMinute = 60 * 1000;
 		final long oneHour = 60 * oneMinute;
-		
+
 		// 23小时59分钟
-		Date before23hour = new Date(System.currentTimeMillis() - 23 * oneHour + 59 * oneMinute); 
-		 // 14天前
+		Date before23hour = new Date(System.currentTimeMillis() - 23 * oneHour + 59 * oneMinute);
+		// 14天前
 		Date lastDate = new Date(System.currentTimeMillis() - 14 * 24 * oneHour);
-		
+
 		conn.getRequestValue().addOrUpdateValue("before23hour", before23hour, "date", 100);
 		conn.getRequestValue().addOrUpdateValue("lastDate", lastDate, "date", 100);
 		// 工作延迟的邮件
@@ -157,7 +159,7 @@ public class JobOaReq extends JobBase {
 		if (pid == null) {
 			jm = new OaReqMails(super._Conn, super._dbName, reqId);
 			jm.setRowSup(super._RowSup);
-
+			jm.setSender(sender);
 			if (type.equals("REQ_MAIL_START")) {
 				jm.sendStart();
 			} else if (type.equals("REQ_MAIL_COMPLETE")) {
@@ -168,9 +170,24 @@ public class JobOaReq extends JobBase {
 		} else {
 			jm = new OaReqMails(super._Conn, super._dbName, Integer.parseInt(pid));
 			jm.setRowSup(super._RowSup);
+			jm.setSender(sender);
 
 			jm.sendProcess(reqId);
 		}
 
+	}
+
+	/**
+	 * @return the sender
+	 */
+	public Addr getSender() {
+		return sender;
+	}
+
+	/**
+	 * @param sender the sender to set
+	 */
+	public void setSender(Addr sender) {
+		this.sender = sender;
 	}
 }
