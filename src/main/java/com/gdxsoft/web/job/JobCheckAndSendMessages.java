@@ -9,27 +9,18 @@ import org.slf4j.LoggerFactory;
 
 import com.gdxsoft.easyweb.data.DTRow;
 import com.gdxsoft.easyweb.datasource.DataConnection;
+import com.gdxsoft.easyweb.utils.Mail.Addr;
 
 /**
  * @author admin
  *
  */
 public class JobCheckAndSendMessages {
-	private static Logger log = LoggerFactory.getLogger(JobMailSenderBase.class);
+	private static Logger log = LoggerFactory.getLogger(JobCheckAndSendMessages.class);
 	static long minute = 1000L * 60;
 	private DTRow _row;
 
-
-	public void checkJobMessages(DataConnection cnn, String supName, String databaseName) {
-
-		log.info("---- job start ----->  ");
-		log.info("---- 开始：" + supName + " [" + databaseName + "] -----");
-		runMailSend(cnn, databaseName);
-		runSmsSend(cnn, databaseName);
-		this.runBounceMail(cnn);
-		cnn.close();
-		log.info(" <---- job end -----");
-	}
+	private Addr oaReqSender;
 
 	/**
 	 * 发送短信 表：sms_job
@@ -37,26 +28,41 @@ public class JobCheckAndSendMessages {
 	 * @param cnn
 	 * @param dbName
 	 */
-	private void runSmsSend(DataConnection cnn, String dbName) {
-		JobSms sms = new JobSms(cnn, dbName);
+	public void runSmsSend(DataConnection cnn ) {
+		JobSms sms = new JobSms(cnn);
 		sms.setRowSup(_row);
 		log.info("  发送短信 表：sms_job runSmsSend");
 		try {
 			sms.sendSmsByJob2();
 		} catch (Exception e) {
-			log.error("  runSmsSend" + e.getMessage());
+			log.error("runSmsSend" + e.getMessage());
 		}
 	}
 
+	/**
+	 * 工作任务跟踪 oa_req
+	 * @param cnn
+	 */
+	public void runJobOaReq(DataConnection cnn ) {
+		log.info("工作任务跟踪");
+		JobOaReq job = new JobOaReq(cnn);
+		job.setRowSup(_row);
+		try {
+			job.runTask();
+		} catch (Exception e) {
+			log.error("runJobOaReq: " + e.getMessage());
+		}
+	}
+	
 	/**
 	 * 邮件发送与提醒短信发送
 	 * 
 	 * @param cnn
 	 * @param dbName
 	 */
-	private void runMailSend(DataConnection cnn, String dbName) {
+	public void runMailSend(DataConnection cnn ) {
 		log.info("  邮件发送与提醒短信发送 runMailSend");
-		JobMailSender job = new JobMailSender(cnn, dbName);
+		JobMailSender job = new JobMailSender(cnn);
 		job.setRowSup(_row);
 		try {
 			job.runTask();
@@ -95,7 +101,7 @@ public class JobCheckAndSendMessages {
 	 * 
 	 * @param cnn
 	 */
-	private void runBounceMail(DataConnection cnn) {
+	public void runBounceMail(DataConnection cnn) {
 		log.info("  检查退信 runBounceMail");
 		JobMailBounce b = new JobMailBounce(cnn);
 		try {
@@ -103,5 +109,19 @@ public class JobCheckAndSendMessages {
 		} catch (Exception err) {
 			log.error("JobMailBounce: " + err.getMessage());
 		}
+	}
+
+	/**
+	 * @return the oaReqSender
+	 */
+	public Addr getOaReqSender() {
+		return oaReqSender;
+	}
+
+	/**
+	 * @param oaReqSender the oaReqSender to set
+	 */
+	public void setOaReqSender(Addr oaReqSender) {
+		this.oaReqSender = oaReqSender;
 	}
 }

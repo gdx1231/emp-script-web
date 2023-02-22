@@ -1,5 +1,7 @@
 package com.gdxsoft.web.message.email;
 
+import java.util.Map;
+
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -98,6 +100,7 @@ public class SendMessage {
 	private boolean repeat;
 	private Integer messageId;
 	private String messageMd5;
+	private DataConnection cnn;
 
 	public SendMessage() {
 		sendMail = new SendMail();
@@ -115,6 +118,10 @@ public class SendMessage {
 	}
 
 	public int saveToQueue() {
+		if (this.cnn == null) {
+			this.cnn = new DataConnection(this.rv);
+		}
+
 		StringBuilder sb = new StringBuilder();
 		sb.append("INSERT INTO sys_message_info (");
 		sb.append("   FROM_SUP_ID, FROM_USR_ID, FROM_EMAIL, FROM_NAME, TARGET_NAME, TARGET_EMAIL\n");
@@ -133,10 +140,8 @@ public class SendMessage {
 		sb.append(")\n -- auto MESSAGE_ID");
 		String sql = sb.toString();
 
-		DataConnection cnn = new DataConnection(rv);
-		
 		rv.addOrUpdateValue("MAIL_MESSAGE_ID", this.sendMail.getMessageId());
-		
+
 		int msgId = cnn.executeUpdateReturnAutoIncrement(sql);
 		if (cnn.getErrorMsg() != null) {
 			this.lastError = cnn.getErrorMsg();
@@ -146,7 +151,40 @@ public class SendMessage {
 		return msgId;
 	}
 
-	private void addParametersToRvAndCheckExists() {
+	/**
+	 * 保存到队列
+	 * 
+	 * @param subject 邮件标题
+	 * @param content 正文
+	 * @param tos     收件人(email, name)
+	 * @param ccs     抄送人(email, name)
+	 * @param atts    附件(name, path)
+	 * @return messageId
+	 */
+	public int saveToQueue(String subject, String content, Map<String, String> tos, Map<String, String> ccs,
+			Map<String, String> atts) {
+		this.sendMail.setFrom(DEFAULT_EMAIL, DEFAULT_NAME).setSubject(subject).setHtmlContent(content);
+		tos.forEach((email, name) -> {
+			this.sendMail.addTo(email, name);
+		});
+		if (ccs != null) {
+			ccs.forEach((email, name) -> {
+				this.sendMail.addCc(email, name);
+			});
+		}
+		if (atts != null) {
+			atts.forEach((name, path) -> {
+				this.sendMail.addAttach(name, path);
+			});
+		}
+		if (this.addParametersToRvAndCheckExists()) {
+			return this.messageId;
+		} else {
+			return this.saveToQueue();
+		}
+	}
+
+	private boolean addParametersToRvAndCheckExists() {
 		StringBuilder sbMd5 = new StringBuilder();
 
 		rv.addOrUpdateValue("MESSAGE_STATUS", "NO");
@@ -224,6 +262,7 @@ public class SendMessage {
 			this.repeat = true;
 		}
 		cnn.close();
+		return this.repeat;
 	}
 
 	public void init(String xmlName, String itemName, RequestValue refRequestValue) {
@@ -264,8 +303,6 @@ public class SendMessage {
 		String mailMessageId = "gdxosft.com_EWA_" + USnowflake.nextId();
 		this.sendMail.setMessageId(mailMessageId);
 
-		
-
 		if (rv.s(MSG_REF_TABLE) == null) {
 			rv.addOrUpdateValue(MSG_REF_TABLE, itemName + "," + xmlName);
 		}
@@ -294,7 +331,7 @@ public class SendMessage {
 	}
 
 	private int addUsers(DTTable tb, String emailField, String nameField, String receptionType) {
-		if(tb.getCount() == 0) {
+		if (tb.getCount() == 0) {
 			return 0;
 		}
 		int emailIndex = tb.getColumns().getNameIndex(emailField);
@@ -374,5 +411,13 @@ public class SendMessage {
 	 */
 	public String getMessageMd5() {
 		return messageMd5;
+	}
+
+	public DataConnection getCnn() {
+		return cnn;
+	}
+
+	public void setCnn(DataConnection cnn) {
+		this.cnn = cnn;
 	}
 }

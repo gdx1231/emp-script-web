@@ -21,15 +21,15 @@ import com.gdxsoft.web.message.sms.SendSms;
  *
  */
 public class JobSms extends JobBase {
-	private static Logger log = LoggerFactory.getLogger(JobMailSenderBase.class);
+	private static Logger log = LoggerFactory.getLogger(JobSms.class);
 
 	private ISms sms;
 	private static String[] HZ = { "０", "１", "２", "３", "４", "５", "６", "７", "８", "９" };
 
 	private HashMap<Integer, Boolean> maps = new HashMap<Integer, Boolean>();
 
-	public JobSms(DataConnection cnn, String dbName) {
-		super(cnn, dbName);
+	public JobSms(DataConnection cnn ) {
+		super(cnn, null);
 	}
 
 	/**
