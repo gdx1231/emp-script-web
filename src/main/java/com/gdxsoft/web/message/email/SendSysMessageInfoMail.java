@@ -217,16 +217,9 @@ public class SendSysMessageInfoMail {
 		}
 		String[] tos1 = tos.split(";");
 		String[] toNames1 = toNames.split(";");
-		int inc = 0;
-		for (int i = 0; i < tos1.length; i++) {
-			if (toNames1.length == tos1.length) {
-				sender.addTo(tos1[i], toNames1[i]);
-			} else {
-				sender.addTo(tos1[i]);
-			}
-			inc++;
-		}
-		return inc;
+		sender.addTos(tos1, toNames1);
+
+		return sender.getTos().size();
 	}
 
 	private int addBccs(SendMail sender, String bccs, String bccNames) {
@@ -235,16 +228,9 @@ public class SendSysMessageInfoMail {
 		}
 		String[] tos = bccs.split(";");
 		String[] toNames = (bccNames == null ? "" : bccNames).split(";");
-		int inc = 0;
-		for (int i = 0; i < tos.length; i++) {
-			if (toNames.length == tos.length) {
-				sender.addBcc(tos[i], toNames[i]);
-			} else {
-				sender.addBcc(tos[i]);
-			}
-			inc++;
-		}
-		return inc;
+
+		sender.addBccs(tos, toNames);
+		return sender.getBccs().size();
 	}
 
 	private int addCcs(SendMail sender, String ccs, String ccNames) {
@@ -253,17 +239,9 @@ public class SendSysMessageInfoMail {
 		}
 		String[] tos = ccs.split(";");
 		String[] toNames = (ccNames == null ? "" : ccNames).split(";");
-		int inc = 0;
-		for (int i = 0; i < tos.length; i++) {
-			if (toNames.length == tos.length) {
-				sender.addCc(tos[i], toNames[i]);
-			} else {
-				sender.addCc(tos[i]);
-			}
-			inc++;
-		}
 
-		return inc;
+		sender.addCcs(tos, toNames);
+		return sender.getCcs().size();
 	}
 
 }

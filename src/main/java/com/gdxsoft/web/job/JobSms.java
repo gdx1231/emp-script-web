@@ -11,6 +11,7 @@ import com.gdxsoft.easyweb.data.DTRow;
 import com.gdxsoft.easyweb.data.DTTable;
 import com.gdxsoft.easyweb.datasource.DataConnection;
 import com.gdxsoft.message.sms.ISms;
+import com.gdxsoft.message.sms.SmsBase;
 import com.gdxsoft.message.sms.SmsMyMobKit;
 import com.gdxsoft.web.message.sms.SendSms;
 
@@ -24,11 +25,10 @@ public class JobSms extends JobBase {
 	private static Logger log = LoggerFactory.getLogger(JobSms.class);
 
 	private ISms sms;
-	private static String[] HZ = { "０", "１", "２", "３", "４", "５", "６", "７", "８", "９" };
 
 	private HashMap<Integer, Boolean> maps = new HashMap<Integer, Boolean>();
 
-	public JobSms(DataConnection cnn ) {
+	public JobSms(DataConnection cnn) {
 		super(cnn, null);
 	}
 
@@ -63,7 +63,7 @@ public class JobSms extends JobBase {
 		Date dtBefore = new Date(System.currentTimeMillis() - twoHours);
 		super._Conn.getRequestValue().addOrUpdateValue("dt_Before", dtBefore, "date", 100);
 
-		String sql =  sb.toString() ;
+		String sql = sb.toString();
 		DTTable tb = DTTable.getJdbcTable(sql, super._Conn);
 		if (tb.getCount() > 0) {
 			// 两小时以内已经发送
@@ -73,7 +73,7 @@ public class JobSms extends JobBase {
 		}
 	}
 
-	public void sendSmsByJob2() throws Exception {
+	public void runTask() throws Exception {
 		StringBuilder sb = new StringBuilder();
 		sb.append("select sj.*, sjl.SMS_JL_PHONE, sjl.SMS_JL_ID, sjl.SMS_JL_REFID, sjl.SMS_JL_REF_TABLE");
 		sb.append(" from sms_job sj ");
@@ -81,14 +81,14 @@ public class JobSms extends JobBase {
 		sb.append(" where sj.sms_jstatus = 'SMS_JOB_NEW'");
 		sb.append("  and sms_jl_phone is not null");
 
-		String sql = sb.toString() ;
+		String sql = sb.toString();
 		int pagesize = 100;
 		int cur = 1;
 		DTTable lst = DTTable.getJdbcTable(sql, "SMS_JL_ID", pagesize, cur, super._Conn);
 		for (int i = 0; i < lst.getCount(); i++) {
 			this.sendSms(lst.getRow(i));
 		}
-		this.log(" send sms " + lst.getCount());
+		log.info("Send sms " + lst.getCount());
 	}
 
 	/**
@@ -106,9 +106,10 @@ public class JobSms extends JobBase {
 		if (phoneNo == null || phoneNo.trim().length() == 0) {
 			sql = "update sms_job set sms_jstatus='SMS_JOB_NO_PHONE',sms_jmdate=@sys_date where sms_jid=" + jid;
 			super._Conn.executeUpdate(sql);
+			log.warn("NOT phone number,SMS_JID={}, SMS_JL_ID={}", jid, r.getCell("SMS_JL_ID").toString());
 			return;
 		}
-		phoneNo = replaceHzNum(phoneNo);
+		phoneNo = SmsBase.replacePhoneHz(phoneNo);
 
 		String smsProvier = r.getCell("SMS_PROVIDER").toString();
 		String smsSignName = r.getCell("SMS_SIGN_NAME").toString();
@@ -116,7 +117,7 @@ public class JobSms extends JobBase {
 
 		boolean isSended = true;
 		if ("MYMOBKIT".equalsIgnoreCase(smsProvier)) {
-			isSended = this.checkRepeat(phoneNo,  content , jid);
+			isSended = this.checkRepeat(phoneNo, content, jid);
 		} else {
 			long before = 2 * 60 * 60;
 			JSONObject rst = SendSms.checkExists(super._Conn, this.sms.getSmsTemplateCode(), json, before, phoneNo,
@@ -138,7 +139,7 @@ public class JobSms extends JobBase {
 
 			// 通过Android手机的 MyMobKit App发送自定义短信
 			if ("MYMOBKIT".equalsIgnoreCase(smsProvier)) {
-				log.info("SEND-MYMOBKIT-sms_job:" + phoneNo + "," + content);
+				log.info("SEND-MYMOBKIT sms_job:" + phoneNo + "," + content);
 				JSONObject sendRst = SmsMyMobKit.sendSms(phoneNo, smsSignName, content, false);
 				smsResult = sendRst.toString();
 				if (!sendRst.optBoolean("isSuccessful")) {
@@ -146,7 +147,7 @@ public class JobSms extends JobBase {
 					log.error("ERR, " + phoneNo + ":" + smsResult);
 				}
 			} else {
-				log.info("SEND-sms_job:" + phoneNo + "," + json);
+				log.info("SEND sms_job:" + phoneNo + "," + json);
 				JSONObject templateParameters = new JSONObject(content);
 				JSONObject sendRst = this.sms.sendSms(phoneNo, templateParameters, "");
 				smsResult = sendRst.toString();
@@ -155,11 +156,11 @@ public class JobSms extends JobBase {
 					log.error("ERR, " + phoneNo + ":" + smsResult);
 				}
 			}
-			 
+
 			sql = "update sms_job set sms_jstatus='" + status + "', sms_jmdate=@sys_date where sms_jid=" + jid;
 
-			String sql1 = "update sms_job_lst set SMS_RESULT='" + smsResult.replace("'", "''")
-					+ "' where SMS_JL_ID=" + smsJlId;
+			String sql1 = "update sms_job_lst set SMS_RESULT='" + smsResult.replace("'", "''") + "' where SMS_JL_ID="
+					+ smsJlId;
 
 			super._Conn.getRequestValue().resetDateTime();
 			super._Conn.executeUpdate(sql);
@@ -170,13 +171,6 @@ public class JobSms extends JobBase {
 		} finally {
 			super._Conn.close();
 		}
-	}
-
-	public static String replaceHzNum(String no) {
-		for (int i = 0; i < HZ.length; i++) {
-			no = no.replace(HZ[i], i + "");
-		}
-		return no;
 	}
 
 	/**

@@ -33,7 +33,7 @@ public class JobCheckAndSendMessages {
 		sms.setRowSup(_row);
 		log.info("  发送短信 表：sms_job runSmsSend");
 		try {
-			sms.sendSmsByJob2();
+			sms.runTask();
 		} catch (Exception e) {
 			log.error("runSmsSend" + e.getMessage());
 		}

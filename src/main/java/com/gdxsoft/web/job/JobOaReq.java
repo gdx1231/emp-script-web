@@ -49,7 +49,7 @@ public class JobOaReq extends JobBase {
 		final long oneHour = 60 * oneMinute;
 
 		// 23小时59分钟
-		Date before23hour = new Date(System.currentTimeMillis() - 23 * oneHour + 59 * oneMinute);
+		Date before23hour = new Date(System.currentTimeMillis() + 23 * oneHour + 59 * oneMinute);
 		// 14天前
 		Date lastDate = new Date(System.currentTimeMillis() - 14 * 24 * oneHour);
 
@@ -89,9 +89,10 @@ public class JobOaReq extends JobBase {
 		}
 
 		// 工作延迟
-		if (lstDelay.getList().size() > 0) {
-			String sql = " UPDATE OA_REQ SET REQ_DELAY_MAIL_TIME = GETDATE() WHERE REQ_ID IN (" + lstDelay.join(",")
-					+ ")";
+		if (lstDelay.size() > 0) {
+			String ids = lstDelay.join(",");
+			String sql = "UPDATE OA_REQ SET REQ_DELAY_MAIL_TIME =@sys_date WHERE REQ_ID IN (" + ids + ")";
+			conn.getRequestValue().resetDateTime();
 			conn.executeUpdate(sql);
 		}
 	}
@@ -121,15 +122,16 @@ public class JobOaReq extends JobBase {
 			DTRow r = tb.getRow(i);
 			try {
 				this.sendJobMail(r, lst);
-
 			} catch (Exception e) {
 				LOGGER.error(e.getMessage());
 			}
 		}
 
 		//
-		if (lst.getList().size() > 0) {
-			sql = "UPDATE OA_REQ_MAIL SET REQ_MAIL_SDATE=GETDATE() WHERE REQ_ID IN (" + lst.join(",") + ")";
+		if (lst.size() > 0) {
+			String ids = lst.join(",");
+			sql = "UPDATE OA_REQ_MAIL SET REQ_MAIL_SDATE=@sys_date WHERE REQ_ID IN (" + ids + ")";
+			conn.getRequestValue().resetDateTime();
 			conn.executeUpdate(sql);
 		}
 
@@ -144,7 +146,8 @@ public class JobOaReq extends JobBase {
 	 */
 	void sendJobMail(DTRow r, MListStr lst) throws Exception {
 		int reqId = Integer.parseInt(r.getCell("req_id").toString());
-		lst.add(reqId + "");
+		lst.add(reqId);
+
 		String pid = r.getCell("req_pid").toString();
 		String type = r.getCell("REQ_MAIL_TYPE").toString();
 		String reqStatus = r.getCell("REQ_STATUS").toString();

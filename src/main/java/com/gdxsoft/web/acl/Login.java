@@ -80,6 +80,9 @@ public class Login {
 	public static String gotoLogin(RequestValue rv, String loginUrl) {
 		String _tmp_lang = rv.getLang();
 		String uLoginLeft = loginUrl + (loginUrl.indexOf("?") < 0 ? "?" : "&") + "EWA_LANG=" + _tmp_lang;
+		if (rv.getRequest() == null) {
+			return "404";
+		}
 		String ref = rv.getRequest().getContextPath() + rv.getRequest().getServletPath();
 		if (rv.getRequest().getQueryString() != null) {
 			ref += "?" + rv.getRequest().getQueryString();
@@ -125,6 +128,7 @@ public class Login {
 
 	/**
 	 * 商户(G_SUP_ID)在session 或 COOKIE_ENCYRPT
+	 * 
 	 * @param rv
 	 * @return
 	 */
@@ -142,6 +146,7 @@ public class Login {
 
 	/**
 	 * 管理员(G_ADM_ID)在session 或 COOKIE_ENCYRPT
+	 * 
 	 * @param rv
 	 * @return
 	 */
@@ -159,6 +164,7 @@ public class Login {
 
 	/**
 	 * 用户(G_SUP_ID)在session 或 COOKIE_ENCYRPT
+	 * 
 	 * @param rv
 	 * @return
 	 */
