@@ -8,25 +8,27 @@ import com.gdxsoft.easyweb.script.RequestValue;
 import com.gdxsoft.easyweb.utils.Utils;
 
 public class ValidBase {
+	public static final String FP_UNID = "FP_UNID";
+	public static final String FP_VALIDCODE = "FP_VALIDCODE";
 	/**
 	 * web_user 自动登录使用的 FP_TYPE,
 	 */
-	public static String VALID_TYPE_WEB_USER_LOGIN = "WEIXIN_LOGIN";
+	public static final String VALID_TYPE_WEB_USER_LOGIN = "WEIXIN_LOGIN";
 
 	/**
 	 * 短信登录使用的 FP_TYPE
 	 */
-	public static String VALID_TYPE_USER_LOGIN = "SMS_WEB_USER_LOGIN";
+	public static final String VALID_TYPE_USER_LOGIN = "SMS_WEB_USER_LOGIN";
 
 	/**
 	 * 管理员 登录验证 <br>
 	 */
-	public static String VALID_TYPE_ADM_LOGIN = "B2B_ADM_LOGIN";
+	public static final String VALID_TYPE_ADM_LOGIN = "B2B_ADM_LOGIN";
 
 	/**
 	 * 微信管理员登录<br>
 	 */
-	public static String VALID_TYPE_ADM_WX_LOGIN = "WX_ADM_LOGIN";
+	public static final String VALID_TYPE_ADM_WX_LOGIN = "WX_ADM_LOGIN";
 
 	RequestValue rv_;
 
