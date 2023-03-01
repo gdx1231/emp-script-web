@@ -680,7 +680,7 @@ public class HttpFileViewBase {
 				+ "\"></iframe>";
 
 		// 根据 navigator.pdfViewerEnabled 进行输出
-		sbHtml.append("<script>(function(){ var s=navigator.pdfViewerEnabled?'" + embed + "':'" + pdfJs
+		sbHtml.append("<script>(function(){ var s=navigator.mimeTypes['application/pdf']||navigator.pdfViewerEnabled?'" + embed + "':'" + pdfJs
 				+ "';document.getElementById('" + id + "').innerHTML = s; })();</script>");
 
 		sbHtml.append(skipHeader ? "" : "</div></body></html>");
