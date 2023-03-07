@@ -320,29 +320,33 @@ public class HttpFileViewBase {
 	 * @return 缩略图
 	 */
 	public File createResized(File orginalFile, int width, int height, int quality) {
-		String accept = this.rv.getRequest().getHeader("accept");
-		String imgExt = "jpeg";
-		if (accept != null) {
+		String accept = this.rv.getRequest().getHeader("accept"); // 获取请求头中的accept字段
+		String imgExt = "jpeg"; // 默认图片格式为jpeg
+		if (UImages.checkImageMagick() && accept != null) { // 如果accept字段不为空
 			if (supportAvif && accept.indexOf("image/avif") >= 0) { // ms edge 暂时不支持
-				imgExt = "avif";
+				imgExt = "avif"; // 如果支持avif格式并且accept字段包含image/avif，就选择avif格式
 			} else if (supportWebp && accept.indexOf("image/webp") >= 0) {
-				imgExt = "webp";
+				imgExt = "webp"; // 如果支持webp格式并且accept字段包含image/webp，就选择webp格式
 			} else if (supportHeic && accept.indexOf("image/heic") >= 0) {
-				imgExt = "heic";
+				imgExt = "heic"; // 如果支持heic格式并且accept字段包含image/heic，就选择heic格式
 			}
 		}
-		String exitspic = orginalFile.getAbsolutePath() + "$resized/" + width + "x" + height + "." + imgExt;
-		File fileSmallPic = new File(exitspic);
+		// 根据原始文件和缩放参数生成一个新的文件名
+		String exitspic = UImages.getResizedImageName(orginalFile, width, height, imgExt); 
+		// 创建一个新的文件对象
+		File fileSmallPic = new File(exitspic); 
 
-		if (fileSmallPic.exists()) {
-			return fileSmallPic;
+		if (fileSmallPic.exists()) { // 如果新的文件已经存在
+			return fileSmallPic; // 就直接返回该文件对象
 		}
 		try {
-			String f2 = UImages.createSmallImage(orginalFile.getAbsolutePath(), width, height, imgExt, 70);
-			return new File(f2);
-		} catch (Exception err1) {
-			LOGGER.error("{}->{},{}", orginalFile, fileSmallPic, err1.getMessage());
-			return null;
+			// 否则调用UImages类的方法来创建一个缩放后的图片文件，并返回其路径
+			String f2 = UImages.createSmallImage(orginalFile.getAbsolutePath(), width, height, imgExt, 70); 
+			// 根据路径创建一个新的文件对象并返回
+			return new File(f2); 
+		} catch (Exception err1) { // 如果发生异常
+			LOGGER.error("{}->{},{}", orginalFile, fileSmallPic, err1.getMessage()); // 记录错误信息到日志中
+			return null; // 返回空值
 		}
 
 	}
@@ -680,8 +684,8 @@ public class HttpFileViewBase {
 				+ "\"></iframe>";
 
 		// 根据 navigator.pdfViewerEnabled 进行输出
-		sbHtml.append("<script>(function(){ var s=navigator.mimeTypes['application/pdf']||navigator.pdfViewerEnabled?'" + embed + "':'" + pdfJs
-				+ "';document.getElementById('" + id + "').innerHTML = s; })();</script>");
+		sbHtml.append("<script>(function(){ var s=navigator.mimeTypes['application/pdf']||navigator.pdfViewerEnabled?'"
+				+ embed + "':'" + pdfJs + "';document.getElementById('" + id + "').innerHTML = s; })();</script>");
 
 		sbHtml.append(skipHeader ? "" : "</div></body></html>");
 
