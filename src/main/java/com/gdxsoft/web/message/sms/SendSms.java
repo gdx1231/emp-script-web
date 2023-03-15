@@ -70,6 +70,9 @@ public class SendSms {
 			return rst;
 		}
 
+		if(!rst.has("sms_jids")) {
+			return rst;
+		}
 		String smsJIds = rst.getString("sms_jids");
 
 		StringBuilder sb = new StringBuilder();
