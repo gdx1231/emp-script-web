@@ -45,7 +45,8 @@ public class SendSms {
 		// 24小时前
 		Date refDate = new Date(System.currentTimeMillis() - beforeSeconds * 1000); // 1天
 		rv.addOrUpdateValue("ref_date", refDate, "date", 100);
-
+		rv.addOrUpdateValue("sms_check_md5", md5);
+		
 		String sqlMd5 = "select SMS_JID from sms_job a where a.SMS_JTITLE=@sms_check_md5 and SMS_JCDATE>@ref_date";
 		if(skipSMSJID>0) {
 			sqlMd5+=" and sms_jid != "+ skipSMSJID;
@@ -53,7 +54,6 @@ public class SendSms {
 		DTTable tb = DTTable.getJdbcTable(sqlMd5, cnn);
 		if (tb.getCount() == 0) {
 			rst.put("repeat", false);
-
 		} else {
 			String smsJIds = tb.joinIds("SMS_JID", false);
 			rst.put("repeat", true);
@@ -66,7 +66,7 @@ public class SendSms {
 	public static JSONObject checkExists(DataConnection cnn, String templateCode, String template, long beforeSeconds,
 			Map<String, Integer> phones, int skipSMSJID) {
 		JSONObject rst = checkExistsContent(cnn, templateCode, template, beforeSeconds, skipSMSJID);
-		if (rst.optBoolean("repeat")) {
+		if (!rst.optBoolean("repeat")) {
 			return rst;
 		}
 
@@ -98,6 +98,7 @@ public class SendSms {
 			String phone = tb2.getCell(i, 0).toString();
 			int jlId = tb2.getCell(i, 1).toInt();
 			if (phones.containsKey(phone)) {
+				// 设置电话对应的记录号，如果记录号>0，表明重复
 				phones.put(phone, jlId);
 				arr.put(phone);
 				rst.put(phone, jlId);
@@ -181,6 +182,7 @@ public class SendSms {
 	private JSONObject smsTemplateParameter;
 
 	private Map<String, Integer> phones = new HashMap<>();
+	private JSONObject checkExistsResult;
 
 	public int sendNow() {
 		List<String> sendPhones = new ArrayList<>();
@@ -188,14 +190,14 @@ public class SendSms {
 		phones.forEach((k, v) -> {
 			if (v == 0) {
 				sendPhones.add(k);
-			} else {
+			} else { //编号>0表示已经发送了
 				if (sbUnSendPhones.length() > 0) {
 					sbUnSendPhones.append(", ");
 				}
 				sbUnSendPhones.append(k);
 			}
 		});
-
+		
 		if (sendPhones.size() == 0) {
 			rv.addOrUpdateValue("MESSAGE_STATUS", "YES");
 			rv.addOrUpdateValue("MESSSAGE_LOG", "没有可用的电话，" + sbUnSendPhones + "重复发送");
@@ -269,16 +271,19 @@ public class SendSms {
 		return msgId;
 	}
 
-	private void checkExists() {
+	private JSONObject checkExists() {
 		rv.addOrUpdateValue("MESSAGE_STATUS", "NO");
 		DataConnection cnn = new DataConnection(rv);
 		// 24小时前
 		long before = 24 * 60 * 60;
-		SendSms.checkExists(cnn, this.sms.getSmsTemplateCode(), this.smsTemplateParameter.toString(), before,
+		//{"RST":true,"sms_check_md5":"1D2E7B9AF6DD975B6D1ABDF10B2F6000","repeat":true,"13910409333":34,"phones":["13910409333","13910409333"],"sms_jids":"37, 38"}
+		
+		JSONObject rst = SendSms.checkExists(cnn, this.sms.getSmsTemplateCode(), this.smsTemplateParameter.toString(), before,
 				this.phones, -1);
+		return rst;
 	}
 
-	public void init(HtmlCreator hc) {
+	public void  init(HtmlCreator hc) {
 		this.rv = hc.getRequestValue().clone();
 		MList tbList = hc.getHtmlClass().getItemValues().getDTTables();
 
@@ -293,7 +298,7 @@ public class SendSms {
 		if (rv.s(MSG_REF_TABLE) == null) {
 			rv.addOrUpdateValue(MSG_REF_TABLE, hc.getSysParas().getItemName() + "," + hc.getSysParas().getXmlName());
 		}
-		this.checkExists();
+		this.checkExistsResult= this.checkExists();
 	}
 
 	private void addSmsTemplateParameter(DTTable tb) {
@@ -398,5 +403,12 @@ public class SendSms {
 	 */
 	public Map<String, Integer> getPhones() {
 		return phones;
+	}
+
+	/**
+	 * @return the checkExistsResult
+	 */
+	public JSONObject getCheckExistsResult() {
+		return checkExistsResult;
 	}
 }
