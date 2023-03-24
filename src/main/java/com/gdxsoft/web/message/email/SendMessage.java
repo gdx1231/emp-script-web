@@ -291,12 +291,7 @@ public class SendMessage {
 		ht.init(xmlName, itemName, paras, rv, null);
 		String content = ht.getHtml();
 
-		// 过滤script标签
-		String scriptRegex = "<script[^>]*?>[\\s\\S]*?<\\/script>";
-		// html注释
-		String regEx_o = "<\\!--.*-->";
-		content = content.replaceAll(scriptRegex, "").replaceAll(regEx_o, "").trim();
-
+		
 		MList tbList = ht.getHtmlCreator().getHtmlClass().getItemValues().getDTTables();
 
 		this.sendMail.setHtmlContent(content).setSubject(ht.getTitle());
