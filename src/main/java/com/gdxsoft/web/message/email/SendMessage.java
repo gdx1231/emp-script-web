@@ -286,8 +286,11 @@ public class SendMessage {
 		this.rv.getPageValues().remove(FrameParameters.EWA_ACTION);
 		this.rv.getPageValues().remove(FrameParameters.EWA_POST);
 		this.rv.getPageValues().remove(FrameParameters.EWA_NO_CONTENT);
-
+		this.rv.getPageValues().remove(FrameParameters.EWA_MTYPE);
+		this.rv.getPageValues().remove(FrameParameters.EWA_AJAX);
+		
 		String paras = "EWA_AJAX=INSTALL&EWA_SKIP_TEST1=1";
+		
 		ht.init(xmlName, itemName, paras, rv, null);
 		String content = ht.getHtml();
 
