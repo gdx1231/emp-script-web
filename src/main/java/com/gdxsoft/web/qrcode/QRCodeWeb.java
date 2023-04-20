@@ -107,6 +107,7 @@ public class QRCodeWeb {
 		if (img == null) {
 			if (useShortUrl) { // 创建段地址
 				msg = this.createShortUrl(msg, onlyNumber, rv);
+				obj.put("shortUrl", msg);
 			}
 			try {
 				img = QRCode.createQRCode(msg, width, logoBuffer);
