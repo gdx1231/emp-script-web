@@ -269,6 +269,8 @@ public class HttpFileViewBase {
 			return this.viewVideo(title, url, skipHeader);
 		} else if (HttpFileViewBase.isPdf(ext)) {
 			return this.viewPdf(title, url, skipHeader);
+		} else if (HttpFileViewBase.isAudio(ext)) { // 音频
+			return this.viewAudio(title, url, skipHeader);
 		} else { // 下载文件
 			if (!allowDownload) {
 				return HttpFileViewBase.msgDenyDownload(en, skipHeader);
@@ -332,18 +334,18 @@ public class HttpFileViewBase {
 			}
 		}
 		// 根据原始文件和缩放参数生成一个新的文件名
-		String exitspic = UImages.getResizedImageName(orginalFile, width, height, imgExt); 
+		String exitspic = UImages.getResizedImageName(orginalFile, width, height, imgExt);
 		// 创建一个新的文件对象
-		File fileSmallPic = new File(exitspic); 
+		File fileSmallPic = new File(exitspic);
 
 		if (fileSmallPic.exists()) { // 如果新的文件已经存在
 			return fileSmallPic; // 就直接返回该文件对象
 		}
 		try {
 			// 否则调用UImages类的方法来创建一个缩放后的图片文件，并返回其路径
-			String f2 = UImages.createSmallImage(orginalFile.getAbsolutePath(), width, height, imgExt, 70); 
+			String f2 = UImages.createSmallImage(orginalFile.getAbsolutePath(), width, height, imgExt, 70);
 			// 根据路径创建一个新的文件对象并返回
-			return new File(f2); 
+			return new File(f2);
 		} catch (Exception err1) { // 如果发生异常
 			LOGGER.error("{}->{},{}", orginalFile, fileSmallPic, err1.getMessage()); // 记录错误信息到日志中
 			return null; // 返回空值
@@ -665,6 +667,15 @@ public class HttpFileViewBase {
 		StringBuilder sbHtml = new StringBuilder(skipHeader ? "" : this.createHtml(title));
 		sbHtml.append("<div class='file-view-vod EWA_TABLE' id='doc-view'>");
 		sbHtml.append("<div style='text-align:center'><video src=\"" + url + "\" controls=\"controls\"></video></div>");
+		sbHtml.append("</div>");
+		sbHtml.append(skipHeader ? "" : "</div></body></html>");
+		return sbHtml.toString();
+	}
+
+	public String viewAudio(String title, String url, boolean skipHeader) {
+		StringBuilder sbHtml = new StringBuilder(skipHeader ? "" : this.createHtml(title));
+		sbHtml.append("<div class='file-view-audio EWA_TABLE' id='audio-view'>");
+		sbHtml.append("<div style='text-align:center'><audio src=\"" + url + "\" controls=\"controls\"></audio></div>");
 		sbHtml.append("</div>");
 		sbHtml.append(skipHeader ? "" : "</div></body></html>");
 		return sbHtml.toString();
