@@ -32,6 +32,20 @@ import com.gdxsoft.easyweb.utils.fileConvert.File2Pdf;
 public class HttpFileViewBase {
 	private static Logger LOGGER = LoggerFactory.getLogger(HttpFileViewBase.class);
 
+	public final static String RECORD_NOT_EXISTS_CN ="文件呢？去哪遛弯了(数据不存在)";
+	public final static String RECORD_NOT_EXISTS_EN ="The data not found";
+	
+	public final static String FILE_NOT_EXISTS_CN ="文件呢？去哪遛弯拉了（物理文件缺失）";
+	public final static String FILE_NOT_EXISTS_EN ="The file not found";
+	
+	public final static String NO_RIGHT_WITH_SUPPLY_CN ="此文件您无权查看或下载，商户不一致";
+	public final static String NO_RIGHT_WITH_SUPPLY_EN ="No right";
+	
+	public final static String NEED_LOGIN_CN ="您需要登录商户系统后查看或下载";
+	public final static String NEED_LOGIN_EN ="Need login";
+	
+	public final static String DENY_DOWNLOAD_CN ="禁止下载";
+	public final static String DENY_DOWNLOAD_EN ="Download deny";
 	/**
 	 * 数据不存在消息
 	 * 
@@ -40,7 +54,7 @@ public class HttpFileViewBase {
 	 * @return
 	 */
 	public static String msgRecordNotExists(boolean en, boolean skipHeader) {
-		return msgAppendHtmlHead(en ? "The data not found." : "文件呢？去哪遛弯了(数据不存在)", skipHeader);
+		return msgAppendHtmlHead(en ? RECORD_NOT_EXISTS_EN : RECORD_NOT_EXISTS_CN, skipHeader);
 	}
 
 	/**
@@ -52,7 +66,7 @@ public class HttpFileViewBase {
 	 * @return
 	 */
 	public static String msgPhyFileNotExists(boolean en, boolean skipHeader) {
-		return msgAppendHtmlHead(en ? "The file not found." : "文件呢？去哪遛弯拉了（物理文件缺失）", skipHeader);
+		return msgAppendHtmlHead(en ? FILE_NOT_EXISTS_EN : FILE_NOT_EXISTS_CN, skipHeader);
 	}
 
 	/**
@@ -64,7 +78,7 @@ public class HttpFileViewBase {
 	 * @return
 	 */
 	public static String msgNoRightWithSup(boolean en, boolean skipHeader) {
-		return msgAppendHtmlHead(en ? "No right." : "此文件您无权查看或下载，商户不一致", skipHeader);
+		return msgAppendHtmlHead(en ? NO_RIGHT_WITH_SUPPLY_EN : NO_RIGHT_WITH_SUPPLY_CN, skipHeader);
 
 	}
 
@@ -77,7 +91,7 @@ public class HttpFileViewBase {
 	 * @return
 	 */
 	public static String msgNeedLogin(boolean en, boolean skipHeader) {
-		return msgAppendHtmlHead(en ? "Need login." : "您需要登录商户系统后查看或下载", skipHeader);
+		return msgAppendHtmlHead(en ? NEED_LOGIN_EN :NEED_LOGIN_CN, skipHeader);
 	}
 
 	/**
@@ -90,7 +104,7 @@ public class HttpFileViewBase {
 	 */
 	public static String msgDenyDownload(boolean en, boolean skipHeader) {
 		// response.setStatus(HttpServletResponse.SC_FORBIDDEN);
-		return msgAppendHtmlHead(en ? "Download deny." : "禁止下载", skipHeader);
+		return msgAppendHtmlHead(en ? DENY_DOWNLOAD_EN : DENY_DOWNLOAD_CN, skipHeader);
 
 	}
 
@@ -103,7 +117,6 @@ public class HttpFileViewBase {
 	 * @return
 	 */
 	public static String msgAppendHtmlHead(String content, boolean skipHeader) {
-
 		final String top = "<div><div class='tip' bgcolor='white'>";
 		final String bottom = "</div></div>";
 
