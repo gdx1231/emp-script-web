@@ -291,7 +291,7 @@
 			<groupId>mysql</groupId>
 			<artifactId>mysql-connector-java</artifactId>
 			<scope>test</scope>
-			<version>8.0.25</version>
+			<version>8.0.28</version>
 		</dependency>
 	</dependencies>
 
