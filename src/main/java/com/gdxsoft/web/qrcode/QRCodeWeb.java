@@ -103,12 +103,11 @@ public class QRCodeWeb {
 
 			}
 		}
-
+		if (useShortUrl) { // 创建短地址，避免被删除了
+			msg = this.createShortUrl(msg, onlyNumber, rv);
+			obj.put("shortUrl", msg);
+		}
 		if (img == null) {
-			if (useShortUrl) { // 创建段地址
-				msg = this.createShortUrl(msg, onlyNumber, rv);
-				obj.put("shortUrl", msg);
-			}
 			try {
 				img = QRCode.createQRCode(msg, width, logoBuffer);
 			} catch (IOException e) {
