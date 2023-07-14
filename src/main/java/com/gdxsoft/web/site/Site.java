@@ -157,7 +157,7 @@ public class Site {
 				s = new Site();
 				s.setConfigName(configName);
 				s.init(siteUnid);
-				SITE_MAP.put(siteUnid, s);
+				SITE_MAP.put(key, s);
 			}
 			return s;
 		} catch (Exception err) {
