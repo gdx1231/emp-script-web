@@ -60,7 +60,9 @@ public class CreateWebLinks {
 		cmd(fRoot, fTarget, mk, rm, 0);
 
 		// 所有项目输出的classes文件目录
-		File allClassRoot = new File(root + "/../../../../allclass/classes");
+		String allclass = root.indexOf("/src/main/") > 0 ? "/../../../../allclass/classes" : "/../../allclass/classes";
+		// 所有项目输出的classes文件目录
+		File allClassRoot = new File(root + allclass);
 		if (allClassRoot.exists()) {
 			cmd(allClassRoot, allClassTarget, mk, rm, 0);
 		} else {
@@ -76,7 +78,8 @@ public class CreateWebLinks {
 		cmd(webInfRoot, webInfTarget, mk, rm, 2);
 
 		// WEB项目本身输出的目录，例如配置信息 ewa_conf.xml等
-		File prjSrc = new File(fRoot.getAbsolutePath() + "/../../../target/classes");
+		String targetClass = root.indexOf("/src/main/") > 0 ? "/../../../target/classes" : "/../target/classes";
+		File prjSrc = new File(fRoot.getAbsolutePath() + targetClass);
 
 		System.out.println(prjSrc + " -> " + allClassTarget);
 		cmd(prjSrc, allClassTarget, mk, rm, 1); // 1-file
