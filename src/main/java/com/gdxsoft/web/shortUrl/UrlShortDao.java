@@ -12,7 +12,8 @@ import com.gdxsoft.easyweb.datasource.ClassDaoBase;
  */
 public class UrlShortDao extends ClassDaoBase<UrlShort> implements IClassDao<UrlShort> {
 
-	private static String SQL_INSERT = "INSERT INTO url_short(url_id, url_uid, url_full, url_md5, url_status, url_cdate, url_vdate, sup_id, adm_id)   VALUES(@url_id, @url_uid, @url_full, @url_md5, @url_status, @url_cdate, @url_vdate, @sup_id, @adm_id)";
+	private static String SQL_INSERT = "INSERT INTO url_short(url_uid, url_full, url_md5, url_status, url_cdate, url_vdate, sup_id, adm_id) "
+			+ "  VALUES(@url_uid, @url_full, @url_md5, @url_status, @url_cdate, @url_vdate, @sup_id, @adm_id)";
 	public static String TABLE_NAME = "url_short";
 	public static String[] KEY_LIST = { "url_id" };
 	public static String[] FIELD_LIST = { "url_id", "url_uid", "url_full", "url_md5", "url_status", "url_cdate",
