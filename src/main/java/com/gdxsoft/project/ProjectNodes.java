@@ -6,10 +6,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.gdxsoft.globalTravel.dao.OaPrjReq;
-import com.gdxsoft.globalTravel.dao.OaPrjReqDao;
-import com.gdxsoft.globalTravel.dao.OaReq;
-import com.gdxsoft.globalTravel.dao.OaReqDao;
+import com.gdxsoft.web.dao.*;
+
 
 public class ProjectNodes {
 

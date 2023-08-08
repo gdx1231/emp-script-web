@@ -1,6 +1,5 @@
 package com.gdxsoft.project;
 
-import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
@@ -9,10 +8,6 @@ import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import org.apache.rocketmq.client.exception.MQBrokerException;
-import org.apache.rocketmq.client.exception.MQClientException;
-import org.apache.rocketmq.client.producer.SendResult;
-import org.apache.rocketmq.remoting.exception.RemotingException;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
@@ -24,9 +19,8 @@ import com.gdxsoft.easyweb.datasource.UpdateChanges;
 import com.gdxsoft.easyweb.script.RequestValue;
 import com.gdxsoft.easyweb.utils.UFormat;
 import com.gdxsoft.easyweb.utils.Utils;
-import com.gdxsoft.globalTravel.dao.LogMain;
-
-import cc.oneWorld.log.LogOaReq;
+import com.gdxsoft.web.dao.LogMain;
+import com.gdxsoft.web.log.LogOaReq;
 
 public class ProjectManager {
 	private static Logger LOGGER = LoggerFactory.getLogger(ProjectManager.class);
@@ -301,28 +295,7 @@ public class ProjectManager {
 			lstLogOaReq.add(log);
 		}
 
-		try {
-			SendResult[] rsts = LogOaReq.postMessages(lstLogMain, "LOG-ADD");
-			if(rsts == null) { 
-				// MQROCKET_NAMESERVERS 参数没有配置
-				return ;
-			}
-			for (int i = 0; i < rsts.length; i++) {
-				SendResult rst = rsts[i];
-				LOGGER.debug(rst.getMsgId() + ", " + rst.getSendStatus());
-			}
-
-		} catch (UnsupportedEncodingException e) {
-			LOGGER.error(e.getLocalizedMessage());
-		} catch (MQClientException e) {
-			LOGGER.error(e.getErrorMessage());
-		} catch (RemotingException e) {
-			LOGGER.error(e.getLocalizedMessage());
-		} catch (MQBrokerException e) {
-			LOGGER.error(e.getErrorMessage());
-		} catch (InterruptedException e) {
-			LOGGER.error(e.getLocalizedMessage());
-		}
+		 
 	}
 
 	/**

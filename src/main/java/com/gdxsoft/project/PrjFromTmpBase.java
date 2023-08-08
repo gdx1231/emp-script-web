@@ -18,13 +18,7 @@ import com.gdxsoft.easyweb.script.RequestValue;
 import com.gdxsoft.easyweb.utils.UFormat;
 import com.gdxsoft.easyweb.utils.Utils;
 import com.gdxsoft.easyweb.utils.msnet.MListStr;
-import com.gdxsoft.globalTravel.dao.OaPrjAdm;
-import com.gdxsoft.globalTravel.dao.OaPrjAdmDao;
-import com.gdxsoft.globalTravel.dao.OaPrjCheckLast;
-import com.gdxsoft.globalTravel.dao.OaPrjCheckLastDao;
-import com.gdxsoft.globalTravel.dao.OaPrjMark;
-import com.gdxsoft.globalTravel.dao.OaPrjMarkDao;
-import com.gdxsoft.globalTravel.dao.OaReq;
+import com.gdxsoft.web.dao.*;
 
 public class PrjFromTmpBase extends ProjectBase {
 	private static Logger LOGGER = LoggerFactory.getLogger(PrjFromTmpBase.class);

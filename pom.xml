@@ -293,11 +293,6 @@
 			<scope>test</scope>
 			<version>8.0.28</version>
 		</dependency>
-		<dependency>
-			<groupId>cn.gezz.erp</groupId>
-			<artifactId>pf_class</artifactId>
-			<version>20210321</version>
-		</dependency>
 	</dependencies>
 
 

@@ -3,7 +3,8 @@ package com.gdxsoft.project;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.gdxsoft.globalTravel.dao.OaReq;
+import com.gdxsoft.web.dao.OaReq;
+
 
 /**
  * 项目节点数据
