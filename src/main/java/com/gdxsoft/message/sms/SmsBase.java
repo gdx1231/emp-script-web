@@ -30,7 +30,7 @@ public class SmsBase {
 	 * @return
 	 */
 	public static String chinesePhoneAddPlus86(String phone) {
-		phone = phone.replace(" ", "");
+		phone = phone.replace(" ", "").replace("-","");
 		phone = replacePhoneHz(phone);
 		if (phone.startsWith("+")) {
 			return phone;
@@ -46,7 +46,7 @@ public class SmsBase {
 	 * @return
 	 */
 	public static String chinesePhoneRemovePlus86(String phone) {
-		phone = phone.replace(" ", "");
+		phone = phone.replace(" ", "").replace("-","");
 		phone = replacePhoneHz(phone);
 		if (!phone.startsWith("+86")) {
 			return phone;
