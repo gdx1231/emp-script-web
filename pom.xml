@@ -58,7 +58,7 @@
 		<plugins>
 			<plugin>
 				<artifactId>maven-compiler-plugin</artifactId>
-				<version>3.8.0</version>
+				<version>3.11.0</version>
 				<configuration>
 					<source>1.8</source>
 					<target>1.8</target>
@@ -141,12 +141,13 @@
 			</plugin>-->
 			<plugin>
 				<artifactId>maven-antrun-plugin</artifactId>
+				<version>1.8</version>
 				<executions>
 					<execution>
 						<id>copy-lib-src-webapps</id>
 						<phase>package</phase>
 						<configuration>
-							<tasks>
+							<target>
 								<echo>copy ${project.build.finalName}.jar to
 									${basedir}/../../workspace.newVersion/allclass/lib/</echo>
 								<copy todir="${basedir}/../../workspace.newVersion/allclass/lib/">
@@ -154,7 +155,7 @@
 										<include name="${project.build.finalName}*" />
 									</fileset>
 								</copy>
-							</tasks>
+							</target>
 						</configuration>
 						<goals>
 							<goal>run</goal>
