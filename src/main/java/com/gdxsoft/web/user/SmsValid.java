@@ -4,6 +4,8 @@ import java.util.Calendar;
 import java.util.Date;
 
 import org.json.JSONObject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.gdxsoft.easyweb.data.DTTable;
 import com.gdxsoft.easyweb.datasource.DataConnection;
@@ -12,6 +14,7 @@ import com.gdxsoft.easyweb.utils.UJSon;
 import com.gdxsoft.message.sms.ISms;
 
 public class SmsValid extends ValidBase {
+	private static Logger LOGGER = LoggerFactory.getLogger(SmsValid.class);
 	private static final String[] cnNums = "０,１,２,３,４,５,６,７,８,９".split(",");
 
 	private ISms sms;
@@ -191,7 +194,8 @@ public class SmsValid extends ValidBase {
 				rst.put("RST", false);
 				rst.put("ERR", "短信接口系统错误");
 				rst.put("ERR1", e.getMessage());
-				System.out.println(rst);
+				
+				LOGGER.error(rst.toString());
 				return rst;
 			}
 		} else {

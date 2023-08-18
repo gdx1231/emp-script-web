@@ -351,6 +351,18 @@ public class DoLogin {
 	}
 
 	/**
+	 * 验证短信
+	 * 
+	 * @param fpUnid  web_user_fpwd的 FP_UNID
+	 * @param smsCode web_user_fpwd的 FP_VALIDCODE
+	 * @return
+	 */
+	public JSONObject smsValid(String fpUnid, String smsCode) {
+		SmsValid sv = this.getSmsValid();
+		return sv.validWebUserCode(fpUnid, smsCode);
+	}
+
+	/**
 	 * 验证短信并进行登录
 	 * 
 	 * @param fpUnid  web_user_fpwd的 FP_UNID
@@ -359,7 +371,7 @@ public class DoLogin {
 	 */
 	public JSONObject smsValidAndLogin(String fpUnid, String smsCode) {
 		// 短信登录 验证
-		JSONObject rst = new JSONObject();
+		JSONObject rst = this.smsValid(fpUnid, smsCode);
 
 		SmsValid sv = this.getSmsValid();
 		rst = sv.validWebUserCode(fpUnid, smsCode);
@@ -502,6 +514,10 @@ public class DoLogin {
 				rst.put("RST", false);
 				rst.put("ERR", "没有用户数据发现");
 				return rst;
+			}
+			try {
+				rst.put("USR_ID", tbUser_.getCell(0, "usr_id").toString());
+			} catch (Exception e) {
 			}
 
 			try {
