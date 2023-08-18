@@ -29,49 +29,17 @@ public class OAFileView extends HttpFileViewBase implements IHttp {
 		this.bp = new BinToPhy(tableBinXmlFilePath);
 	}
 
-	@Override
-	public String response(HttpServletRequest request, HttpServletResponse response) throws Exception {
-		request.setCharacterEncoding("utf-8");
-
-		RequestValue rv = new RequestValue(request);
-		super.setRequest(request);
-		super.setResponse(response);
-		super.setRv(rv);
-
-		super.initParameters();
-
-		String tbName = rv.s("tb");
-		if (tbName == null) {
-			return "tb?";
-		}
-
-		bp.init();
-		Element item = bp.getCfg(tbName);
-		if (item == null) {
-			return HttpFileViewBase.msgAppendHtmlHead(isEn() ? "Unkonw method" : "未知模式", isSkipHeader());
-		}
-
+	/**
+	 * 创建查询的SQL语句
+	 * @param item
+	 * @param skipCheck
+	 * @return
+	 */
+	public String createSql(Element item, boolean skipCheck) {
 		String tableName = item.getAttribute("name"); // 表名
 		String keyField = item.getAttribute("keyf"); // 主键
-		String fileField = item.getAttribute("filef"); // 物理文件字段
-		String extField = item.getAttribute("extf"); // 扩展名字段
 		// String lenField = item.getAttribute("lenf"); // 扩展名字段
-		String md5Field = item.getAttribute("md5f"); // md5扩展名
 		String supField = item.getAttribute("supf"); // sup_id字段
-		String cached = item.getAttribute("cached"); // 缓存时间
-		String titleField = item.getAttribute("titlef"); // 文件名
-
-		boolean is_skip_check = this.skipCheck(tbName);
-
-		if (!is_skip_check && !Login.isSupplyLogined(super.getRv())) {
-			if (isSmall()) {
-				response.sendRedirect(UPath.getEmpScriptV2Path() + "/EWA_STYLE/images/pic_no.jpg");
-			} else {
-				// 去登录
-				super.getResponse().sendRedirect(Login.gotoLoginSupply(super.getRv()));
-			}
-			return null;
-		}
 
 		StringBuilder sbSql = new StringBuilder();
 		sbSql.append("select * from ");
@@ -110,12 +78,59 @@ public class OAFileView extends HttpFileViewBase implements IHttp {
 			}
 		}
 
-		String sql = sbSql.toString();
-		if (!tbName.equalsIgnoreCase("lbs_photos") && supField != null && supField.trim().length() > 0) {
-			if (!is_skip_check) {
-				sql += " and " + supField + " = @g_sup_id";
+		// 检查文件是否属于指定的商户，可指定多个字段，为或的关系，用“,"分割
+		if (!skipCheck && supField != null && supField.trim().length() > 0) {
+			String[] supFields = supField.split(",");
+			StringBuilder sb1 = new StringBuilder();
+			sb1.append("(");
+			for (int i = 0; i < supFields.length; i++) {
+				if (i > 0) {
+					sb1.append(" or ");
+				}
+				sb1.append(supFields[i]).append(" = @g_sup_id");
 			}
+			sb1.append(")");
+			sbSql.append(" and ").append(sb1);
 		}
+
+		return sbSql.toString();
+	}
+	
+	@Override
+	public String response(HttpServletRequest request, HttpServletResponse response) throws Exception {
+		request.setCharacterEncoding("utf-8");
+
+		RequestValue rv = new RequestValue(request);
+		super.setRequest(request);
+		super.setResponse(response);
+		super.setRv(rv);
+
+		super.initParameters();
+
+		String tbName = rv.s("tb");
+		if (tbName == null) {
+			return "tb?";
+		}
+
+		bp.init();
+		Element item = bp.getCfg(tbName);
+		if (item == null) {
+			return HttpFileViewBase.msgAppendHtmlHead(isEn() ? "Unkonw method" : "未知模式", isSkipHeader());
+		}
+		
+		boolean is_skip_check = this.skipCheck(tbName);
+
+		if (!is_skip_check && !Login.isSupplyLogined(super.getRv())) {
+			if (isSmall()) {
+				response.sendRedirect(UPath.getEmpScriptV2Path() + "/EWA_STYLE/images/pic_no.jpg");
+			} else {
+				// 去登录
+				super.getResponse().sendRedirect(Login.gotoLoginSupply(super.getRv()));
+			}
+			return null;
+		}
+
+		String sql = this.createSql(item, is_skip_check);
 		DTTable tb = DTTable.getJdbcTable(sql, "", rv);
 
 		// 记录是否存在
@@ -130,6 +145,14 @@ public class OAFileView extends HttpFileViewBase implements IHttp {
 			return HttpFileViewBase.msgRecordNotExists(super.isEn(), super.isSkipHeader());
 		}
 
+		String keyField = item.getAttribute("keyf"); // 主键
+		String fileField = item.getAttribute("filef"); // 物理文件字段
+		String extField = item.getAttribute("extf"); // 扩展名字段
+		// String lenField = item.getAttribute("lenf"); // 扩展名字段
+		String md5Field = item.getAttribute("md5f"); // md5扩展名
+		String cached = item.getAttribute("cached"); // 缓存时间
+		String titleField = item.getAttribute("titlef"); // 文件名
+		
 		// 物理文件地址
 		String phy = tb.getCell(0, fileField).toString();
 		if (phy == null || phy.trim().length() == 0) {
@@ -166,6 +189,7 @@ public class OAFileView extends HttpFileViewBase implements IHttp {
 			ext = "bin";
 		}
 		String key = "";
+		String[] keyFields = keyField.split(",");
 		for (int i = 0; i < keyFields.length; i++) {
 			String f1 = keyFields[i].trim();
 			if (i > 0) {
@@ -242,7 +266,14 @@ public class OAFileView extends HttpFileViewBase implements IHttp {
 		return null;
 	}
 
-	private boolean skipCheck(String tbName) throws IOException {
+	/**
+	 * 检查文件是否需要检查权限
+	 * 
+	 * @param tbName
+	 * @return
+	 * @throws IOException
+	 */
+	public boolean skipCheck(String tbName) throws IOException {
 		if (tbName.equalsIgnoreCase("lbs_photos")) {
 			return true;
 		}
