@@ -53,9 +53,37 @@ public class App {
 		sb.al("var g_is_in_weixin = " + inWeixin + ";");
 		sb.al("var g_is_in_native = " + inNativeApp + ";");
 		sb.al("var g_is_in_mini = " + inMini + ";");
-
 		sb.al("var g_is_iphone = " + iphone + ";");
+		sb.al("var g_is_ipad = " + ipad + ";");
+		sb.al("var g_is_ios = " + (ipad || iphone) + ";");
 		sb.al("var g_is_android = " + android + ";");
+
+		return sb.toString();
+	}
+
+	public String createAppEnvCss() {
+		MStr sb = new MStr();
+		if (inWeixin) {
+			sb.a(" weixin");
+		}
+		if (inNativeApp) {
+			sb.a(" native");
+		}
+		if (inMini) {
+			sb.a(" mini");
+		}
+		if (iphone) {
+			sb.a(" iphone");
+		}
+		if (ipad) {
+			sb.a(" ipad");
+		}
+		if (ipad || iphone) {
+			sb.a(" ios");
+		}
+		if (android) {
+			sb.a(" android");
+		}
 
 		return sb.toString();
 	}
@@ -188,7 +216,8 @@ public class App {
 	}
 
 	/**
-	 * app启动时 根据 ewa_lang, cookie(APP_LANG)和 request.getHeader("accept-language") 来判断语言设定
+	 * app启动时 根据 ewa_lang, cookie(APP_LANG)和 request.getHeader("accept-language")
+	 * 来判断语言设定
 	 * 
 	 * @param response
 	 * @return
