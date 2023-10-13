@@ -16,6 +16,22 @@ public class App2CfgBase {
 	boolean isLogined_;
 	boolean isAgent_;
 	boolean isInNativeApp_;
+	String configName;
+	/**
+	 * 数据库链接池名称
+	 * @return
+	 */
+	public String getConfigName() {
+		return configName;
+	}
+
+	/**
+	 * 数据库链接池名称
+	 * @param configName
+	 */
+	public void setConfigName(String configName) {
+		this.configName = configName;
+	}
 
 	public App2CfgBase(RequestValue rv) {
 		this.rv_ = rv;
@@ -62,7 +78,7 @@ public class App2CfgBase {
 	 */
 	public void checkLogined() {
 		String sqlAdm = "select * from adm_user where adm_id=@g_adm_id";
-		DTTable tbAdm = DTTable.getJdbcTable(sqlAdm, rv_);
+		DTTable tbAdm = DTTable.getJdbcTable(sqlAdm, this.configName, rv_);
 		if (tbAdm.getCount() == 0) {
 			this.isLogined_ = false;
 		} else {
@@ -171,7 +187,7 @@ public class App2CfgBase {
 	}
 
 	public DTTable getCfgsTable() {
-		return DTTable.getJdbcTable(this.getCfgsSql(), rv_);
+		return DTTable.getJdbcTable(this.getCfgsSql(), this.configName, rv_);
 	}
 
 	public String getCfgsJs() {
@@ -184,7 +200,7 @@ public class App2CfgBase {
 	}
 
 	public DTTable getHomeIndexTable() {
-		DTTable tb = DTTable.getJdbcTable(getHomeIndexSql(), rv_);
+		DTTable tb = DTTable.getJdbcTable(getHomeIndexSql(), this.configName, rv_);
 		return tb;
 	}
 
@@ -212,7 +228,7 @@ public class App2CfgBase {
 	 */
 	public String getFooter() throws Exception {
 		String sqlCfgIndex = this.getFooterSql();
-		DTTable tbFooter = DTTable.getJdbcTable(sqlCfgIndex, this.rv_);
+		DTTable tbFooter = DTTable.getJdbcTable(sqlCfgIndex, this.configName, this.rv_);
 
 		String footerHtml = this.createFooterMenus(tbFooter);
 

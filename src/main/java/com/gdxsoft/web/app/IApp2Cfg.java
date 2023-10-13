@@ -101,4 +101,17 @@ public interface IApp2Cfg {
 	 */
 	public void checkLogined();
 
+	/**
+	 * 数据库链接池名称
+	 * 
+	 * @return
+	 */
+	public String getConfigName();
+
+	/**
+	 * 数据库链接池名称
+	 * 
+	 * @param configName
+	 */
+	public void setConfigName(String configName);
 }
