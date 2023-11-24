@@ -1,5 +1,6 @@
 package com.gdxsoft.web.http;
 
+import java.awt.Dimension;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -15,6 +16,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.gdxsoft.easyweb.script.RequestValue;
+import com.gdxsoft.easyweb.script.display.frame.FrameParameters;
 import com.gdxsoft.easyweb.script.servlets.FileOut;
 import com.gdxsoft.easyweb.utils.UFile;
 import com.gdxsoft.easyweb.utils.UImages;
@@ -32,20 +34,47 @@ import com.gdxsoft.easyweb.utils.fileConvert.File2Pdf;
 public class HttpFileViewBase {
 	private static Logger LOGGER = LoggerFactory.getLogger(HttpFileViewBase.class);
 
-	public final static String RECORD_NOT_EXISTS_CN ="文件呢？去哪遛弯了(数据不存在)";
-	public final static String RECORD_NOT_EXISTS_EN ="The data not found";
-	
-	public final static String FILE_NOT_EXISTS_CN ="文件呢？去哪遛弯拉了（物理文件缺失）";
-	public final static String FILE_NOT_EXISTS_EN ="The file not found";
-	
-	public final static String NO_RIGHT_WITH_SUPPLY_CN ="此文件您无权查看或下载，商户不一致";
-	public final static String NO_RIGHT_WITH_SUPPLY_EN ="No right";
-	
-	public final static String NEED_LOGIN_CN ="您需要登录商户系统后查看或下载";
-	public final static String NEED_LOGIN_EN ="Need login";
-	
-	public final static String DENY_DOWNLOAD_CN ="禁止下载";
-	public final static String DENY_DOWNLOAD_EN ="Download deny";
+	public final static String RECORD_NOT_EXISTS_CN = "文件呢？去哪遛弯了(数据不存在)";
+	public final static String RECORD_NOT_EXISTS_EN = "The data not found";
+
+	public final static String FILE_NOT_EXISTS_CN = "文件呢？去哪遛弯拉了（物理文件缺失）";
+	public final static String FILE_NOT_EXISTS_EN = "The file not found";
+
+	public final static String NO_RIGHT_WITH_SUPPLY_CN = "此文件您无权查看或下载，商户不一致";
+	public final static String NO_RIGHT_WITH_SUPPLY_EN = "No right";
+
+	public final static String NEED_LOGIN_CN = "您需要登录商户系统后查看或下载";
+	public final static String NEED_LOGIN_EN = "Need login";
+
+	public final static String DENY_DOWNLOAD_CN = "禁止下载";
+	public final static String DENY_DOWNLOAD_EN = "Download deny";
+
+	/**
+	 * 图片缩放
+	 */
+	public final static String RESIZE = "resize";
+	/**
+	 * 下载文件
+	 */
+	public final static String DOWNLOAD = "download";
+	/**
+	 * 下载文件
+	 */
+	public final static String DOWNLOAD_FILE = "download_file";
+	/**
+	 * 在线查看
+	 */
+	public final static String INLINE = "inline";
+
+	/**
+	 * 缩略图
+	 */
+	public final static String SMALL = "SMALL";
+	/**
+	 * 缩略图，错误的拼写，兼容用
+	 */
+	public final static String SMAILL = "SMAILL";
+
 	/**
 	 * 数据不存在消息
 	 * 
@@ -91,7 +120,7 @@ public class HttpFileViewBase {
 	 * @return
 	 */
 	public static String msgNeedLogin(boolean en, boolean skipHeader) {
-		return msgAppendHtmlHead(en ? NEED_LOGIN_EN :NEED_LOGIN_CN, skipHeader);
+		return msgAppendHtmlHead(en ? NEED_LOGIN_EN : NEED_LOGIN_CN, skipHeader);
 	}
 
 	/**
@@ -216,12 +245,27 @@ public class HttpFileViewBase {
 	private boolean supportWebp = true;
 	private boolean supportHeic = false;
 
+	private Dimension resize;
+
+	public Dimension getResize() {
+		return resize;
+	}
+
+	public void setResize(Dimension resize) {
+		this.resize = resize;
+	}
+
 	public void initParameters() {
 		small = rv.s("SMAILL") != null || rv.s("SMALL") != null;
-		skipHeader = rv.s("EWA_APP") != null || rv.s("EWA_AJAX") != null;
-		en = "enus".equalsIgnoreCase(rv.getLang());
-		this.download = rv.s("download") != null || rv.s("download_file") != null;
-		this.inline = rv.s("inline") != null;
+		skipHeader = rv.s(FrameParameters.EWA_APP) != null || rv.s(FrameParameters.EWA_AJAX) != null;
+		en = rv.isEn();
+		this.download = rv.s(DOWNLOAD) != null || rv.s(DOWNLOAD_FILE) != null;
+		this.inline = rv.s(INLINE) != null;
+
+		if (rv.isNotBlank(RESIZE)) {
+			resize = UImages.parseSize(rv.s(RESIZE));
+		}
+
 	}
 
 	/**
@@ -238,6 +282,10 @@ public class HttpFileViewBase {
 	public String handleFile(File file, String ext, String title, boolean allowDownload, String ifNoneMatch)
 			throws IOException {
 
+		if (this.resize != null   && isImage(ext) && !small) {
+			File resizedFile = this.createResized(file, resize .width, resize.height, 70);
+			file = resizedFile;
+		}
 		if (this.isDownload()) {
 			if (!allowDownload) {
 				return HttpFileViewBase.msgDenyDownload(en, skipHeader);
@@ -394,6 +442,7 @@ public class HttpFileViewBase {
 	 */
 	public String inlineFile(File file, HttpServletRequest request, HttpServletResponse response) {
 		FileOut fo = new FileOut(request, response);
+
 		fo.initFile(file);
 
 		long cachedLife = 3600 * 60 * 24; // 24小时

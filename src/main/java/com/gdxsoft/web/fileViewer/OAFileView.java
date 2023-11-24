@@ -14,6 +14,7 @@ import org.w3c.dom.Element;
 import com.gdxsoft.easyweb.data.DTTable;
 import com.gdxsoft.easyweb.script.RequestValue;
 import com.gdxsoft.easyweb.utils.UPath;
+import com.gdxsoft.easyweb.utils.Utils;
 import com.gdxsoft.web.acl.Login;
 import com.gdxsoft.web.http.HttpFileViewBase;
 import com.gdxsoft.web.http.HttpOaSysAttView;
@@ -31,6 +32,7 @@ public class OAFileView extends HttpFileViewBase implements IHttp {
 
 	/**
 	 * 创建查询的SQL语句
+	 * 
 	 * @param item
 	 * @param skipCheck
 	 * @return
@@ -95,7 +97,7 @@ public class OAFileView extends HttpFileViewBase implements IHttp {
 
 		return sbSql.toString();
 	}
-	
+
 	@Override
 	public String response(HttpServletRequest request, HttpServletResponse response) throws Exception {
 		request.setCharacterEncoding("utf-8");
@@ -117,7 +119,7 @@ public class OAFileView extends HttpFileViewBase implements IHttp {
 		if (item == null) {
 			return HttpFileViewBase.msgAppendHtmlHead(isEn() ? "Unkonw method" : "未知模式", isSkipHeader());
 		}
-		
+
 		boolean is_skip_check = this.skipCheck(tbName);
 
 		if (!is_skip_check && !Login.isSupplyLogined(super.getRv())) {
@@ -152,7 +154,7 @@ public class OAFileView extends HttpFileViewBase implements IHttp {
 		String md5Field = item.getAttribute("md5f"); // md5扩展名
 		String cached = item.getAttribute("cached"); // 缓存时间
 		String titleField = item.getAttribute("titlef"); // 文件名
-		
+
 		// 物理文件地址
 		String phy = tb.getCell(0, fileField).toString();
 		if (phy == null || phy.trim().length() == 0) {
@@ -203,6 +205,11 @@ public class OAFileView extends HttpFileViewBase implements IHttp {
 			md5 = tb.getCell(0, md5Field).toString();
 			if (md5 != null && md5.trim().length() == 0) {
 				md5 = null;
+			}
+			if (super.getResize() != null) {
+				// 缩放
+				String exp = md5 + "," + super.getResize().height + "x" + super.getResize().width;
+				md5 = Utils.md5(exp);
 			}
 		}
 		String ifNoneMatch = md5 == null ? null : "W/" + md5;
