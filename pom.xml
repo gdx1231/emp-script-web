@@ -3,7 +3,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>com.gdxsoft.easyweb</groupId>
 	<artifactId>emp-script-web</artifactId>
-	<version>1.1.6</version>
+	<version>1.1.8</version>
 	<name>Easy Web Appliaction Web</name>
 	<description>Web系统快速成型系统 - 模块部分</description>
 
@@ -188,12 +188,12 @@
 		<dependency>
 			<groupId>com.gdxsoft.easyweb</groupId>
 			<artifactId>emp-script-utils</artifactId>
-			<version>[1.1.5,]</version>
+			<version>1.1.8</version>
 		</dependency>
 		<dependency>
 			<groupId>com.gdxsoft.easyweb</groupId>
 			<artifactId>emp-script</artifactId>
-			<version>[1.1.5,]</version>
+			<version>1.1.8</version>
 		</dependency>
 		<dependency>
 			<groupId>com.gdxsoft</groupId>
@@ -220,16 +220,17 @@
 		<dependency>
 			<groupId>com.auth0</groupId>
 			<artifactId>java-jwt</artifactId>
-			<version>3.2.0</version>
+			<version>4.4.0</version>
 		</dependency>
 
 		<!-- https://mvnrepository.com/artifact/com.tencentcloudapi/tencentcloud-sdk-java-sms -->
 		<!-- 腾讯短信接口 -->
 		<dependency>
-			<groupId>com.tencentcloudapi</groupId>
-			<artifactId>tencentcloud-sdk-java-sms</artifactId>
-			<version>3.1.694</version>
+		    <groupId>com.tencentcloudapi</groupId>
+		    <artifactId>tencentcloud-sdk-java-sms</artifactId>
+		    <version>3.1.893</version>
 		</dependency>
+
 
 
 		<!-- https://mvnrepository.com/artifact/com.aliyun/aliyun-java-sdk-core -->
