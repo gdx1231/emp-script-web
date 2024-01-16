@@ -181,6 +181,8 @@ public class Site {
 	}
 
 	private String configName;
+	private String navItemClass;
+	private String navLinkClass;
 
 	/**
 	 * 初始化
@@ -213,7 +215,7 @@ public class Site {
 	 * @return
 	 */
 	public String createLinks(List<SiteNavCat> alr, String defaultContext, boolean isEn, boolean islogined) {
-		if(alr == null) {
+		if (alr == null) {
 			return "";
 		}
 		StringBuilder sbNavR = new StringBuilder();
@@ -290,7 +292,15 @@ public class Site {
 		String name = isEn ? cat.getSitNavNameEn() : cat.getSitNavName();
 
 		StringBuilder sbNav = new StringBuilder();
-		sbNav.append("<li><a id='nNv" + cat.getSitNavId() + "' href='");
+		sbNav.append("<li id=\"nav").append(cat.getSitNavId()).append("\"");
+		if (this.navItemClass != null) {
+			sbNav.append(" class=\"").append(this.navItemClass).append("\"");
+		}
+		sbNav.append("><a");
+		if (this.navLinkClass != null) {
+			sbNav.append(" class=\"").append(this.navLinkClass).append("\"");
+		}
+		sbNav.append(" id='nNv" + cat.getSitNavId() + "' href='");
 		sbNav.append(url);
 
 		sbNav.append("' ");
@@ -564,4 +574,39 @@ public class Site {
 		this.configName = configName;
 	}
 
+	/**
+	 * 导航的css的class
+	 * 
+	 * @return
+	 */
+	public String getNavItemClass() {
+		return navItemClass;
+	}
+
+	/**
+	 * 导航的css的class
+	 * 
+	 * @param navItemClass
+	 */
+	public void setNavItemClass(String navItemClass) {
+		this.navItemClass = navItemClass;
+	}
+
+	/**
+	 * 导航链接的css的class
+	 * 
+	 * @return
+	 */
+	public String getNavLinkClass() {
+		return navLinkClass;
+	}
+
+	/**
+	 * 导航链接的css的class
+	 * 
+	 * @param navLinkClass
+	 */
+	public void setNavLinkClass(String navLinkClass) {
+		this.navLinkClass = navLinkClass;
+	}
 }
