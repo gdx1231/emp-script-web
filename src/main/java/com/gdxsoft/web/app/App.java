@@ -35,8 +35,8 @@ public class App {
 			String _g_user_agent = rv.s("SYS_USER_AGENT").toLowerCase();
 			inWeixin = _g_user_agent.indexOf("micromessenger") > 0;
 			inNativeApp = _g_user_agent.indexOf(NATIVE_TAG) > 0;
-			iphone = _g_user_agent.indexOf("android") > 0;
-			android = _g_user_agent.indexOf("iphone") > 0;
+			iphone = _g_user_agent.indexOf("iphone") > 0;
+			android = _g_user_agent.indexOf("android") > 0;
 			ipad = _g_user_agent.indexOf("ipad") > 0;
 			inMini = _g_user_agent.indexOf("miniprogram") > 0;
 		}
