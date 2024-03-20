@@ -547,23 +547,21 @@ public class ProjectManager {
 				" count(*) as NUM, min(REQ_PROGRESS) MIN_PGS from oa_req where req_pid="
 				+ summaryTaskId + " and REQ_STATUS !='OA_REQ_DEL'";
 
-		DTTable tb = DTTable.getJdbcTable(sql2);
-		/*
+		DTTable tb = DTTable.getJdbcTable(sql2);	
+
+		String process="null";
 		if (tb.getCount() > 0 && !tb.getCell(0, 0).isNull() && !tb.getCell(0, 1).isNull()) {
 			if (tb.getCell(0, 1).toInt() > 0) {
-				double process = tb.getCell(0, 0).toDouble() / tb.getCell(0, 1).toInt();
-				String sql3 = "update oa_req set REQ_PROGRESS=" + process + " where req_id = " + summaryTaskId;
-				DataConnection.updateAndClose(sql3, "", rv_);
+				process = (tb.getCell(0, 0).toDouble() / tb.getCell(0, 1).toInt()) + "";
 			}
 		}
-		*/
+		
 		//更新进度为最小的
-		String process="";
-		if(tb.getCell(0, 2).isNull() || tb.getCell(0, 2).toString()==null) {
-			process="null";
-		}else {
+		/*
+		if(!tb.getCell(0, 2).isNull() && tb.getCell(0, 2).toInt()>0) {
 			process=tb.getCell(0, 2).toDouble()+"";
 		}
+		*/
 		String sql3 = "update oa_req set REQ_PROGRESS=" + process + " where req_id = " + summaryTaskId;
 		DataConnection.updateAndClose(sql3, "", rv_);
 
