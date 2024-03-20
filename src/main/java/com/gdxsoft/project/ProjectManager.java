@@ -543,11 +543,12 @@ public class ProjectManager {
 		String sql = "update oa_req set REQ_START_TIME=a.a, REQ_REV_PLAN_TIME=a.b  from (select min(REQ_START_TIME) a ,max(REQ_REV_PLAN_TIME) b from oa_req where req_id in ("
 				+ childrenIds + ") and REQ_STATUS !='OA_REQ_DEL') a where req_id = " + summaryTaskId;
 
-		String sql2 = "select sum(case when REQ_PROGRESS is null or REQ_PROGRESS <0 then 0 when REQ_PROGRESS>1 then 1 else REQ_PROGRESS end) as TOTAL, count(*) as NUM from oa_req where req_pid="
+		String sql2 = "select sum(case when REQ_PROGRESS is null or REQ_PROGRESS <0 then 0 when REQ_PROGRESS>1 then 1 else REQ_PROGRESS end) as TOTAL,"+
+				" count(*) as NUM, min(REQ_PROGRESS) MIN_PGS from oa_req where req_pid="
 				+ summaryTaskId + " and REQ_STATUS !='OA_REQ_DEL'";
 
 		DTTable tb = DTTable.getJdbcTable(sql2);
-
+		/*
 		if (tb.getCount() > 0 && !tb.getCell(0, 0).isNull() && !tb.getCell(0, 1).isNull()) {
 			if (tb.getCell(0, 1).toInt() > 0) {
 				double process = tb.getCell(0, 0).toDouble() / tb.getCell(0, 1).toInt();
@@ -555,6 +556,16 @@ public class ProjectManager {
 				DataConnection.updateAndClose(sql3, "", rv_);
 			}
 		}
+		*/
+		//更新进度为最小的
+		String process="";
+		if(tb.getCell(0, 2).isNull() || tb.getCell(0, 2).toString()==null) {
+			process="null";
+		}else {
+			process=tb.getCell(0, 2).toDouble()+"";
+		}
+		String sql3 = "update oa_req set REQ_PROGRESS=" + process + " where req_id = " + summaryTaskId;
+		DataConnection.updateAndClose(sql3, "", rv_);
 
 		DataConnection.updateAndClose(sql, "", rv_);
 	}
