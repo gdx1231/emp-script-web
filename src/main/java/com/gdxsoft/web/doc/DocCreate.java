@@ -541,9 +541,6 @@ public class DocCreate {
 	}
 
 	private void docSqlData() {
-		if (!this._DocType.equalsIgnoreCase("DOC_TYPE_EWA")) {
-			return;
-		}
 		String sql = _Tmp.getDocTmpSql();
 		// SQL定义的数据
 		if (sql == null || sql.trim().length() == 0) { // 加载SQL指定的数据
