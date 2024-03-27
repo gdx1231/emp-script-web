@@ -21,7 +21,7 @@ public class DocCreate {
 
 	private MTable _Subs;
 	private DocTmp _Tmp;
-	
+
 	/**
 	 * 获取文档模板
 	 * @return
@@ -48,7 +48,7 @@ public class DocCreate {
 	private HashMap<String, String> _SubDocParas;
 	private int _SupId;
 	private boolean _OnlyParaChdDoc;
-	
+
 	private String _DtccRefTable;
 	private String _DtccRefId;
 
@@ -157,6 +157,11 @@ public class DocCreate {
 			if (this._IsSub == false) { // 最外层文档
 				DTRow r = this._TableMainVal.getRow(0);
 				this.addTableParaToRv(r);
+				if (this._TableSql != null && this._TableSql.getCount() > 0 
+						&& this._Conn.getRequestValue().s("ADD_MAIN_PARA")!=null) {
+					DTRow r2 = this._TableSql.getRow(0);
+					this.addTableParaToRv(r2);
+				}
 			}
 			String html = null;
 			if (this._DocType.equalsIgnoreCase("DOC_TYPE_ONE")) { // 主文档
@@ -202,6 +207,15 @@ public class DocCreate {
 
 		HtmlControl ht = new HtmlControl();
 		RequestValue rv = this._Conn.getRequestValue();
+		MListStr al = Utils.getParameters(paras, "@");
+		for (int i = 0; i < al.size(); i++) {
+			String key = al.get(i);
+			if (key.trim().length() == 0) {
+				continue;
+			}
+			String val = rv.s(key);
+			paras = paras.replace("@" + key, val == null ? "" : val);
+		}
 		ht.init(xmlname, itemname, paras, rv.getRequest(), rv.getSession(), null);
 
 		return ht.getHtml();
@@ -443,13 +457,13 @@ public class DocCreate {
 		}
 		// 替换为自定义模板内容
 		RequestValue rv = this._Conn.getRequestValue();
-		if(!(StringUtils.isBlank(rv.s("DTCC_REF_TABLE")) || StringUtils.isBlank(rv.s("DTCC_REF_ID")))) {
-			String sqlDtcc="SELECT DOC_TMP_CNT FROM DOC_TMP_CUSTOM_CNT\n" + 
-					"where DTCC_REF_TABLE=@DTCC_REF_TABLE and DTCC_REF_ID=@DTCC_REF_ID\n" + 
-					"AND DOC_TMP_UNID='"+this._Tmp.getDocTmpUnid().replace("'", "''") + "' AND SUP_ID=@G_SUP_ID\n" + 
-					"AND DTCC_STATUS='COM_YES'\n";
-			DTTable dtDtcc=DTTable.getJdbcTable(sqlDtcc, rv);
-			if(dtDtcc.getCount()==1) {
+		if (!(StringUtils.isBlank(rv.s("DTCC_REF_TABLE")) || StringUtils.isBlank(rv.s("DTCC_REF_ID")))) {
+			String sqlDtcc = "SELECT DOC_TMP_CNT FROM DOC_TMP_CUSTOM_CNT\n"
+					+ "where DTCC_REF_TABLE=@DTCC_REF_TABLE and DTCC_REF_ID=@DTCC_REF_ID\n" + "AND DOC_TMP_UNID='"
+					+ this._Tmp.getDocTmpUnid().replace("'", "''") + "' AND SUP_ID=@G_SUP_ID\n"
+					+ "AND DTCC_STATUS='COM_YES'\n";
+			DTTable dtDtcc = DTTable.getJdbcTable(sqlDtcc, rv);
+			if (dtDtcc.getCount() == 1) {
 				this._Tmp.setDocTmpCnt(dtDtcc.getCell(0, "DOC_TMP_CNT").toString());
 			}
 		}
@@ -527,6 +541,9 @@ public class DocCreate {
 	}
 
 	private void docSqlData() {
+		if (!this._DocType.equalsIgnoreCase("DOC_TYPE_EWA")) {
+			return;
+		}
 		String sql = _Tmp.getDocTmpSql();
 		// SQL定义的数据
 		if (sql == null || sql.trim().length() == 0) { // 加载SQL指定的数据
@@ -572,8 +589,7 @@ public class DocCreate {
 	}
 
 	/**
-	 * @param docValMId
-	 *            the _DocValMId to set
+	 * @param docValMId the _DocValMId to set
 	 */
 	public void setDocValMId(int docValMId) {
 		_DocValMId = docValMId;
@@ -587,8 +603,7 @@ public class DocCreate {
 	}
 
 	/**
-	 * @param docTmpId
-	 *            the _DocTmpId to set
+	 * @param docTmpId the _DocTmpId to set
 	 */
 	public void setDocTmpId(String docTmpUnid) {
 		_DocTmpUnid = docTmpUnid;
@@ -608,7 +623,6 @@ public class DocCreate {
 	public void setOnlyParaChdDoc(boolean a) {
 		_OnlyParaChdDoc = a;
 	}
-	
 
 	public String getDtccRefTable() {
 		return _DtccRefTable;
