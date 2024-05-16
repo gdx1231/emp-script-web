@@ -2,16 +2,21 @@ package com.gdxsoft.web.acl;
 
 import com.gdxsoft.easyweb.cache.CachedValue;
 import com.gdxsoft.easyweb.cache.CachedValueManager;
+import com.gdxsoft.easyweb.conf.ConfSecurities;
 import com.gdxsoft.easyweb.data.DTTable;
 import com.gdxsoft.easyweb.script.HtmlControl;
 import com.gdxsoft.easyweb.script.PageValue;
 import com.gdxsoft.easyweb.script.PageValueTag;
 import com.gdxsoft.easyweb.script.RequestValue;
+import com.gdxsoft.easyweb.utils.IUSymmetricEncyrpt;
 import com.gdxsoft.easyweb.utils.UCookies;
+import com.gdxsoft.web.user.ValidBase;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
+
+import org.json.JSONObject;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
@@ -21,6 +26,80 @@ import java.util.Enumeration;
 import java.util.List;
 
 public class Login {
+
+	/**
+	 * 根据loginToke创建登录验证
+	 * @param encryptedLoginToken 加密的LoginToken
+	 * @return
+	 * @throws Exception
+	 */
+	public static JSONObject createAdminLoginValidByToken(String encryptedLoginToken) throws Exception {
+		IUSymmetricEncyrpt symmetric = ConfSecurities.getInstance().getDefaultSecurity().createSymmetric();
+
+		JSONObject token = new JSONObject(symmetric.decrypt(encryptedLoginToken));
+		long t = token.optLong("t");
+		if (System.currentTimeMillis() - t > 10000) {
+			throw new Exception("Token overtime");
+		}
+		int admId = token.getInt("adm_id");
+		String admUnid = token.getString("adm_unid");
+		
+		RequestValue rv = new RequestValue();
+		rv.addOrUpdateValue("adm_id", admId);
+		rv.addOrUpdateValue("adm_unid", admUnid);
+		String sql = "select adm_id from adm_user where adm_id=@adm_id and adm_unid=@adm_unid";
+		
+		DTTable tbAdm = DTTable.getJdbcTable(sql);
+		if (tbAdm.getCount() == 0) {
+			throw new Exception("Invalid token no adm_user");
+		}
+
+		ValidBase vb = new ValidBase(null);
+		String validCode = vb.randomNumberCode(20);
+		JSONObject rst = vb.createValidRecord(admId, validCode, ValidBase.VALID_TYPE_ADM_LOGIN, 10, "自动登录数据");
+		
+		rst.put("VALID_CODE", validCode);
+		
+		return rst;
+	}
+
+	/**
+	 * 创建管理员登录凭证，通过系统默认的AES加密
+	 * 
+	 * @param admId 管理员ID
+	 * @return
+	 * @throws Exception
+	 */
+	public static String createAdminLoginToken(int admId) throws Exception {
+		String sql = "select  adm_unid from adm_user where adm_id=" + admId;
+		DTTable tb = DTTable.getJdbcTable(sql);
+		// 如果tb没有记录，说明没有岗位信息
+		if (tb.getCount() == 0) {
+			return null;
+		}
+		String admUnid = tb.getCell(0, 0).toString();
+		return createAdminLoginToken(admId, admUnid);
+	}
+
+	/**
+	 * 创建管理员登录凭证，通过系统默认的AES加密
+	 * 
+	 * @param admId   管理员ID
+	 * @param admUnid 管理员UNID
+	 * @return
+	 * @throws Exception
+	 */
+	public static String createAdminLoginToken(int admId, String admUnid) throws Exception {
+		JSONObject login_token = new JSONObject();
+		login_token.put("adm_id", admId);
+		login_token.put("adm_unid", admUnid);
+		login_token.put("t", System.currentTimeMillis());
+
+		IUSymmetricEncyrpt symmetric = ConfSecurities.getInstance().getDefaultSecurity().createSymmetric();
+		String encode = symmetric.encrypt(login_token.toString());
+
+		return encode;
+	}
 
 	/**
 	 * 获取我的所有岗位
