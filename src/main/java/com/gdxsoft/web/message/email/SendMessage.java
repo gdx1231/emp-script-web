@@ -25,18 +25,22 @@ public class SendMessage {
 	public static String DEFAULT_EMAIL = "undefined@undefined.gdx";
 	public static String DEFAULT_NAME = "undefined";
 
+	// 收件人
 	public static final String TO = "TO";
 	public static final String TO_EMAIL = "TO_EMAIL";
 	public static final String TO_NAME = "TO_NAME";
 
+	// 抄送
 	public static final String CC = "CC";
 	public static final String CC_EMAIL = "CC_EMAIL";
 	public static final String CC_NAME = "CC_NAME";
 
+	// 秘送
 	public static final String BCC = "BCC";
 	public static final String BCC_EMAIL = "BCC_EMAIL";
 	public static final String BCC_NAME = "BCC_NAME";
 
+	// 发件人
 	public static final String FROM = "FROM";
 	public static final String FROM_EMAIL = "FROM_EMAIL";
 	public static final String FROM_NAME = "FROM_NAME";
@@ -44,6 +48,10 @@ public class SendMessage {
 	public static final String SENDER = "SENDER";
 	public static final String SENDER_EMAIL = "SENDER_EMAIL";
 	public static final String SENDER_NAME = "SENDER_NAME";
+
+	public static final String REPLAY_TO = "REPLAY_TO";
+	public static final String REPLAY_TO_EMAIL = "REPLAY_TO_EMAIL";
+	public static final String REPLAY_TO_NAME = "REPLAY_TO_NAME";
 
 	public static final String MSG_REF_TABLE = "MSG_REF_TABLE";
 	public static final String MSG_REF_ID = "MSG_REF_ID";
@@ -131,6 +139,7 @@ public class SendMessage {
 		sb.append(" , SEND_DATE, MODULE_TYPE, IS_READ, REF_ID, REF_TABLE, MAIL_TYPE, ATTS\n");
 		sb.append(" , MESSSAGE_LOG, FACEBACK_URL, REPLAY_TO_EMAIL, REPLAY_TO_NAME\n");
 		sb.append(" , SINGLE_TO_EMAIL, SINGLE_TO_NAME, SMTP_CFG, MQ_MSG_ID, MQ_MSG\n");
+		sb.append(" , TARGET_USR_ID, TARGET_SUP_ID\n");
 		sb.append(" , CC_EMAILS,CC_NAMES,BCC_EMAILS,BCC_NAMES, MESSAGE_MD5,MAIL_MESSAGE_ID\n");
 		sb.append(") VALUES(\n");
 		sb.append("   @G_SUP_ID, @G_ADM_ID, @FROM_EMAIL, @FROM_NAME.50, @TARGET_NAME, @TARGET_EMAIL");
@@ -138,6 +147,7 @@ public class SendMessage {
 		sb.append(" , @SEND_DATE, @MODULE_TYPE, @IS_READ, @MSG_REF_ID, @MSG_REF_TABLE.200, @MAIL_TYPE, @ATTS\n");
 		sb.append(" , @MESSSAGE_LOG, @FACEBACK_URL, @REPLAY_TO_EMAIL, @REPLAY_TO_NAME\n");
 		sb.append(" , @SINGLE_TO_EMAIL, @SINGLE_TO_NAME, @SMTP_CFG, @MQ_MSG_ID, @MQ_MSG\n");
+		sb.append(" , @TARGET_USR_ID, @TARGET_SUP_ID\n");
 		sb.append(" , @CC_EMAILS, @CC_NAMES, @BCC_EMAILS, @BCC_NAMES, @MESSAGE_MD5, @MAIL_MESSAGE_ID\n");
 		sb.append(")\n -- auto MESSAGE_ID");
 		String sql = sb.toString();
@@ -241,7 +251,7 @@ public class SendMessage {
 		StringBuilder ccTo = new StringBuilder();
 		StringBuilder ccName = new StringBuilder();
 		this.sendMail.getCcs().forEach((k, v) -> {
-			if (sbTo.length() > 0) {
+			if (ccTo.length() > 0) {
 				ccTo.append(";");
 				ccName.append(";");
 			}
@@ -253,16 +263,32 @@ public class SendMessage {
 		rv.addOrUpdateValue("CC_NAMES", ccName.toString());
 		sbMd5.append(ccName.toString()).append("GDX");
 
-		//附件
+		// 回复人
+		StringBuilder replayTo = new StringBuilder();
+		StringBuilder replayToName = new StringBuilder();
+		this.sendMail.getReplayTos().forEach((k, v) -> {
+			if (replayTo.length() > 0) {
+				replayTo.append(";");
+				replayToName.append(";");
+			}
+			replayTo.append(v.getEmail());
+			replayToName.append(StringUtils.isBlank(v.getName()) ? v.getEmail() : v.getName());
+		});
+		rv.addOrUpdateValue("REPLAY_TO_EMAIL", replayTo.toString());
+		sbMd5.append(replayTo.toString()).append("GDX");
+		rv.addOrUpdateValue("REPLAY_TO_NAME", replayToName.toString());
+		sbMd5.append(replayToName.toString()).append("GDX");
+
+		// 附件
 		JSONArray atts = new JSONArray();
 		this.sendMail.getAtts().forEach((k, v) -> {
-			 JSONObject obj = new JSONObject();
-			 obj.put(v.getAttachName(), v.getSavePathAndName());
-			 atts.put(obj);
+			JSONObject obj = new JSONObject();
+			obj.put(v.getAttachName(), v.getSavePathAndName());
+			atts.put(obj);
 		});
 		rv.addOrUpdateValue("ATTS", atts.toString());
 		sbMd5.append(atts.toString()).append("GDX");
-		
+
 		this.messageMd5 = Utils.md5(sbMd5.toString());
 		rv.addOrUpdateValue("MESSAGE_MD5", this.messageMd5);
 
@@ -288,13 +314,12 @@ public class SendMessage {
 		this.rv.getPageValues().remove(FrameParameters.EWA_NO_CONTENT);
 		this.rv.getPageValues().remove(FrameParameters.EWA_MTYPE);
 		this.rv.getPageValues().remove(FrameParameters.EWA_AJAX);
-		
+
 		String paras = "EWA_AJAX=INSTALL&EWA_SKIP_TEST1=1";
-		
+
 		ht.init(xmlName, itemName, paras, rv, null);
 		String content = ht.getHtml();
 
-		
 		MList tbList = ht.getHtmlCreator().getHtmlClass().getItemValues().getDTTables();
 
 		this.sendMail.setHtmlContent(content).setSubject(ht.getTitle());
@@ -305,6 +330,7 @@ public class SendMessage {
 			addCc(tb);
 			addBcc(tb);
 			addSender(tb);
+			this.addReplyTo(tb);
 			totalFrom += addFrom(tb);
 		}
 
@@ -322,10 +348,31 @@ public class SendMessage {
 		addParametersToRvAndCheckExists();
 	}
 
+	/**
+	 * 指定邮件的回复人
+	 * @param tb
+	 * @return
+	 */
+	private int addReplyTo(DTTable tb) {
+		return addUsers(tb, REPLAY_TO_EMAIL, REPLAY_TO_NAME, REPLAY_TO);
+	}
+	
+	/**
+	 * 指定邮件的发件人，如果没有”Sender”，将会使用”From”
+	 * @param tb
+	 * @return
+	 */
 	private int addSender(DTTable tb) {
+		// 当自动生成回复信息的地址列表时，应当注意：如果没有”Sender”，将会使用”From” .
+		// 接收者在回复信息时，邮件sender中的信息不会被自动使用。如果”Reply-To”
+		// 字段存在，将使用该字段信息，而不是”From”字段。如果有”From” 而没有”Reply-To” ，将使用”From”。
 		return addUsers(tb, SENDER_EMAIL, SENDER_NAME, SENDER);
 	}
-
+	/**
+	 * 指定邮件的发件人，如果没有”Sender”，将会使用”From”
+	 * @param tb
+	 * @return
+	 */
 	private int addFrom(DTTable tb) {
 		return addUsers(tb, FROM_EMAIL, FROM_NAME, FROM);
 	}
