@@ -2,6 +2,8 @@ package com.gdxsoft.web.log;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -66,26 +68,9 @@ public class EwaScriptLog extends LogBase implements ILog {
 	 */
 	public static int DETAIL_MAX_SIZE = 4096; //
 
-	@Override
-	public void write() {
-		Log log = super.getLog();
-		if (log.getMsg() == null || log.getMsg().trim().length() == 0) {
-			// return;
-		}
-		RequestValue rv = super.getCreator().getRequestValue();
-		DataConnection cnn = new DataConnection(CONN_CONFIG_NAME, rv);
-		try {
-			this.writeToLog(cnn);
-		} catch (Exception err) {
-			LOGGER.error(err.getMessage());
-		} finally {
-			cnn.close();
-		}
-	}
-
-	public void writeToLog(DataConnection cnn) {
-		Log log = super.getLog();
-
+	private static final String SQL_MAIN;
+	private static final String SQL_DETAIL;
+	static {
 		StringBuilder sb = new StringBuilder();
 		sb.append("INSERT INTO _ewa_log_main(LOG_DES, LOG_MSG, LOG_TIME, LOG_IP");
 		sb.append(" , LOG_XMLNAME, LOG_ITEMNAME, LOG_RUNTIME");
@@ -97,9 +82,54 @@ public class EwaScriptLog extends LogBase implements ILog {
 		sb.append(" , @g_adm_id, @g_sup_id, @__tmp_LOG_QUERIES ");
 		sb.append(" , @__tmp_LOG_ACTION, @__tmp_LOG_URL, @__tmp_LOG_REFERER");
 		sb.append(")");
-		String sql = sb.toString();
+		SQL_MAIN = sb.toString();
 
-		RequestValue rv = super.getCreator().getRequestValue();
+		StringBuilder sb1 = new StringBuilder();
+		sb1.append("INSERT INTO _ewa_log_detail (log_id, det_inc, det_run_ms");
+		sb1.append(" , det_total_ms, det_event, det_description) VALUES");
+		SQL_DETAIL = sb1.toString();
+	}
+
+	private RequestValue rv = new RequestValue();
+	private long startTime;
+	private List<String> sqls;
+
+	@Override
+	public void write() {
+
+		DataConnection cnn = new DataConnection(CONN_CONFIG_NAME, rv);
+		this.preprocessingData(cnn);
+
+		ExecutorService executorService = Executors.newFixedThreadPool(1);
+		executorService.submit(() -> {
+			// 异步写入，不阻碍主线程
+			try {
+				this.writeToLog(cnn);
+			} catch (Exception err) {
+				LOGGER.error(err.getMessage());
+			} finally {
+				cnn.close();
+			}
+		});
+		executorService.shutdown();
+	}
+
+	/**
+	 * 预处理数据
+	 * 
+	 * @param cnn
+	 */
+	private void preprocessingData(DataConnection cnn) {
+		Log log = super.getLog();
+		if (log.getMsg() == null || log.getMsg().trim().length() == 0) {
+			// return;
+		}
+		startTime = super.getCreator().getDebugFrames().getCurrentTime();
+
+		// 查询字符串
+		String EWA_QUERY_ALL = super.getCreator().getRequestValue().s("EWA_QUERY_ALL");
+		rv.addValueByTruncate("__tmp_LOG_QUERIES", EWA_QUERY_ALL, 2000);
+
 		rv.addValueByTruncate("__tmp_LOG_DES", log.getDescription(), 200);
 
 		String logMsg = log.getMsg();
@@ -115,26 +145,13 @@ public class EwaScriptLog extends LogBase implements ILog {
 		rv.addValueByTruncate("__tmp_LOG_URL", log.getUrl(), 1500);
 		rv.addValueByTruncate("__tmp_LOG_REFERER", log.getRefererUrl(), 2000);
 
-		// 查询字符串
-		String EWA_QUERY_ALL = rv.s("EWA_QUERY_ALL");
-		rv.addValueByTruncate("__tmp_LOG_QUERIES", EWA_QUERY_ALL, 2000);
-
-		Object autoInc = cnn.executeUpdateReturnAutoIncrementObject(sql);
-		cnn.close();
-
-		BatchInsert batchInsert = new BatchInsert(cnn, false);
-		StringBuilder sb1 = new StringBuilder();
-		sb1.append("INSERT INTO _ewa_log_detail (log_id, det_inc, det_run_ms");
-		sb1.append(" , det_total_ms, det_event, det_description) VALUES");
-		long startTime = super.getCreator().getDebugFrames().getCurrentTime();
 		long prevTime = startTime;
-
-		List<String> sqls = new ArrayList<>();
+		sqls = new ArrayList<>();
 		DebugFrames frames = super.getCreator().getDebugFrames();
 		for (int i = 0; i < frames.size(); i++) {
 			DebugFrame df = frames.get(i);
 			StringBuilder sb2 = new StringBuilder();
-			sb2.append("(").append(autoInc);
+			// 不包含id，后面处理
 			sb2.append(",").append(i);
 
 			long runMs = df.getCurrentTime() - prevTime;
@@ -156,6 +173,22 @@ public class EwaScriptLog extends LogBase implements ILog {
 			sb2.append(")");
 			sqls.add(sb2.toString());
 		}
-		batchInsert.insertBatch(sb1.toString(), sqls);
+
+	}
+
+	public void writeToLog(DataConnection cnn) {
+		Object autoInc = cnn.executeUpdateReturnAutoIncrementObject(SQL_MAIN);
+		cnn.close();
+		List<String> sqls1 = new ArrayList<>();
+
+		for (int i = 0; i < sqls.size(); i++) {
+			//包含id
+			String sql = "(" + autoInc + sqls.get(i);
+			sqls1.add(sql);
+		}
+
+		BatchInsert batchInsert = new BatchInsert(cnn, false);
+
+		batchInsert.insertBatch(SQL_DETAIL, sqls1);
 	}
 }
