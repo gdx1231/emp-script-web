@@ -121,7 +121,8 @@ public class EwaScriptLog extends LogBase implements ILog {
 	 */
 	private void preprocessingData(DataConnection cnn) {
 		Log log = super.getLog();
-		if (log.getMsg() == null || log.getMsg().trim().length() == 0) {
+		String logMsg = log.getMsg();
+		if (logMsg == null || logMsg.trim().length() == 0) {
 			// return;
 		}
 		startTime = super.getCreator().getDebugFrames().getCurrentTime();
@@ -131,16 +132,14 @@ public class EwaScriptLog extends LogBase implements ILog {
 		rv.addValueByTruncate("__tmp_LOG_QUERIES", EWA_QUERY_ALL, 2000);
 
 		rv.addValueByTruncate("__tmp_LOG_DES", log.getDescription(), 200);
-
-		String logMsg = log.getMsg();
-		if (logMsg != null && logMsg.trim().length() > 0) {
-			rv.addValueByTruncate("__tmp_LOG_MSG", log.getMsg(), 4096);
-		}
+		rv.addValueByTruncate("__tmp_LOG_MSG", logMsg, 4096);
 		rv.addValue("__tmp_LOG_IP", log.getIp());
 
 		rv.addValueByTruncate("__tmp_LOG_XMLNAME", UserConfig.filterXmlNameByJdbc(log.getXmlName()), 200);
 		rv.addValueByTruncate("__tmp_LOG_ITEMNAME", log.getItemName(), 200);
+		
 		rv.addValue("__tmp_LOG_RUNTIME", log.getRunTime());
+
 		rv.addValueByTruncate("__tmp_LOG_ACTION", log.getActionName(), 233);
 		rv.addValueByTruncate("__tmp_LOG_URL", log.getUrl(), 1500);
 		rv.addValueByTruncate("__tmp_LOG_REFERER", log.getRefererUrl(), 2000);
