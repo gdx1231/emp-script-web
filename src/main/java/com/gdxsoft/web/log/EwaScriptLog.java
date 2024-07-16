@@ -79,7 +79,7 @@ public class EwaScriptLog extends LogBase implements ILog {
 		sb.append(")VALUES (");
 		sb.append("   @__tmp_LOG_DES, @__tmp_LOG_MSG, @sys_date, @__tmp_LOG_IP");
 		sb.append(" , @__tmp_LOG_XMLNAME, @__tmp_LOG_ITEMNAME, @__tmp_LOG_RUNTIME");
-		sb.append(" , @g_adm_id, @g_sup_id, @__tmp_LOG_QUERIES ");
+		sb.append(" , @__tmp_g_adm_id, @__tmp_g_sup_id, @__tmp_LOG_QUERIES ");
 		sb.append(" , @__tmp_LOG_ACTION, @__tmp_LOG_URL, @__tmp_LOG_REFERER");
 		sb.append(")");
 		SQL_MAIN = sb.toString();
@@ -144,6 +144,10 @@ public class EwaScriptLog extends LogBase implements ILog {
 		rv.addValueByTruncate("__tmp_LOG_URL", log.getUrl(), 1500);
 		rv.addValueByTruncate("__tmp_LOG_REFERER", log.getRefererUrl(), 2000);
 
+		rv.addOrUpdateValue("__tmp_g_adm_id", super.getCreator().getRequestValue().s("g_adm_id"));
+		rv.addOrUpdateValue("__tmp_g_sup_id", super.getCreator().getRequestValue().s("g_sup_id"));
+		
+		
 		long prevTime = startTime;
 		sqls = new ArrayList<>();
 		DebugFrames frames = super.getCreator().getDebugFrames();
