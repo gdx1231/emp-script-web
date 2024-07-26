@@ -2,8 +2,7 @@ package com.gdxsoft.web.log;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+import java.util.concurrent.*;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -100,18 +99,35 @@ public class EwaScriptLog extends LogBase implements ILog {
 		DataConnection cnn = new DataConnection(CONN_CONFIG_NAME, rv);
 		this.preprocessingData(cnn);
 
-		ExecutorService executorService = Executors.newFixedThreadPool(1);
-		executorService.submit(() -> {
+		ExecutorService executorService = Executors.newSingleThreadExecutor();
+		Callable<String> task = () -> {
 			// 异步写入，不阻碍主线程
 			try {
 				this.writeToLog(cnn);
+				return "OK";
 			} catch (Exception err) {
 				LOGGER.error(err.getMessage());
+				return "ERR:" + err.getMessage();
 			} finally {
 				cnn.close();
 			}
-		});
-		executorService.shutdown();
+
+		};
+		Future<String> future = executorService.submit(task);
+
+		try {
+			// 设置超时时间 5秒）
+			String result = future.get(5, TimeUnit.SECONDS);
+			LOGGER.debug(result);
+		} catch (InterruptedException | ExecutionException | TimeoutException e) {
+			LOGGER.error(e.getLocalizedMessage());
+			// 取消任务
+			future.cancel(true);
+		} finally {
+			// 关闭ExecutorService
+			executorService.shutdownNow();
+			cnn.close();
+		}
 	}
 
 	/**
@@ -137,7 +153,7 @@ public class EwaScriptLog extends LogBase implements ILog {
 
 		rv.addValueByTruncate("__tmp_LOG_XMLNAME", UserConfig.filterXmlNameByJdbc(log.getXmlName()), 200);
 		rv.addValueByTruncate("__tmp_LOG_ITEMNAME", log.getItemName(), 200);
-		
+
 		rv.addValue("__tmp_LOG_RUNTIME", log.getRunTime());
 
 		rv.addValueByTruncate("__tmp_LOG_ACTION", log.getActionName(), 233);
@@ -146,8 +162,7 @@ public class EwaScriptLog extends LogBase implements ILog {
 
 		rv.addOrUpdateValue("__tmp_g_adm_id", super.getCreator().getRequestValue().s("g_adm_id"));
 		rv.addOrUpdateValue("__tmp_g_sup_id", super.getCreator().getRequestValue().s("g_sup_id"));
-		
-		
+
 		long prevTime = startTime;
 		sqls = new ArrayList<>();
 		DebugFrames frames = super.getCreator().getDebugFrames();
@@ -185,7 +200,7 @@ public class EwaScriptLog extends LogBase implements ILog {
 		List<String> sqls1 = new ArrayList<>();
 
 		for (int i = 0; i < sqls.size(); i++) {
-			//包含id
+			// 包含id
 			String sql = "(" + autoInc + sqls.get(i);
 			sqls1.add(sql);
 		}
