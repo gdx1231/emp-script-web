@@ -24,8 +24,8 @@ public class OAFileView extends HttpFileViewBase implements IHttp {
 	private static Logger LOGGER = LoggerFactory.getLogger(HttpOaSysAttView.class);
 
 	private BinToPhy bp;
-	
-	private boolean skipSupCheck; //手动设定不验证sup_id
+
+	private boolean skipSupCheck; // 手动设定不验证sup_id
 
 	public OAFileView(String pdfJs, URL tableBinXmlFilePath) {
 		super.setPdfJs(pdfJs);
@@ -268,10 +268,11 @@ public class OAFileView extends HttpFileViewBase implements IHttp {
 				return f;
 			}
 		}
-		f = new File(pathUpload + path);
+		f = new File(pathUpload + "/" + path);
 		if (f.exists()) {
 			return f;
 		}
+		LOGGER.error("找不到文件：path={}, pathUpload={}, fullpath={}", path, pathUpload, f.getAbsolutePath());
 		return null;
 	}
 
@@ -283,7 +284,7 @@ public class OAFileView extends HttpFileViewBase implements IHttp {
 	 * @throws IOException
 	 */
 	public boolean skipCheck(String tbName) throws IOException {
-		if(this.skipSupCheck) { //手动设定不验证sup_id
+		if (this.skipSupCheck) { // 手动设定不验证sup_id
 			return true;
 		}
 		if (tbName.equalsIgnoreCase("lbs_photos")) {
@@ -313,6 +314,7 @@ public class OAFileView extends HttpFileViewBase implements IHttp {
 
 	/**
 	 * 手动设定不验证sup_id
+	 * 
 	 * @return
 	 */
 	public boolean isSkipSupCheck() {
@@ -321,6 +323,7 @@ public class OAFileView extends HttpFileViewBase implements IHttp {
 
 	/**
 	 * 手动设定不验证sup_id
+	 * 
 	 * @param skipSupCheck
 	 */
 	public void setSkipSupCheck(boolean skipSupCheck) {
