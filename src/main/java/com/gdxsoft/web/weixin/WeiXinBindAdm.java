@@ -5,6 +5,8 @@ import java.net.URLEncoder;
 import javax.servlet.http.HttpServletResponse;
 
 import org.json.JSONObject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.gdxsoft.easyweb.data.DTTable;
 import com.gdxsoft.easyweb.datasource.DataConnection;
@@ -12,6 +14,7 @@ import com.gdxsoft.easyweb.script.HtmlControl;
 import com.gdxsoft.easyweb.script.RequestValue;
 import com.gdxsoft.easyweb.utils.UDes;
 import com.gdxsoft.easyweb.utils.Utils;
+import com.gdxsoft.web.job.JobBase;
 import com.gdxsoft.web.user.ValidBase;
 
 /**
@@ -22,7 +25,7 @@ import com.gdxsoft.web.user.ValidBase;
  *
  */
 public class WeiXinBindAdm {
-
+	private static Logger LOGGER = LoggerFactory.getLogger(WeiXinBindAdm.class);
 	private RequestValue rv_;
 	private String wxCfgNo_; // 微信公众号
 	private String roleType_; // 绑定类型 ERP/GUIDE/TEACHER ...
@@ -105,7 +108,7 @@ public class WeiXinBindAdm {
 		String AUTH_TYPE = "";
 		try {
 			this.fp_unid_ = objG1.getString("FP_UNID");
-			this.fp_validcode_ = objG1.getString("FP_VALIDCODE");
+			this.fp_validcode_ = objG1.optString("FP_VALIDCODE");
 			this.roleType_ = objG1.getString("ROLE_TYPE");
 			AUTH_TYPE = objG1.getString("AUTH_TYPE");
 			if (AUTH_TYPE.equals("LOGIN")) {
@@ -255,6 +258,12 @@ public class WeiXinBindAdm {
 			if (tb.getCount() == 0) {
 				obj.put("RST", false);
 				obj.put("ERR", "验证数据丢失！");
+				obj.put("FP_UNID", g_rv.s("FP_UNID"));
+				obj.put("FP_VALIDCODE", g_rv.s("FP_VALIDCODE"));
+				obj.put("FP_TYPE", "WX_ADM_LOGIN");
+				
+				LOGGER.error(obj.toString());
+				
 				return obj;
 			}
 
@@ -307,6 +316,12 @@ public class WeiXinBindAdm {
 			if (tb.getCount() == 0) {
 				obj.put("RST", false);
 				obj.put("ERR", "验证数据丢失！");
+				obj.put("FP_UNID", g_rv.s("FP_UNID"));
+				obj.put("FP_VALIDCODE", g_rv.s("FP_VALIDCODE"));
+				obj.put("FP_TYPE", "WX_ADM_BIND");
+				
+				LOGGER.error(obj.toString());
+				
 				return obj;
 			}
 
@@ -332,7 +347,8 @@ public class WeiXinBindAdm {
 		} else {
 			obj.put("RST", false);
 			obj.put("ERR", "未知的请求参数");
-
+			LOGGER.error(obj.toString());
+			
 		}
 		obj.put("wxCfgNo", wxCfgNo_);
 		obj.put("roleType", roleType_);
@@ -405,10 +421,12 @@ public class WeiXinBindAdm {
 		String FP_VALIDCODE = Utils.randomStr(20);
 
 		ValidBase vb = new ValidBase(rv_);
-
 		JSONObject obj = vb.createValidRecord(admId, FP_VALIDCODE, fpType, 20, "");
 
-		obj.put("FP_UNID", rv_.s("sys_unid"));
+		this.fp_unid_ = obj.getString("FP_UNID");
+		this.fp_validcode_ = FP_VALIDCODE;
+		this.fp_type_ = fpType;
+
 		obj.put("ROLE_TYPE", roleType_);
 		return obj;
 	}
@@ -426,7 +444,11 @@ public class WeiXinBindAdm {
 	 **/
 	private DTTable getVaildData(String fpUnid, String fpValidCode, String fpType) {
 		ValidBase vb = new ValidBase(rv_);
-		return vb.getValidRecord(fpUnid, fpType);
+		if (fpValidCode == null) {
+			return vb.getValidRecord(fpUnid, fpType);
+		} else {
+			return vb.getValidRecord(adm_id_, fpValidCode, fpType);
+		}
 
 	}
 
