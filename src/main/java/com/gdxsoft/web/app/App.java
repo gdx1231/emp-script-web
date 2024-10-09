@@ -8,6 +8,7 @@ import javax.servlet.http.HttpSession;
 
 import com.gdxsoft.easyweb.data.DTTable;
 import com.gdxsoft.easyweb.script.RequestValue;
+import com.gdxsoft.easyweb.script.display.frame.FrameParameters;
 import com.gdxsoft.easyweb.utils.Utils;
 import com.gdxsoft.easyweb.utils.msnet.MStr;
 import com.gdxsoft.web.dao.*;
@@ -226,45 +227,50 @@ public class App {
 		HttpServletRequest request = rv.getRequest();
 		HttpSession session = rv.getSession();
 
-		String lang = "zhcn"; // 默认中文
-		if (rv.s("ewa_lang") != null) {
-			lang = rv.s("ewa_lang");
-			if (!lang.equals("enus")) {
-				lang = "zhcn";
-			}
-			// System.out.println(" 取消用户的语言设定 APP_LANG " + rv.s("ewa_lang"));
+		String ewaLang = rv.s("ewa_lang");
 
-			if (response != null) {
-				// 取消用户的语言设定 APP_LANG
-				javax.servlet.http.Cookie ck = new javax.servlet.http.Cookie("APP_LANG", "");
-				ck.setMaxAge(0);
-				ck.setPath("/");
+		String lang = null;
 
-				response.addCookie(ck);
+		String sysEwaLang = null;
+		String appLang = null;
+		String acceptLang = null;
+
+		if (ewaLang == null) {
+			// 1. 先从cookie中获取
+			appLang = rv.s("APP_LANG");// cookie中设定的（language-setting.jsp）
+
+			// 2. 再从session中获取
+			if (session != null && session.getAttribute(FrameParameters.SYS_EWA_LANG) != null) {
+				sysEwaLang = session.getAttribute(FrameParameters.SYS_EWA_LANG).toString();
 			}
-		} else if (rv.s("APP_LANG") != null) { // cookie中设定的（language-setting.jsp）
-			lang = rv.s("APP_LANG");
-			if (!lang.equals("enus")) {
-				lang = "zhcn";
-			}
-		} else if (rv.s("ewa_lang") == null) {
+			// 3. 从浏览器的语言获取
 			String accept_language = request.getHeader("accept-language");
 			if (accept_language != null) {
 				String[] accept_languages = accept_language.toLowerCase().split(",");
 				if (accept_languages[0].indexOf("zh") < 0) { // 非中文
-					lang = "enus"; // 英文
+					acceptLang = FrameParameters.ENUS; // 英文
 				}
 			}
+
+			if (appLang != null && appLang.trim().length() > 0) { // cookie中设定的（language-setting.jsp）
+				lang = appLang;
+			} else if (sysEwaLang != null && sysEwaLang.trim().length() > 0) { // session中设定的
+				lang = sysEwaLang;
+			} else if (acceptLang != null) { // 浏览器的语言
+				lang = acceptLang;
+			}
+
+			if (!FrameParameters.ENUS.equals(lang)) {
+				// 默认字符集为简体中文
+				lang = FrameParameters.ZHCN;
+			}
+
 		} else {
 			lang = rv.getLang();
 		}
-		if (session != null) {
-			Object obj_ewa_lang = session.getAttribute("SYS_EWA_LANG");
-			if (obj_ewa_lang == null || !lang.equals(obj_ewa_lang.toString())) {
-				// System.out.println("设定语言为：" + lang);
-				request.setAttribute("SYS_EWA_LANG", lang); // 设置英文
-				rv.addOrUpdateValue("SYS_EWA_LANG", lang); // 设置英文
-			}
+		if (session != null && (sysEwaLang == null || !lang.equals(sysEwaLang))) {
+			session.setAttribute(FrameParameters.SYS_EWA_LANG, lang); // 设置语言
+			rv.addOrUpdateValue(FrameParameters.SYS_EWA_LANG, lang); // 设置语言
 		}
 		return lang;
 	}
