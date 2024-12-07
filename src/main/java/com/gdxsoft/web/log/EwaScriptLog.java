@@ -36,6 +36,7 @@ CREATE TABLE _ewa_log_main (
   log_queries varchar(2000) CHARACTER SET latin1  COMMENT '查询参数',
   log_referer varchar(1500) CHARACTER SET latin1  COMMENT '参考',
   log_des varchar(200) COMMENT '配置说明',
+  log_ua varchar(2000) CHARACTER SET latin1  COMMENT 'useragent'
   PRIMARY KEY (log_id),
   key idx__ewa_log_main_xmlname_itemname(log_xmlname, log_itemname)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 ;
@@ -74,12 +75,12 @@ public class EwaScriptLog extends LogBase implements ILog {
 		sb.append("INSERT INTO _ewa_log_main(LOG_DES, LOG_MSG, LOG_TIME, LOG_IP");
 		sb.append(" , LOG_XMLNAME, LOG_ITEMNAME, LOG_RUNTIME");
 		sb.append(" , adm_id, sup_id, LOG_QUERIES");
-		sb.append(" , LOG_ACTION, LOG_URL, LOG_REFERER");
+		sb.append(" , LOG_ACTION, LOG_URL, LOG_REFERER, log_ua");
 		sb.append(")VALUES (");
 		sb.append("   @__tmp_LOG_DES, @__tmp_LOG_MSG, @sys_date, @__tmp_LOG_IP");
 		sb.append(" , @__tmp_LOG_XMLNAME, @__tmp_LOG_ITEMNAME, @__tmp_LOG_RUNTIME");
 		sb.append(" , @__tmp_g_adm_id, @__tmp_g_sup_id, @__tmp_LOG_QUERIES ");
-		sb.append(" , @__tmp_LOG_ACTION, @__tmp_LOG_URL, @__tmp_LOG_REFERER");
+		sb.append(" , @__tmp_LOG_ACTION, @__tmp_LOG_URL, @__tmp_LOG_REFERER, @__tmp_log_ua");
 		sb.append(")");
 		SQL_MAIN = sb.toString();
 
@@ -162,7 +163,9 @@ public class EwaScriptLog extends LogBase implements ILog {
 
 		rv.addOrUpdateValue("__tmp_g_adm_id", super.getCreator().getRequestValue().s("g_adm_id"));
 		rv.addOrUpdateValue("__tmp_g_sup_id", super.getCreator().getRequestValue().s("g_sup_id"));
-
+		// user agent
+		rv.addValueByTruncate("__tmp_log_ua", super.getCreator().getRequestValue().s(RequestValue.SYS_USER_AGENT), 2000);
+		
 		long prevTime = startTime;
 		sqls = new ArrayList<>();
 		DebugFrames frames = super.getCreator().getDebugFrames();
