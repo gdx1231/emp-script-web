@@ -270,7 +270,7 @@ public class Site {
 			url = "";
 		}
 		String u = "";
-		if (url.indexOf("http:") >= 0 || url.indexOf("https:") >= 0) {
+		if (url.indexOf("javascript:") >= 0 || url.indexOf("http:") >= 0 || url.indexOf("https:") >= 0) {
 			u = url;
 		} else if (url.indexOf("/") == 0) {
 			u = url;
