@@ -1,4 +1,6 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<url>https://github.com/gdx1231/emp-script-web</url>
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>com.gdxsoft.easyweb</groupId>
@@ -64,22 +66,24 @@
 					<target>1.8</target>
 				</configuration>
 			</plugin>
-			<plugin>
+			<!--<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-dependency-plugin</artifactId>
+				<version>3.7.0</version>
 				<executions>
 					<execution>
-						<id>copy</id>
+						<id>copy-dependencies</id>
 						<phase>package</phase>
 						<goals>
 							<goal>copy-dependencies</goal>
 						</goals>
 						<configuration>
 							<outputDirectory>${project.build.directory}/lib</outputDirectory>
+							<stripVersion>false</stripVersion>
 						</configuration>
 					</execution>
 				</executions>
-			</plugin>
+			</plugin> -->
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-source-plugin</artifactId>
@@ -113,7 +117,7 @@
 					</additionalOptions>
 				</configuration>
 			</plugin>
-			 
+
 			<plugin>
 				<artifactId>maven-antrun-plugin</artifactId>
 				<version>1.8</version>
@@ -123,11 +127,14 @@
 						<phase>package</phase>
 						<configuration>
 							<target>
-								<echo>copy ${project.build.finalName}.jar to
+								<echo>
+									copy ${project.build.finalName}.jar to
 									${basedir}/../../workspace.newVersion/allclass/lib/</echo>
-								<copy todir="${basedir}/../../workspace.newVersion/allclass/lib/">
+								<copy
+									todir="${basedir}/../../workspace.newVersion/allclass/lib/">
 									<fileset dir="${project.build.directory}">
-										<include name="${project.build.finalName}*" />
+										<include
+											name="${project.build.finalName}*" />
 									</fileset>
 								</copy>
 							</target>
@@ -152,7 +159,8 @@
 						</goals>
 						<configuration>
 							<sourceFile>target/${project.build.finalName}.jar</sourceFile>
-							<destinationFile>target/${project.artifactId}-last.jar</destinationFile>
+							<destinationFile>
+								target/${project.artifactId}-last.jar</destinationFile>
 						</configuration>
 					</execution>
 				</executions>
@@ -198,14 +206,14 @@
 			<version>4.4.0</version>
 		</dependency>
 
-		<!-- https://mvnrepository.com/artifact/com.tencentcloudapi/tencentcloud-sdk-java-sms -->
+		<!--
+		https://mvnrepository.com/artifact/com.tencentcloudapi/tencentcloud-sdk-java-sms -->
 		<!-- 腾讯短信接口 -->
 		<dependency>
-		    <groupId>com.tencentcloudapi</groupId>
-		    <artifactId>tencentcloud-sdk-java-sms</artifactId>
-		    <version>3.1.893</version>
+			<groupId>com.tencentcloudapi</groupId>
+			<artifactId>tencentcloud-sdk-java-sms</artifactId>
+			<version>3.1.893</version>
 		</dependency>
-
 
 
 		<!-- https://mvnrepository.com/artifact/com.aliyun/aliyun-java-sdk-core -->
@@ -216,12 +224,13 @@
 		</dependency>
 		<!-- 阿里云域名 -->
 		<dependency>
-		    <groupId>com.aliyun</groupId>
-		    <artifactId>aliyun-java-sdk-alidns</artifactId>
-		    <version>3.0.7</version>
+			<groupId>com.aliyun</groupId>
+			<artifactId>aliyun-java-sdk-alidns</artifactId>
+			<version>3.0.7</version>
 		</dependency>
-		
-		<!-- https://mvnrepository.com/artifact/com.aliyun/aliyun-java-sdk-dysmsapi -->
+
+		<!--
+		https://mvnrepository.com/artifact/com.aliyun/aliyun-java-sdk-dysmsapi -->
 		<dependency>
 			<groupId>com.aliyun</groupId>
 			<artifactId>aliyun-java-sdk-dysmsapi</artifactId>
@@ -241,7 +250,8 @@
 			<scope>provided</scope>
 		</dependency>
 
-		<!-- https://mvnrepository.com/artifact/javax.websocket/javax.websocket-api -->
+		<!--
+		https://mvnrepository.com/artifact/javax.websocket/javax.websocket-api -->
 		<dependency>
 			<groupId>javax.websocket</groupId>
 			<artifactId>javax.websocket-api</artifactId>
@@ -249,7 +259,8 @@
 			<scope>provided</scope>
 		</dependency>
 
-		<!-- https://mvnrepository.com/artifact/org.junit.jupiter/junit-jupiter-api -->
+		<!--
+		https://mvnrepository.com/artifact/org.junit.jupiter/junit-jupiter-api -->
 		<dependency>
 			<groupId>org.junit.jupiter</groupId>
 			<artifactId>junit-jupiter-api</artifactId>
@@ -344,11 +355,13 @@
 			<distributionManagement>
 				<snapshotRepository>
 					<id>oss</id>
-					<url>https://oss.sonatype.org/content/repositories/snapshots/</url>
+					<url>
+						https://oss.sonatype.org/content/repositories/snapshots/</url>
 				</snapshotRepository>
 				<repository>
 					<id>oss</id>
-					<url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</url>
+					<url>
+						https://oss.sonatype.org/service/local/staging/deploy/maven2/</url>
 				</repository>
 			</distributionManagement>
 		</profile>
