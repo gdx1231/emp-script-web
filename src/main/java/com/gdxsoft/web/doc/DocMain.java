@@ -7,6 +7,8 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.json.JSONObject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.gdxsoft.easyweb.data.DTTable;
 import com.gdxsoft.easyweb.datasource.DataConnection;
@@ -20,6 +22,7 @@ import com.gdxsoft.easyweb.utils.msnet.MStr;
 import com.gdxsoft.web.http.HttpFileViewBase;
 
 public class DocMain {
+	private static Logger LOGGER = LoggerFactory.getLogger(DocMain.class);
 	RequestValue rv;
 	String configName;
 	private HttpServletRequest request;

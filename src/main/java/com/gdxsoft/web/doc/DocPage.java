@@ -1,11 +1,15 @@
 package com.gdxsoft.web.doc;
 
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.gdxsoft.easyweb.data.DTTable;
 import com.gdxsoft.easyweb.datasource.DataConnection;
 import com.gdxsoft.easyweb.script.RequestValue;
 
 public class DocPage {
+	private static Logger LOGGER = LoggerFactory.getLogger(DocPage.class);
 	private String connConfigName; // 数据库链接配置名称
 	private DocCreate _DocCreate;
 
@@ -147,6 +151,7 @@ public class DocPage {
 			s = DocUtils.reptDefines(s, rv);
 			return s;
 		} catch (Exception err1) {
+			LOGGER.error(err1.getMessage(), err1);
 			throw err1;
 		} finally {
 			conn.close();
@@ -154,6 +159,10 @@ public class DocPage {
 	}
 
 	public String createDocContent(RequestValue rv) throws Exception {
+		if(rv.isBlank("G_SUP_ID")) {
+			LOGGER.error("G_SUP_ID is blank");
+			throw new Exception("G_SUP_ID is blank");
+		}
 		int supId = rv.getInt("G_SUP_ID");
 		return this.createDocContent(rv, supId);
 	}
