@@ -1,9 +1,12 @@
 package com.gdxsoft.web.doc;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 
 import org.jodconverter.core.util.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.gdxsoft.easyweb.data.DTCell;
 import com.gdxsoft.easyweb.data.DTRow;
@@ -18,12 +21,13 @@ import com.gdxsoft.easyweb.utils.msnet.MStr;
 import com.gdxsoft.easyweb.utils.msnet.MTable;
 
 public class DocCreate {
-
+	private static Logger LOGGER = LoggerFactory.getLogger(DocCreate.class);
 	private MTable _Subs;
 	private DocTmp _Tmp;
 
 	/**
 	 * 获取文档模板
+	 * 
 	 * @return
 	 */
 	public DocTmp getDocTmp() {
@@ -60,6 +64,10 @@ public class DocCreate {
 		try {
 			this.init();
 		} catch (Throwable e) {
+			if (this._Conn != null) {
+				this._Conn.close();
+			}
+			LOGGER.error("dodTmpUnid: {}, supId: {}", dodTmpUnid, supId, e);
 			this._Error = e.getMessage();
 		}
 	}
@@ -73,6 +81,10 @@ public class DocCreate {
 		try {
 			this.init();
 		} catch (Throwable e) {
+			if (this._Conn != null) {
+				this._Conn.close();
+			}
+			LOGGER.error("dodTmpUnid: {}, supId: {}, OnlyParaChd: {}", dodTmpUnid, supId, OnlyParaChd, e);
 			this._Error = e.getMessage();
 		}
 	}
@@ -157,8 +169,8 @@ public class DocCreate {
 			if (this._IsSub == false) { // 最外层文档
 				DTRow r = this._TableMainVal.getRow(0);
 				this.addTableParaToRv(r);
-				if (this._TableSql != null && this._TableSql.getCount() > 0 
-						&& this._Conn.getRequestValue().s("ADD_MAIN_PARA")!=null) {
+				if (this._TableSql != null && this._TableSql.getCount() > 0
+						&& this._Conn.getRequestValue().s("ADD_MAIN_PARA") != null) {
 					DTRow r2 = this._TableSql.getRow(0);
 					this.addTableParaToRv(r2);
 				}
@@ -453,6 +465,7 @@ public class DocCreate {
 		dao.setConfigName(this._Conn.getCurrentConfig().getName());
 		this._Tmp = dao.getRecord(this._SupId, this._DocTmpUnid);
 		if (this._Tmp == null) {
+			LOGGER.error("模板未发现_SupId {}, _DocTmpUnid {}", this._SupId, this._DocTmpUnid);
 			throw new Exception("模板未发现");
 		}
 		// 替换为自定义模板内容
@@ -492,6 +505,12 @@ public class DocCreate {
 		this._Subs = new MTable();
 		for (int i = 0; i < valTb.getCount(); i++) {
 			String unid = valTb.getRow(i).getCell(0).toString();
+			if (this._Conn.getResultSetList() != null && this._Conn.getResultSetList().size() > 100) {
+				this._Conn.close();
+				LOGGER.error("太多的递归调用次数，死循环？DocTmpUnid={}", this._Tmp.getDocTmpUnid());
+				throw new Exception("太多的递归调用次数，死循环？DocTmpUnid=" + this._Tmp.getDocTmpUnid());
+			}
+
 			DocCreate d = new DocCreate(unid, _SupId, this._Conn, this._OnlyParaChdDoc);
 			d._IsSub = true;
 			d._DocParent = this;
