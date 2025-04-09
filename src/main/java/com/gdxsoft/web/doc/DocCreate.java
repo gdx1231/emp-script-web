@@ -505,10 +505,14 @@ public class DocCreate {
 		this._Subs = new MTable();
 		for (int i = 0; i < valTb.getCount(); i++) {
 			String unid = valTb.getRow(i).getCell(0).toString();
-			if (this._Conn.getResultSetList() != null && this._Conn.getResultSetList().size() > 100) {
-				this._Conn.close();
-				LOGGER.error("太多的递归调用次数，死循环？DocTmpUnid={}", this._Tmp.getDocTmpUnid());
-				throw new Exception("太多的递归调用次数，死循环？DocTmpUnid=" + this._Tmp.getDocTmpUnid());
+			if (this._Conn.getResultSetList() != null  ) {
+				int size = this._Conn.getResultSetList().size() ;
+				if (size > 1000) { // 防止死循环
+					this._Conn.close();
+					LOGGER.error("太多的递归调用次数，死循环？DocTmpUnid={}", this._Tmp.getDocTmpUnid());
+					throw new Exception("太多的递归调用次数，死循环？DocTmpUnid=" + this._Tmp.getDocTmpUnid());
+				}
+				
 			}
 
 			DocCreate d = new DocCreate(unid, _SupId, this._Conn, this._OnlyParaChdDoc);
