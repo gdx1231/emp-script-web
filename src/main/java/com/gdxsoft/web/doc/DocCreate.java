@@ -493,12 +493,14 @@ public class DocCreate {
 		String sql;
 		if (_OnlyParaChdDoc) {
 			sql = "select b.DOC_TMP_UNID from BAS_DOC_PARA a "
-					+ " INNER JOIN DOC_TMP B ON A.DOC_PARA_RUNID=B.DOC_TMP_UNID " + " where a.DOC_TMP_UNID='"
+					+ " INNER JOIN DOC_TMP B ON A.DOC_PARA_RUNID=B.DOC_TMP_UNID " 
+					+ " where b.SUP_ID=@G_SUP_ID and a.DOC_TMP_UNID='"
 					+ this._Tmp.getDocTmpUnid().replace("'", "''") + "'"
 					+ " AND DOC_PARA_RUNID IS NOT NULL AND DOC_PARA_RUNID<>''";
 		} else {
-			sql = "SELECT DOC_TMP_UNID FROM DOC_TMP A " + " INNER JOIN BAS_DOC_CAT B ON A.DOC_CAT_UNID=B.DOC_CAT_UNID "
-					+ " WHERE B.DOC_CAT_PUNID  ='" + this._Tmp.getDocCatUnid().replace("'", "''") + "'";
+			sql = "SELECT DOC_TMP_UNID FROM DOC_TMP A " 
+					+ " INNER JOIN BAS_DOC_CAT B ON A.DOC_CAT_UNID=B.DOC_CAT_UNID "
+					+ " WHERE a.SUP_ID=@G_SUP_ID AND B.DOC_CAT_PUNID  ='" + this._Tmp.getDocCatUnid().replace("'", "''") + "'";
 		}
 
 		DTTable valTb = DTTable.getJdbcTable(sql, this._Conn);
