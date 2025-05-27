@@ -282,8 +282,8 @@ public class HttpFileViewBase {
 	public String handleFile(File file, String ext, String title, boolean allowDownload, String ifNoneMatch)
 			throws IOException {
 
-		if (this.resize != null   && isImage(ext) && !small) {
-			File resizedFile = this.createResized(file, resize .width, resize.height, 70);
+		if (this.resize != null && isImage(ext) && !small) {
+			File resizedFile = this.createResized(file, resize.width, resize.height, 70);
 			file = resizedFile;
 		}
 		if (this.isDownload()) {
@@ -350,26 +350,59 @@ public class HttpFileViewBase {
 	public void handleSmall(File file, String ext) throws IOException {
 		// EmpScriptV2 静态文件默认目录
 		String emp = UPath.getEmpScriptV2Path();
-		if (HttpFileViewBase.isDocuement(ext)) {
-			if (ext.trim().equalsIgnoreCase("doc") || ext.trim().equalsIgnoreCase("docx")
-					|| ext.trim().equalsIgnoreCase("rtf")) {
-				response.sendRedirect(emp + "/EWA_STYLE/images/file_png/MSWD.png");
-			} else {
-				response.sendRedirect(emp + "/EWA_STYLE/images/file_png/XCEL.png");
-			}
-		} else if (HttpFileViewBase.isImage(ext)) {
+		if (HttpFileViewBase.isImage(ext)) {
 			File thumbnail = this.createResized(file, 128, 128, 71);
 			if (thumbnail == null) {
 				response.sendRedirect(emp + "/EWA_STYLE/images/transparent.png");
 				return;
 			}
 			this.inlineFile(thumbnail, request, response);
+		} else {
+			// 如果不是图片，直接输出默认图标
+			String url = this.getFileIcon(ext);
+			response.sendRedirect(url);
+
+		}
+
+	}
+
+	/**
+	 * 获取文件图标
+	 * 
+	 * @param ext
+	 * @return
+	 */
+	public String getFileIcon(String ext) {
+		// EmpScriptV2 静态文件默认目录
+		String emp = UPath.getEmpScriptV2Path();
+		if (HttpFileViewBase.isDocuement(ext)) {
+			if (ext.trim().equalsIgnoreCase("doc") || ext.trim().equalsIgnoreCase("docx")
+					|| ext.trim().equalsIgnoreCase("rtf") || ext.trim().equalsIgnoreCase("wps")) {
+				return emp + "/EWA_STYLE/images/file_png/MSWD.png";
+			} else if (ext.trim().equalsIgnoreCase("xls") || ext.trim().equalsIgnoreCase("xlsx")) {
+				return emp + "/EWA_STYLE/images/file_png/XCEL.png";
+			} else if (ext.trim().equalsIgnoreCase("ppt") || ext.trim().equalsIgnoreCase("pptx")) {
+				return emp + "/EWA_STYLE/images/file_png/PPT3.png";
+			} else if (ext.trim().equalsIgnoreCase("html") || ext.trim().equalsIgnoreCase("html")) {
+				return emp + "/EWA_STYLE/images/file_png/html.png";
+			} else if (ext.trim().equalsIgnoreCase("txt")) {
+				return emp + "/EWA_STYLE/images/file_png/Notepad.png";
+			} else if (ext.trim().equalsIgnoreCase("odt") || ext.trim().equalsIgnoreCase("ods")
+					|| ext.trim().equalsIgnoreCase("odp")) {
+				return emp + "/EWA_STYLE/images/file_png/openoffice.png";
+			} else {
+				return emp + "/EWA_STYLE/images/file_png/EDIT.png";
+			}
+		} else if (HttpFileViewBase.isImage(ext)) {
+			return emp + "/EWA_STYLE/images/file_png/Image.png";
 		} else if (HttpFileViewBase.isVideo(ext)) { // 视频
-			response.sendRedirect(emp + "/EWA_STYLE/images/file_png/vod.png");
+			return emp + "/EWA_STYLE/images/file_png/vod.png";
 		} else if (HttpFileViewBase.isPdf(ext)) {
-			response.sendRedirect(emp + "/EWA_STYLE/images/file_png/ACR_App.png");
-		} else { // 下载文件
-			response.sendRedirect(emp + "/EWA_STYLE/images/file_png/gnote.png");
+			return emp + "/EWA_STYLE/images/file_png/ACR_App.png";
+		} else if (HttpFileViewBase.isAudio(ext)) {
+			return emp + "/EWA_STYLE/images/file_png/mp3.png";
+		} else {
+			return emp + "/EWA_STYLE/images/file_png/gnote.png";
 		}
 	}
 

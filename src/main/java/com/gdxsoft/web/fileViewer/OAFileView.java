@@ -27,6 +27,12 @@ public class OAFileView extends HttpFileViewBase implements IHttp {
 
 	private boolean skipSupCheck; // 手动设定不验证sup_id
 
+	private String phyFilePath; // 物理文件路径
+	private String md5; // md5值
+	private String ext; // 扩展名
+	private String name; // 显示或下载的文件名
+	private long fileSize; // 文件大小
+
 	public OAFileView(String pdfJs, URL tableBinXmlFilePath) {
 		super.setPdfJs(pdfJs);
 		this.bp = new BinToPhy(tableBinXmlFilePath);
@@ -240,6 +246,12 @@ public class OAFileView extends HttpFileViewBase implements IHttp {
 				}
 			}
 		}
+		this.ext = ext;
+		this.md5 = md5;
+		this.name = name;
+		this.phyFilePath = file.getAbsolutePath();
+		this.fileSize = file.length();
+
 		return super.handleFile(file, ext, name, true, ifNoneMatch);
 
 	}
@@ -328,6 +340,50 @@ public class OAFileView extends HttpFileViewBase implements IHttp {
 	 */
 	public void setSkipSupCheck(boolean skipSupCheck) {
 		this.skipSupCheck = skipSupCheck;
+	}
+
+	/**
+	 * 获取物理文件路径
+	 * 
+	 * @return the phyFilePath
+	 */
+	public String getPhyFilePath() {
+		return phyFilePath;
+	}
+
+	/**
+	 * 获取md5值
+	 * 
+	 * @return the md5
+	 */
+	public String getMd5() {
+		return md5;
+	}
+
+	/**
+	 * 获取扩展名
+	 * 
+	 * @return the ext
+	 */
+	public String getExt() {
+		return ext;
+	}
+
+	/**
+	 * 获取显示或下载的文件名
+	 * 
+	 * @return the name
+	 */
+	public String getName() {
+		return name;
+	}
+
+	/**
+	 * 获取文件大小
+	 * @return the fileSize
+	 */
+	public long getFileSize() {
+		return fileSize;
 	}
 
 }
