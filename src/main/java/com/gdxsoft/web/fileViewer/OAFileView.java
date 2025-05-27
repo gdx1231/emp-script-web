@@ -33,6 +33,9 @@ public class OAFileView extends HttpFileViewBase implements IHttp {
 	private String name; // 显示或下载的文件名
 	private long fileSize; // 文件大小
 
+	private boolean recordExists; // 记录是否存在
+	private boolean fileExists; // 物理文件是否存在
+
 	public OAFileView(String pdfJs, URL tableBinXmlFilePath) {
 		super.setPdfJs(pdfJs);
 		this.bp = new BinToPhy(tableBinXmlFilePath);
@@ -155,6 +158,8 @@ public class OAFileView extends HttpFileViewBase implements IHttp {
 			return HttpFileViewBase.msgRecordNotExists(super.isEn(), super.isSkipHeader());
 		}
 
+		this.recordExists = true;
+
 		String keyField = item.getAttribute("keyf"); // 主键
 		String fileField = item.getAttribute("filef"); // 物理文件字段
 		String extField = item.getAttribute("extf"); // 扩展名字段
@@ -182,6 +187,8 @@ public class OAFileView extends HttpFileViewBase implements IHttp {
 			}
 			return HttpFileViewBase.msgPhyFileNotExists(super.isEn(), super.isSkipHeader());
 		}
+
+		this.fileExists = true;
 
 		int cache_life = 30000;// 30s
 		if (cached != null && cached.trim().length() > 0) {
@@ -380,10 +387,28 @@ public class OAFileView extends HttpFileViewBase implements IHttp {
 
 	/**
 	 * 获取文件大小
+	 * 
 	 * @return the fileSize
 	 */
 	public long getFileSize() {
 		return fileSize;
 	}
 
+	/**
+	 * 检查记录是否存在
+	 * 
+	 * @return
+	 */
+	public boolean isRecordExists() {
+		return recordExists;
+	}
+
+	/**
+	 * 物理文件是否存在
+	 * 
+	 * @return
+	 */
+	public boolean isFileExists() {
+		return fileExists;
+	}
 }

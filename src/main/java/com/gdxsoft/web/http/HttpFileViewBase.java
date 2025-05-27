@@ -245,6 +245,8 @@ public class HttpFileViewBase {
 	private boolean supportWebp = true;
 	private boolean supportHeic = false;
 
+	private boolean forceUsingPdfJs = false; // 强制使用pdfjs查看pdf文件
+
 	private Dimension resize;
 
 	public Dimension getResize() {
@@ -801,15 +803,21 @@ public class HttpFileViewBase {
 		// chrome edge safari
 		String embed = "<embed src=\"" + url + "\" class=\"pdfobject\" type=\"application/pdf\" title=\""
 				+ Utils.textToInputValue(title) + "\" style=\"overflow: auto; width: 100%; height: 100%;\">";
-		// firefox
-		String u = this.pdfJs + "?file=" + Utils.textToUrl(url);
+		// firefox pdf.js viewer.html?file=xxx.pdf
+		String u = this.pdfJs + (this.pdfJs.indexOf("?") > 0 ? "&" : "?") + "file=" + Utils.textToUrl(url);
 		String pdfJs = "<iframe id=\"fra_pdf\" height=\"100%\" frameborder=\"0\" width=\"100%\" src=\"" + u
 				+ "\"></iframe>";
+		sbHtml.append("<script>(function(){");
 
-		// 根据 navigator.pdfViewerEnabled 进行输出
-		sbHtml.append("<script>(function(){ var s=navigator.mimeTypes['application/pdf']||navigator.pdfViewerEnabled?'"
-				+ embed + "':'" + pdfJs + "';document.getElementById('" + id + "').innerHTML = s; })();</script>");
+		if (forceUsingPdfJs) {
+			sbHtml.append("var s='" + pdfJs + "';document.getElementById('" + id + "').innerHTML = s; ");
+		} else {
+			// 根据 navigator.pdfViewerEnabled 进行输出
+			sbHtml.append("var s=navigator.mimeTypes['application/pdf']||navigator.pdfViewerEnabled?'" + embed + "':'"
+					+ pdfJs + "';document.getElementById('" + id + "').innerHTML = s; ");
+		}
 
+		sbHtml.append("})();</script>");
 		sbHtml.append(skipHeader ? "" : "</div></body></html>");
 
 		return sbHtml.toString();
@@ -1073,5 +1081,23 @@ public class HttpFileViewBase {
 	 */
 	public void setSupportHeic(boolean supportHeic) {
 		this.supportHeic = supportHeic;
+	}
+
+	/**
+	 * 强制使用pdf.js查看pdf文件
+	 * 
+	 * @return
+	 */
+	public boolean isForceUsingPdfJs() {
+		return forceUsingPdfJs;
+	}
+
+	/**
+	 * 强制使用pdf.js查看pdf文件
+	 * 
+	 * @param forceUsingPdfJs
+	 */
+	public void setForceUsingPdfJs(boolean forceUsingPdfJs) {
+		this.forceUsingPdfJs = forceUsingPdfJs;
 	}
 }
