@@ -41,7 +41,7 @@ public class HttpFileViewBase {
 	public final static String FILE_NOT_EXISTS_EN = "The file not found";
 
 	public final static String NO_RIGHT_WITH_SUPPLY_CN = "此文件您无权查看或下载，商户不一致";
-	public final static String NO_RIGHT_WITH_SUPPLY_EN = "No right";
+	public final static String NO_RIGHT_WITH_SUPPLY_EN = "You do not have permission to view or download this file";
 
 	public final static String NEED_LOGIN_CN = "您需要登录商户系统后查看或下载";
 	public final static String NEED_LOGIN_EN = "Need login";
