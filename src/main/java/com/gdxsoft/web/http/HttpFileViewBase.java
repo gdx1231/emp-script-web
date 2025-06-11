@@ -249,6 +249,9 @@ public class HttpFileViewBase {
 
 	private Dimension resize;
 
+	private String htmlTop; // 附加地页面头部在<body>后面
+	private String htmlBottom; // 附加的尾部在</body>上面
+
 	public Dimension getResize() {
 		return resize;
 	}
@@ -609,16 +612,17 @@ public class HttpFileViewBase {
 
 		Elements eles = doc.getElementsByTag("body");
 		String html1 = eles.get(0).html();
-		StringBuilder sbHtml = new StringBuilder(skipHeader ? "" : this.createHtml(title));
+		StringBuilder sbHtml = new StringBuilder( this.createHtml(title));
 		sbHtml.append("<div class='oa-doc-view EWA_TABLE' id='doc-view' style='width:760px;margin:0 auto'>");
 		sbHtml.append(html1);
 		sbHtml.append("</div>");
-		sbHtml.append(skipHeader ? "" : "</div></body></html>");
+		//sbHtml.append(skipHeader ? "" : "</div></body></html>");
+		sbHtml.append(createFooterHtml());
 		return sbHtml.toString();
 	}
 
 	public String viewImage(String title, String url, boolean skipHeader) {
-		StringBuilder sbHtml = new StringBuilder(skipHeader ? "" : this.createHtml(title));
+		StringBuilder sbHtml = new StringBuilder( this.createHtml(title));
 
 		sbHtml.append("<style type=\"text/css\">\n");
 		sbHtml.append("body {\n");
@@ -773,30 +777,48 @@ public class HttpFileViewBase {
 //		sbHtml.append("<div class='file-view-image' style='text-align:center'>");
 //		sbHtml.append("<img style='max-width:100%;max-height:100%' src='" + url + "'>");
 //		sbHtml.append("</div></div>");
-		sbHtml.append(skipHeader ? "" : "</div></body></html>");
+
+		sbHtml.append(createFooterHtml());
 		return sbHtml.toString();
 	}
 
+	private String createFooterHtml() {
+		StringBuilder sbHtml = new StringBuilder();
+		if (!this.skipHeader) {
+			sbHtml.append("</div>");
+		}
+		if (this.getHtmlBottom() != null) {
+			sbHtml.append(this.getHtmlBottom());
+		}
+		if (!this.skipHeader) {
+			sbHtml.append("</body></html>");
+		}
+		
+
+		return sbHtml.toString();
+	}
+	
+
 	public String viewVideo(String title, String url, boolean skipHeader) {
-		StringBuilder sbHtml = new StringBuilder(skipHeader ? "" : this.createHtml(title));
+		StringBuilder sbHtml = new StringBuilder(  this.createHtml(title));
 		sbHtml.append("<div class='file-view-vod EWA_TABLE' id='doc-view'>");
 		sbHtml.append("<div style='text-align:center'><video src=\"" + url + "\" controls=\"controls\"></video></div>");
 		sbHtml.append("</div>");
-		sbHtml.append(skipHeader ? "" : "</div></body></html>");
+		sbHtml.append(createFooterHtml());
 		return sbHtml.toString();
 	}
 
 	public String viewAudio(String title, String url, boolean skipHeader) {
-		StringBuilder sbHtml = new StringBuilder(skipHeader ? "" : this.createHtml(title));
+		StringBuilder sbHtml = new StringBuilder(  this.createHtml(title));
 		sbHtml.append("<div class='file-view-audio EWA_TABLE' id='audio-view'>");
 		sbHtml.append("<div style='text-align:center'><audio src=\"" + url + "\" controls=\"controls\"></audio></div>");
 		sbHtml.append("</div>");
-		sbHtml.append(skipHeader ? "" : "</div></body></html>");
+		sbHtml.append(createFooterHtml());
 		return sbHtml.toString();
 	}
 
 	public String viewPdf(String title, String url, boolean skipHeader) {
-		StringBuilder sbHtml = new StringBuilder(skipHeader ? "" : this.createHtml(title));
+		StringBuilder sbHtml = new StringBuilder( this.createHtml(title));
 		String id = "pdf_" + System.currentTimeMillis();
 
 		sbHtml.append("<div id='" + id + "' style='height:100%; overflow:hidden'>");
@@ -818,8 +840,7 @@ public class HttpFileViewBase {
 		}
 
 		sbHtml.append("})();</script>");
-		sbHtml.append(skipHeader ? "" : "</div></body></html>");
-
+		sbHtml.append(createFooterHtml());
 		return sbHtml.toString();
 	}
 
@@ -864,6 +885,14 @@ public class HttpFileViewBase {
 
 	public String createHtml(String title) {
 		StringBuilder sb = new StringBuilder();
+		if(this.skipHeader) {
+			if (this.htmlTop != null) {
+				sb.append(this.htmlTop);
+			}
+			
+			return sb.toString();
+		}
+		
 		sb.append("<!DOCTYPE HTML>\n");
 		sb.append("<html>\n");
 		sb.append("<head>\n");
@@ -911,7 +940,11 @@ public class HttpFileViewBase {
 		sb.append("		background-color:#fff;\n");
 		sb.append("	}\n");
 		sb.append("</style>\n");
-		sb.append("<body>\n<div style='height:100%' class=\"container\">");
+		sb.append("<body>\n");
+		if (this.htmlTop != null) {
+			sb.append(this.htmlTop);
+		}
+		sb.append("<div style='height:100%' class=\"container\">");
 		return sb.toString();
 	}
 
@@ -1099,5 +1132,41 @@ public class HttpFileViewBase {
 	 */
 	public void setForceUsingPdfJs(boolean forceUsingPdfJs) {
 		this.forceUsingPdfJs = forceUsingPdfJs;
+	}
+
+	/**
+	 * 附加地页面头部在&lt;body&gt;后面
+	 * 
+	 * @return
+	 */
+	public String getHtmlTop() {
+		return htmlTop;
+	}
+
+	/**
+	 * 附加地页面头部在&lt;body&gt;后面
+	 * 
+	 * @param htmlTop
+	 */
+	public void setHtmlTop(String htmlTop) {
+		this.htmlTop = htmlTop;
+	}
+
+	/**
+	 * 附加的尾部在&lt;/body&gt;上面
+	 * 
+	 * @return
+	 */
+	public String getHtmlBottom() {
+		return htmlBottom;
+	}
+
+	/**
+	 * 附加的尾部在&lt;/body&gt;上面
+	 * 
+	 * @param htmlBottom
+	 */
+	public void setHtmlBottom(String htmlBottom) {
+		this.htmlBottom = htmlBottom;
 	}
 }
