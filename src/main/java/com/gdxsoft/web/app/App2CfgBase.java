@@ -17,8 +17,10 @@ public class App2CfgBase {
 	boolean isAgent_;
 	boolean isInNativeApp_;
 	String configName;
+
 	/**
 	 * 数据库链接池名称
+	 * 
 	 * @return
 	 */
 	public String getConfigName() {
@@ -27,6 +29,7 @@ public class App2CfgBase {
 
 	/**
 	 * 数据库链接池名称
+	 * 
 	 * @param configName
 	 */
 	public void setConfigName(String configName) {
@@ -41,6 +44,26 @@ public class App2CfgBase {
 		this.checkNativeApp();
 
 		this.checkLogined();
+	}
+
+	/**
+	 * 获取配置SQL
+	 * 
+	 * @param cfg2GrpCode 配置组代码
+	 * @return SQL查询语句
+	 */
+	public String getCfgsSqlByGrpCode(String cfg2GrpCode) {
+		StringBuilder query = new StringBuilder();
+		query.append("select a.* from  _EWA_APP_CFG2 a\n");
+		query.append("inner join _EWA_APP_CFG2_GRP_subs b on a.cfg_type = b.CFG_TYPE\n");
+		query.append("	and a.ID = b.ID\n");
+		query.append("	and b.CFG2_GRP_STATUS ='USED'\n");
+		query.append("	and b.CFG2_GRP_CODE = '");
+		query.append(cfg2GrpCode.replace("'", "''"));
+		query.append("'\n");
+		query.append("order by b.CFG2_GRP_ORD");
+
+		return query.toString();
 	}
 
 	/**
