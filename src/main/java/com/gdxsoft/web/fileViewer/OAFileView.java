@@ -13,6 +13,7 @@ import org.w3c.dom.Element;
 
 import com.gdxsoft.easyweb.data.DTTable;
 import com.gdxsoft.easyweb.script.RequestValue;
+import com.gdxsoft.easyweb.utils.UFile;
 import com.gdxsoft.easyweb.utils.UPath;
 import com.gdxsoft.easyweb.utils.Utils;
 import com.gdxsoft.web.acl.Login;
@@ -167,10 +168,13 @@ public class OAFileView extends HttpFileViewBase implements IHttp {
 		String md5Field = item.getAttribute("md5f"); // md5扩展名
 		String cached = item.getAttribute("cached"); // 缓存时间
 		String titleField = item.getAttribute("titlef"); // 文件名
+		String phy = tb.getCell(0, fileField).toString(); // 物理文件地址
 
-		// 物理文件地址
-		String phy = tb.getCell(0, fileField).toString();
-		if (phy == null || phy.trim().length() == 0) {
+		String phyRoot = item.getAttribute("phy_root");// 物理文件路径(不是字段）
+		// 是否使用物理文件路径
+		boolean usingPhyRoot = (phyRoot == null || phyRoot.trim().length() == 0) ? false : true;
+
+		if ((phyRoot == null || phyRoot.trim().length() == 0) && (phy == null || phy.trim().length() == 0)) {
 			if (isSmall()) {
 				response.sendRedirect(UPath.getEmpScriptV2Path() + "/EWA_STYLE/images/pic_no.jpg");
 				return null;
@@ -179,7 +183,7 @@ public class OAFileView extends HttpFileViewBase implements IHttp {
 		}
 
 		// 物理文件是否存在
-		File file = this.getPhyFilePath(phy);
+		File file = usingPhyRoot ? this.getPhyFile(phy, phyRoot) : this.getPhyFile(phy);
 		if (file == null) {
 			if (isSmall()) {
 				response.sendRedirect(UPath.getEmpScriptV2Path() + "/EWA_STYLE/images/pic_no.jpg");
@@ -201,9 +205,17 @@ public class OAFileView extends HttpFileViewBase implements IHttp {
 		// 缓存时间 单位秒
 		super.setCacheLife(cache_life);
 
-		String ext = tb.getCell(0, extField).toString();
-		if (ext == null) {
-			ext = "bin";
+		String ext;
+		if (extField != null && extField.trim().length() > 0) {
+			ext = tb.getCell(0, extField).toString();
+			if (ext == null) {
+				ext = "bin";
+			}
+		} else {
+			ext = UFile.getFileExt(file.getName());
+			if (ext.length() == 0) {
+				ext = "bin";
+			}
 		}
 		String key = "";
 		String[] keyFields = keyField.split(",");
@@ -263,13 +275,26 @@ public class OAFileView extends HttpFileViewBase implements IHttp {
 
 	}
 
+	private File getPhyFile(String path, String phyRoot) {
+		if (!phyRoot.endsWith("/") && !phyRoot.endsWith("\\")) {
+			phyRoot += "/";
+		}
+		String path1 = phyRoot + path;
+		File f = new File(path1);
+		if (f.exists()) {
+			return f;
+		}
+		LOGGER.error("找不到文件：phyRoot={}, path={}, fullpath={}", phyRoot, path, path1);
+		return null;
+	}
+
 	/**
 	 * 获取物理文件
 	 * 
 	 * @param path
 	 * @return
 	 */
-	private File getPhyFilePath(String path) {
+	private File getPhyFile(String path) {
 		File f = new File(path);
 		if (f.exists()) {
 			return f;
