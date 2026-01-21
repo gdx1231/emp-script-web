@@ -37,6 +37,10 @@ public class OAFileView extends HttpFileViewBase implements IHttp {
 	private boolean recordExists; // 记录是否存在
 	private boolean fileExists; // 物理文件是否存在
 
+	private String dataConfigName = ""; // 数据配置名称
+	
+	
+
 	public OAFileView(String pdfJs, URL tableBinXmlFilePath) {
 		super.setPdfJs(pdfJs);
 		this.bp = new BinToPhy(tableBinXmlFilePath);
@@ -145,7 +149,7 @@ public class OAFileView extends HttpFileViewBase implements IHttp {
 		}
 
 		String sql = this.createSql(item, is_skip_check);
-		DTTable tb = DTTable.getJdbcTable(sql, "", rv);
+		DTTable tb = DTTable.getJdbcTable(sql, this.dataConfigName, rv);
 
 		// 记录是否存在
 		if (!tb.isOk() || tb.getCount() == 0) {
@@ -435,5 +439,23 @@ public class OAFileView extends HttpFileViewBase implements IHttp {
 	 */
 	public boolean isFileExists() {
 		return fileExists;
+	}
+	
+	/**
+	 * 获取数据配置名称
+	 * 
+	 * @return the dataConfigName
+	 */
+	public String getDataConfigName() {
+		return dataConfigName;
+	}
+
+	/**
+	 * 设置数据配置名称
+	 * 
+	 * @param dataConfigName the dataConfigName to set
+	 */
+	public void setDataConfigName(String dataConfigName) {
+		this.dataConfigName = dataConfigName;
 	}
 }
