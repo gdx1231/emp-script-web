@@ -255,6 +255,29 @@ public class DoLogin {
 	 * 发送短信验证码
 	 * 
 	 * @param mobilePhone 电话
+	 * @param checkExists 是否检查电话是否存在
+	 * @return
+	 */
+	public JSONObject smsSendLoginCodeAdmin(String mobilePhone, boolean checkExists ) {
+		// 发送短信验证码
+		JSONObject rst = new JSONObject();
+		SmsValid sv = this.getSmsValid();
+
+		// 检查电话号码合法性
+		rst = sv.checkMobilePhone(mobilePhone);
+		if (!rst.optBoolean("RST")) {
+			return rst;
+		}
+
+		rst = sv.validAdmUserCreate(mobilePhone, false);
+
+		return rst;
+	}
+	
+	/**
+	 * 发送短信验证码
+	 * 
+	 * @param mobilePhone 电话
 	 * @param regUser     是否注册不存在的电话
 	 * @return
 	 */
