@@ -3,6 +3,7 @@ package com.gdxsoft.web.log;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -60,13 +61,23 @@ public class EwaScriptLog extends LogBase implements ILog {
 	private static Logger LOGGER = LoggerFactory.getLogger(EwaScriptLog.class);
 
 	/**
+	 * 写入数据库的细节长度最大值，默认4k，和表 log_detail.det_description对应
+	 */
+	public static final int MAX_DETAIL_LENGTH = 4096;
+	/**
+	 * 写入数据库的细节长度，默认4k，设为0则不限制，和表 log_detail.det_description对应
+	 */
+	public static final AtomicInteger DETAIL_MAX_SIZE_ATOM = new AtomicInteger(MAX_DETAIL_LENGTH);
+	/**
 	 * 写入日志数据库的连接池名称
 	 */
 	public static String CONN_CONFIG_NAME = "";
 	/**
 	 * 写入数据库的细节长度，默认4k，设为0则不限制，和表 log_detail.det_description对应
+	 * 
+	 * @deprecated Use DETAIL_MAX_SIZE_ATOM
 	 */
-	public static int DETAIL_MAX_SIZE = 4096; //
+	public static int DETAIL_MAX_SIZE = MAX_DETAIL_LENGTH; // 兼容旧代码
 
 	private static final String SQL_MAIN;
 	private static final String SQL_DETAIL;
@@ -88,6 +99,23 @@ public class EwaScriptLog extends LogBase implements ILog {
 		sb1.append("INSERT INTO _ewa_log_detail (log_id, det_inc, det_run_ms");
 		sb1.append(" , det_total_ms, det_event, det_description) VALUES");
 		SQL_DETAIL = sb1.toString();
+	}
+
+	/**
+	 * 设置写入数据库的细节无限制长度，根据数据库的限制来，例如：
+	 * <ul>
+	 * <li>SqlServer的NVARCHAR(max)是2GB，NTEXT是1GB</li>
+	 * <li>MySQL的TEXT是64k，MEDIUMTEXT是16MB，LONGTEXT是4GB</li>
+	 * <li>Oracle的CLOB是128TB</li>
+	 * <li>PostgreSQL的TEXT是1GB</li>
+	 * </ul>
+	 */
+	public static void setDetailUnlimitSize() {
+		setDetailMaxSize(0);
+	}
+
+	public static void setDetailMaxSize(int size) {
+		DETAIL_MAX_SIZE_ATOM.compareAndSet(MAX_DETAIL_LENGTH, size);
 	}
 
 	private RequestValue rv = new RequestValue();
@@ -164,8 +192,9 @@ public class EwaScriptLog extends LogBase implements ILog {
 		rv.addOrUpdateValue("__tmp_g_adm_id", super.getCreator().getRequestValue().s("g_adm_id"));
 		rv.addOrUpdateValue("__tmp_g_sup_id", super.getCreator().getRequestValue().s("g_sup_id"));
 		// user agent
-		rv.addValueByTruncate("__tmp_log_ua", super.getCreator().getRequestValue().s(RequestValue.SYS_USER_AGENT), 2000);
-		
+		rv.addValueByTruncate("__tmp_log_ua", super.getCreator().getRequestValue().s(RequestValue.SYS_USER_AGENT),
+				2000);
+
 		long prevTime = startTime;
 		sqls = new ArrayList<>();
 		DebugFrames frames = super.getCreator().getDebugFrames();
@@ -186,8 +215,9 @@ public class EwaScriptLog extends LogBase implements ILog {
 
 			String des = df.getDesscription();
 			// 限制细节长度
-			if (DETAIL_MAX_SIZE > 0 && des.length() > DETAIL_MAX_SIZE) {
-				des = des.substring(0, DETAIL_MAX_SIZE);
+			int maxSize = DETAIL_MAX_SIZE_ATOM.get();
+			if (maxSize > 0 && des.length() > maxSize) {
+				des = des.substring(0, maxSize);
 			}
 
 			sb2.append(",").append(cnn.sqlParameterStringExp(des));

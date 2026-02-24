@@ -283,10 +283,10 @@
 		</dependency>
 
 		<dependency>
-			<groupId>mysql</groupId>
-			<artifactId>mysql-connector-java</artifactId>
+			<groupId>com.mysql</groupId>
+			<artifactId>mysql-connector-j</artifactId>
+			<version>9.1.0</version>
 			<scope>test</scope>
-			<version>8.0.33</version>
 		</dependency>
 	</dependencies>
 
