@@ -19,6 +19,27 @@ public class SmsValid extends ValidBase {
 
 	private ISms sms;
 
+	// 是否跳过重复手机号检查，默认不跳过
+	private boolean skipRepeateCheck = false;
+
+	/**
+	 * 是否跳过重复手机号检查，默认不跳过false
+	 * 
+	 * @return true：跳过重复手机号检查；false：不跳过重复手机号检查
+	 */
+	public boolean isSkipRepeateCheck() {
+		return skipRepeateCheck;
+	}
+
+	/**
+	 * 设置是否跳过重复手机号检查，默认不跳过
+	 * 
+	 * @param skipRepeateCheck true：跳过重复手机号检查；false：不跳过重复手机号检查
+	 */
+	public void setSkipRepeateCheck(boolean skipRepeateCheck) {
+		this.skipRepeateCheck = skipRepeateCheck;
+	}
+
 	public SmsValid(RequestValue rv, ISms sms) {
 		super(rv);
 		this.sms = sms;
@@ -77,8 +98,8 @@ public class SmsValid extends ValidBase {
 			rst.put("CODE", "404");
 			return rst;
 		}
-		
-		if (tb.getCount() > 1) {
+
+		if (tb.getCount() > 1 && !this.skipRepeateCheck) {
 			rst.put("RST", false);
 			rst.put("ERR", "此手机号重复，不能用于登录，请与客服联系");
 			rst.put("CODE", "400");
@@ -204,7 +225,7 @@ public class SmsValid extends ValidBase {
 		rst.put("SIGN_NAME", this.sms.getSmsSignName());
 		rst.put("TEMPLATE_CODE", this.sms.getSmsTemplateCode());
 
-		JSONObject recordRst = super.createValidRecord(usrId, validCode, VALID_TYPE_USER_LOGIN, 15, null);
+		JSONObject recordRst = super.createValidRecord(usrId, validCode, VALID_TYPE_USER_LOGIN, 15, mobilePhone);
 		if (!recordRst.optBoolean("RST")) {
 			return recordRst;
 		}
