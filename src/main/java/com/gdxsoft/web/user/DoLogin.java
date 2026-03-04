@@ -20,6 +20,7 @@ import com.gdxsoft.easyweb.script.RequestValue;
 import com.gdxsoft.easyweb.utils.UAes;
 import com.gdxsoft.easyweb.utils.UCookies;
 import com.gdxsoft.easyweb.utils.UDes;
+import com.gdxsoft.easyweb.utils.UJSon;
 import com.gdxsoft.easyweb.utils.USnowflake;
 import com.gdxsoft.easyweb.utils.Utils;
 import com.gdxsoft.web.acl.Login;
@@ -255,6 +256,29 @@ public class DoLogin {
 	 * 发送短信验证码
 	 * 
 	 * @param mobilePhone 电话
+	 * @param checkExists 是否检查电话是否存在
+	 * @return
+	 */
+	public JSONObject smsSendLoginCodeAdmin(String mobilePhone, boolean checkExists ) {
+		// 发送短信验证码
+		JSONObject rst = new JSONObject();
+		SmsValid sv = this.getSmsValid();
+
+		// 检查电话号码合法性
+		rst = sv.checkMobilePhone(mobilePhone);
+		if (!rst.optBoolean("RST")) {
+			return rst;
+		}
+
+		rst = sv.validAdmUserCreate(mobilePhone, false);
+
+		return rst;
+	}
+	
+	/**
+	 * 发送短信验证码
+	 * 
+	 * @param mobilePhone 电话
 	 * @param regUser     是否注册不存在的电话
 	 * @return
 	 */
@@ -361,7 +385,29 @@ public class DoLogin {
 		SmsValid sv = this.getSmsValid();
 		return sv.validWebUserCode(fpUnid, smsCode);
 	}
-
+	
+	/**
+	 * 验证短信，并检查手机号是否一致
+	 * 
+	 * @param fpUnid      web_user_fpwd的 FP_UNID
+	 * @param smsCode     web_user_fpwd的 FP_VALIDCODE
+	 * @param mobilePhone 需要验证的手机号
+	 * @return
+	 */
+	public JSONObject smsValid(String fpUnid, String smsCode, String mobilePhone) {
+		SmsValid sv = this.getSmsValid();
+		JSONObject result = sv.validWebUserCode(fpUnid, smsCode);
+		
+		if (!result.optBoolean("RST")) {
+			return result;
+		}
+		// 验证成功后，检查手机号是否一致
+		String validPhone = result.optString("FP_LOG");
+		if (!mobilePhone.equals(validPhone)) {
+			UJSon.rstSetFalse(result, "手机号不一致");
+		}
+		return result;
+	}
 	/**
 	 * 验证短信并进行登录
 	 * 

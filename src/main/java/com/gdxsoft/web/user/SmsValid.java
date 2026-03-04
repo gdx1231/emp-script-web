@@ -19,6 +19,27 @@ public class SmsValid extends ValidBase {
 
 	private ISms sms;
 
+	// 是否跳过重复手机号检查，默认不跳过
+	private boolean skipRepeateCheck = false;
+
+	/**
+	 * 是否跳过重复手机号检查，默认不跳过false
+	 * 
+	 * @return true：跳过重复手机号检查；false：不跳过重复手机号检查
+	 */
+	public boolean isSkipRepeateCheck() {
+		return skipRepeateCheck;
+	}
+
+	/**
+	 * 设置是否跳过重复手机号检查，默认不跳过
+	 * 
+	 * @param skipRepeateCheck true：跳过重复手机号检查；false：不跳过重复手机号检查
+	 */
+	public void setSkipRepeateCheck(boolean skipRepeateCheck) {
+		this.skipRepeateCheck = skipRepeateCheck;
+	}
+
 	public SmsValid(RequestValue rv, ISms sms) {
 		super(rv);
 		this.sms = sms;
@@ -56,6 +77,55 @@ public class SmsValid extends ValidBase {
 
 	public JSONObject validWebUserCreate(String mobilePhone) {
 		return validWebUserCreate(mobilePhone, false);
+	}
+
+	/**
+	 * 创建管理员用户验证信息
+	 * 
+	 * @param mobilePhone
+	 * @return
+	 */
+	public JSONObject validAdmUserCreate(String mobilePhone, boolean checkExists) {
+		JSONObject rst = this.checkMobilePhone(mobilePhone);
+		if (!rst.optBoolean("RST")) {
+			return rst;
+		}
+
+		DTTable tb = this.getAdmUserByPhone(mobilePhone);
+		if (checkExists && tb.getCount() == 0) {
+			rst.put("RST", false);
+			rst.put("ERR", "您的手机号没有注册");
+			rst.put("CODE", "404");
+			return rst;
+		}
+
+		if (tb.getCount() > 1 && !this.skipRepeateCheck) {
+			rst.put("RST", false);
+			rst.put("ERR", "此手机号重复，不能用于登录，请与客服联系");
+			rst.put("CODE", "400");
+			return rst;
+		}
+
+		long admId = -1;
+		if (tb.getCount() > 0) {
+			try {
+				admId = tb.getCell(0, "ADM_ID").toLong();
+			} catch (Exception e) {
+				rst.put("RST", false);
+				rst.put("ERR", e.getMessage());
+				rst.put("CODE", "500");
+				return rst;
+			}
+		}
+
+		JSONObject templateParam = new JSONObject();
+		// 创建6位随机数字
+		String validCode = super.randomNumberCode(6);
+		templateParam.put("code", validCode);
+
+		rst = this.smsValid(admId, mobilePhone, templateParam, validCode);
+
+		return rst;
 	}
 
 	/**
@@ -155,7 +225,7 @@ public class SmsValid extends ValidBase {
 		rst.put("SIGN_NAME", this.sms.getSmsSignName());
 		rst.put("TEMPLATE_CODE", this.sms.getSmsTemplateCode());
 
-		JSONObject recordRst = super.createValidRecord(usrId, validCode, VALID_TYPE_USER_LOGIN, 15, null);
+		JSONObject recordRst = super.createValidRecord(usrId, validCode, VALID_TYPE_USER_LOGIN, 15, mobilePhone);
 		if (!recordRst.optBoolean("RST")) {
 			return recordRst;
 		}
@@ -186,7 +256,7 @@ public class SmsValid extends ValidBase {
 				rv0.addOrUpdateValue("mobilePhone", mobilePhone);
 				rv0.addOrUpdateValue("TemplateCode", this.sms.getSmsTemplateCode());
 				rv0.addOrUpdateValue("TemplateParams", smsTemplateParams.toString());
-				rv0.addOrUpdateValue("SMS_PROVIDER",  sms.getProvider());
+				rv0.addOrUpdateValue("SMS_PROVIDER", sms.getProvider());
 				String sqlFrequency = "insert into SMS_JOB(SMS_PROVIDER, SMS_JSTATUS, SMS_JCDATE,SMS_REF_TABLE,SMS_REF_ID,SMS_TEMPLATE_CODE, SMS_PHONES)"
 						+ " values(@SMS_PROVIDER, 'SMS_JOB_SEND', @sys_date, 'SMS_VALID', @mobilePhone, @TemplateCode, @TemplateParams)";
 				DataConnection.updateAndClose(sqlFrequency, "", rv0);
@@ -194,7 +264,7 @@ public class SmsValid extends ValidBase {
 				rst.put("RST", false);
 				rst.put("ERR", "短信接口系统错误");
 				rst.put("ERR1", e.getMessage());
-				
+
 				LOGGER.error(rst.toString());
 				return rst;
 			}
