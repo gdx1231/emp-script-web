@@ -391,7 +391,7 @@ public class SmsValid extends ValidBase {
 		sb.append(mobilePhone.replace("'", ""));
 		sb.append("' or ADM_MOBILE='+86 ");
 		sb.append(mobilePhone.replace("'", ""));
-		sb.append("')");
+		sb.append("') and ADM_USR_STA_TAG='OK' ");
 		if (supId >= 0) {
 			sb.append(" and sup_id=" + supId);
 		}
