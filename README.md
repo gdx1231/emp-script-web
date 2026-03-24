@@ -1,8 +1,93 @@
 # EMP-Script-Web - 企业级 Web 应用快速开发框架
 
+## 文档导航
+
+- [`README.md`](README.md)：项目总览、依赖方式与快速入口
+- [`文档说明.md`](文档说明.md)：项目结构、阅读顺序与维护背景
+- [`fileviewer说明.md`](fileviewer说明.md)：文件预览、下载与 fileViewer 模块说明
+- [`message说明.md`](message说明.md)：短信发送与邮件发送模块说明
+- [`project说明.md`](project说明.md)：项目模板、任务树与项目节点管理说明
+- [`weixin说明.md`](weixin说明.md)：公众号、企业微信、小程序与绑定能力说明
+- [`schedule说明.md`](schedule说明.md)：基于 XML 与 SQL 的调度执行说明
+- [`doc说明.md`](doc说明.md)：文档模板、生成、下载与 PDF 输出说明
+- [`uploadResources说明.md`](uploadResources说明.md)：上传目录资源读取与缓存说明
+- [`http说明.md`](http说明.md)：HTTP 扩展入口与适配层说明
+- [`user说明.md`](user说明.md)：用户登录、短信验证与自动登录说明
+- [`acl说明.md`](acl说明.md)：登录态识别与访问控制说明
+- [`shorturl-qrcode说明.md`](shorturl-qrcode说明.md)：短地址与二维码模块说明
+- [`dao说明.md`](dao说明.md)：生成式 DAO 与表映射层说明
+- [`ws说明.md`](ws说明.md)：WebSocket 接入点与聊天消息处理说明
+- [`app说明.md`](app说明.md)：移动端、小程序与 App 环境辅助说明
+- [`.github/copilot-instructions.md`](.github/copilot-instructions.md)：面向 Copilot 会话的仓库工作说明
+
 ## 项目简介
 
 EMP-Script-Web 是一个专为企业级 Web 应用设计的快速开发框架，提供完整的 Web 开发解决方案。该框架支持多种企业级功能，包括用户认证、权限管理、消息通知、任务调度、文档管理等核心模块，旨在帮助开发者快速构建高质量的企业级 Web 应用系统。
+
+## 项目说明
+
+### 先建立正确心智模型
+
+EMP-Script-Web 是面向 EMP / EasyWeb 体系的 **共享业务模块库**。它以 Maven `jar` 形式提供能力，适合作为宿主 Web 项目的依赖模块使用，而不是独立部署的完整站点工程。
+
+这意味着你看到的 Java 代码并不是全部运行逻辑。很多页面行为、登录流程、模块渲染和文档输出，还依赖：
+
+- EMP XML 配置
+- 数据库配置
+- 宿主工程中的 JSP / XML 资源
+- `HtmlControl.init(xmlname, itemname, ...)`
+
+如果只盯着 Java 代码，很容易误判真实执行链路。
+
+### 这个仓库主要提供什么
+
+仓库主要提供这些可复用能力：
+
+- 认证、自动登录、JWT、访问控制
+- 文档、文件预览、上传资源、二维码、短地址
+- 微信、小程序、App 环境辅助
+- 消息发送、任务调度、项目任务树
+- DAO 表映射与通用 CRUD
+
+### 5 分钟上手阅读路线
+
+如果你是第一次接手，建议按这个最短路径阅读：
+
+1. 看 `pom.xml`，确认这是 Java 8 + Maven 的库项目。
+2. 看 `dao说明.md` 或 `com.gdxsoft.web.dao` 下任意一组 `Xxx` / `XxxDao`，先理解数据访问模式。
+3. 看 `user说明.md`、`acl说明.md`、`src/main/java/com/gdxsoft/web/acl/Login.java`，理解登录态和访问控制。
+4. 看 `http说明.md` 与 `src/main/java/com/gdxsoft/web/http`，理解 HTTP 入口如何把请求转给业务类。
+5. 再按业务方向继续看 `weixin说明.md`、`project说明.md`、`doc说明.md`、`message说明.md` 等专项文档。
+
+### 本地验证命令
+
+建议优先使用：
+
+```bash
+mvn -q -DskipTests compile
+```
+
+可单独运行的测试：
+
+```bash
+mvn -q -Dtest=TestResourceConfig test
+mvn -q -Dtest=TestWs test
+```
+
+完整测试：
+
+```bash
+mvn -q test
+```
+
+需要注意，完整测试依赖本地 `ewa_conf.xml` / `ewa_conf_console.xml` 和数据库配置，默认环境下不一定能直接通过。
+
+### 下一步看哪里
+
+- 想快速理解整体结构：看 [`文档说明.md`](文档说明.md)
+- 想理解文件查看与下载：看 [`fileviewer说明.md`](fileviewer说明.md)
+- 想理解登录与权限：看 [`user说明.md`](user说明.md) 和 [`acl说明.md`](acl说明.md)
+- 想理解 HTTP、二维码、短链接：看 [`http说明.md`](http说明.md) 与 [`shorturl-qrcode说明.md`](shorturl-qrcode说明.md)
 
 ## 官方信息
 
