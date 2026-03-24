@@ -23,7 +23,7 @@ public class BackAdminImpl extends AclBase implements IAcl {
         int iSupId = AclBase.getId(rv, "G_SUP_ID");
 
 
-        if (iAdmId < 0 && iSupId != 0) {
+        if (iAdmId < 0 || iSupId < 0) {
             return false;
         } else {
             return true;
