@@ -1,11 +1,8 @@
 package com.gdxsoft.web.log;
 
-import java.io.UnsupportedEncodingException;
-import java.util.ArrayList;
 import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -14,37 +11,36 @@ import org.json.JSONObject;
 
 import com.gdxsoft.easyweb.data.DTTable;
 import com.gdxsoft.easyweb.datasource.DataConnection;
-import com.gdxsoft.easyweb.utils.UPath;
 import com.gdxsoft.message.sms.ISms;
 import com.gdxsoft.web.dao.SmsJob;
 import com.gdxsoft.web.dao.SmsJobDao;
 import com.gdxsoft.web.dao.SupMain;
 import com.gdxsoft.web.dao.SupMainDao;
 import com.gdxsoft.web.dao.SysMessageInfo;
-import com.gdxsoft.web.dao.SysMessageInfoDao;
 import com.gdxsoft.web.job.JobMailScan;
 
 
 /**
  * 日志的消息订阅
- * 
+ *
  * @author admin
  *
  */
 public class LogConsumer {
-	private static Map<Integer, JobMailScan> MAIL_SENDERS;
+	private static final Map<Integer, JobMailScan> MAIL_SENDERS = new ConcurrentHashMap<>();
 	private static Logger LOGGER = LoggerFactory.getLogger(LogConsumer.class);
- 
+
 	/**
 	 * 获取发送邮件的数据库名称和smtp地址配置
-	 * 
+	 *
 	 * @param sup_id
 	 * @return
 	 * @throws Exception
 	 */
 	private static JobMailScan getJobMailSender(int sup_id) throws Exception {
-		if (MAIL_SENDERS.containsKey(sup_id)) {
-			return MAIL_SENDERS.get(sup_id);
+		JobMailScan cached = MAIL_SENDERS.get(sup_id);
+		if (cached != null) {
+			return cached;
 		}
 
 		SupMainDao d1 = new SupMainDao();
@@ -59,7 +55,12 @@ public class LogConsumer {
 		JobMailScan jms = new JobMailScan(cnn, dbName);
 		jms.setRowSup(tb.getRow(0));
 
-		MAIL_SENDERS.put(sup_id, jms);
+		JobMailScan prev = MAIL_SENDERS.putIfAbsent(sup_id, jms);
+		if (prev != null) {
+			// 另一个线程已经先放入了，关闭当前创建的连接
+			cnn.close();
+			return prev;
+		}
 
 		return jms;
 	}
