@@ -9,7 +9,7 @@ import org.json.JSONObject;
 
 import com.gdxsoft.api.Auth;
 import com.gdxsoft.chatRoom.dao.ChatUser;
-import com.gdxsoft.easyweb.script.servlets.RestfulResult;
+import com.gdxsoft.easyweb.script.restful.RestfulResult;
 import com.gdxsoft.easyweb.utils.UNet;
 import com.gdxsoft.easyweb.utils.UPath;
 import com.gdxsoft.web.dao.WebUser;

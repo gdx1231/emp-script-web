@@ -3,7 +3,7 @@ package com.gdxsoft.chatRoom.sdk;
 import org.apache.commons.lang3.StringUtils;
 import org.json.JSONObject;
 
-import com.gdxsoft.easyweb.script.servlets.RestfulResult;
+import com.gdxsoft.easyweb.script.restful.RestfulResult;
 import com.gdxsoft.easyweb.utils.UNet;
 import com.gdxsoft.easyweb.utils.UUrl;
 import com.gdxsoft.easyweb.utils.Utils;

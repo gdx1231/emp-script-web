@@ -14,7 +14,7 @@ import org.slf4j.LoggerFactory;
 
 import com.gdxsoft.chatRoom.dao.ChatUser;
 import com.gdxsoft.easyweb.script.RequestValue;
-import com.gdxsoft.easyweb.script.servlets.RestfulResult;
+import com.gdxsoft.easyweb.script.restful.RestfulResult;
 import com.gdxsoft.easyweb.utils.UJSon;
 import com.gdxsoft.easyweb.utils.UPath;
 import com.gdxsoft.easyweb.websocket.*;
