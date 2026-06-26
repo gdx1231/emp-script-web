@@ -2,7 +2,10 @@ package com.gdxsoft.web.log;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.*;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.slf4j.Logger;
@@ -73,6 +76,16 @@ public class EwaScriptLog extends LogBase implements ILog {
 	 */
 	public static String CONN_CONFIG_NAME = "";
 	/**
+	 * 日志写入线程池核心线程数
+	 */
+	public static int EXECUTOR_CORE_POOL_SIZE = 2;
+	/**
+	 * 日志写入任务队列容量，超出后丢弃并打 warn 日志。
+	 * 不宜过大：每个任务持有一个 DataConnection（含 JDBC 连接），
+	 * 队列深度应 ≤ 数据库连接池大小。
+	 */
+	public static int EXECUTOR_QUEUE_CAPACITY = 33;
+	/**
 	 * 写入数据库的细节长度，默认4k，设为0则不限制，和表 log_detail.det_description对应
 	 * 
 	 * @deprecated Use DETAIL_MAX_SIZE_ATOM
@@ -115,62 +128,51 @@ public class EwaScriptLog extends LogBase implements ILog {
 	}
 
 	public static void setDetailMaxSize(int size) {
-		DETAIL_MAX_SIZE_ATOM.compareAndSet(MAX_DETAIL_LENGTH, size);
+		DETAIL_MAX_SIZE_ATOM.set(size);
 	}
 
-	private RequestValue rv = new RequestValue();
-	private long startTime;
-	private List<String> sqls;
+	private static final ExecutorService EXECUTOR = new ThreadPoolExecutor(
+			EXECUTOR_CORE_POOL_SIZE, Math.max(EXECUTOR_CORE_POOL_SIZE, Runtime.getRuntime().availableProcessors()),
+			60L, TimeUnit.SECONDS,
+			new LinkedBlockingQueue<>(EXECUTOR_QUEUE_CAPACITY),
+			r -> {
+				Thread t = new Thread(r, "ewa-script-log-writer");
+				t.setDaemon(true);
+				return t;
+			},
+			(r, executor) -> LOGGER.warn("Log queue full, task dropped. Queue size: {}", executor.getQueue().size()));
 
 	@Override
 	public void write() {
-
+		RequestValue rv = new RequestValue();
 		DataConnection cnn = new DataConnection(CONN_CONFIG_NAME, rv);
-		this.preprocessingData(cnn);
+		List<String> sqls = this.preprocessingData(cnn, rv);
 
-		ExecutorService executorService = Executors.newSingleThreadExecutor();
-		Callable<String> task = () -> {
-			// 异步写入，不阻碍主线程
+		EXECUTOR.execute(() -> {
 			try {
-				this.writeToLog(cnn);
-				return "OK";
+				this.writeToLog(cnn, sqls);
 			} catch (Exception err) {
 				LOGGER.error(err.getMessage());
-				return "ERR:" + err.getMessage();
 			} finally {
 				cnn.close();
 			}
-
-		};
-		Future<String> future = executorService.submit(task);
-
-		try {
-			// 设置超时时间 5秒）
-			String result = future.get(5, TimeUnit.SECONDS);
-			LOGGER.debug(result);
-		} catch (InterruptedException | ExecutionException | TimeoutException e) {
-			LOGGER.error(e.getLocalizedMessage());
-			// 取消任务
-			future.cancel(true);
-		} finally {
-			// 关闭ExecutorService
-			executorService.shutdownNow();
-			cnn.close();
-		}
+		});
 	}
 
 	/**
 	 * 预处理数据
-	 * 
+	 *
 	 * @param cnn
+	 * @param rv
+	 * @return SQL detail list
 	 */
-	private void preprocessingData(DataConnection cnn) {
+	private List<String> preprocessingData(DataConnection cnn, RequestValue rv) {
 		Log log = super.getLog();
 		String logMsg = log.getMsg();
 		if (logMsg == null || logMsg.trim().length() == 0) {
 			// return;
 		}
-		startTime = super.getCreator().getDebugFrames().getCurrentTime();
+		long startTime = super.getCreator().getDebugFrames().getCurrentTime();
 
 		// 查询字符串
 		String EWA_QUERY_ALL = super.getCreator().getRequestValue().s("EWA_QUERY_ALL");
@@ -196,7 +198,7 @@ public class EwaScriptLog extends LogBase implements ILog {
 				2000);
 
 		long prevTime = startTime;
-		sqls = new ArrayList<>();
+		List<String> sqls = new ArrayList<>();
 		DebugFrames frames = super.getCreator().getDebugFrames();
 		for (int i = 0; i < frames.size(); i++) {
 			DebugFrame df = frames.get(i);
@@ -225,11 +227,11 @@ public class EwaScriptLog extends LogBase implements ILog {
 			sqls.add(sb2.toString());
 		}
 
+		return sqls;
 	}
 
-	public void writeToLog(DataConnection cnn) {
+	public void writeToLog(DataConnection cnn, List<String> sqls) {
 		Object autoInc = cnn.executeUpdateReturnAutoIncrementObject(SQL_MAIN);
-		cnn.close();
 		List<String> sqls1 = new ArrayList<>();
 
 		for (int i = 0; i < sqls.size(); i++) {
