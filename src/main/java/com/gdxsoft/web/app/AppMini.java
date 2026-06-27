@@ -141,8 +141,8 @@ public class AppMini  {
 		if (wxCfgNo == null) {
 			return;
 		}
-		wxCfgNo = wxCfgNo.trim().replace("'", "");
-		String w = " wx_cfg_no='" + wxCfgNo + "' and AUTH_WEIXIN_ID = '" + openId + "'";
+		wxCfgNo = wxCfgNo.trim().replace("'", "''");
+		String w = " wx_cfg_no='" + wxCfgNo + "' and AUTH_WEIXIN_ID = '" + openId.replace("'", "''") + "'";
 		ArrayList<WxUser> al = d.getRecords(w);
 		if (al.size() == 0) {
 			return;

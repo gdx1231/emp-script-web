@@ -395,8 +395,8 @@ public class Login {
 				return false;
 			}
 
-			String fp_unid = tokens[0];
-			String r_code = tokens[1];
+			String fp_unid = java.net.URLEncoder.encode(tokens[0], "UTF-8");
+			String r_code = java.net.URLEncoder.encode(tokens[1], "UTF-8");
 
 			// 提交登录页面
 			String xmlname = "";

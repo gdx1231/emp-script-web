@@ -58,7 +58,6 @@ public class DocPage {
 				+ supId + ")");
 		String sql = sb.toString();
 		conn.executeUpdate(sql);
-		conn.close();
 	}
 
 	public String createDocContent(RequestValue rv, int supId) throws Exception {
@@ -172,7 +171,7 @@ public class DocPage {
 		DataConnection conn = new DataConnection();
 		conn.setRequestValue(rv);
 		conn.setConfigName(this.connConfigName == null ? "globaltravel" : this.connConfigName);
-		String sql1 = "select DOC_CNT from DOC_REF where REF_ID=" + tg2 + " AND TABLE_NAME='" + tg1.replace("'", "")
+		String sql1 = "select DOC_CNT from DOC_REF where REF_ID=" + tg2 + " AND TABLE_NAME='" + tg1.replace("'", "''")
 				+ "'";
 		DTTable table1 = DTTable.getJdbcTable(sql1, conn);
 		conn.close();

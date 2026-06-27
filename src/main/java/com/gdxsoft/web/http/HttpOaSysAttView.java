@@ -39,12 +39,12 @@ public class HttpOaSysAttView extends HttpFileViewBase implements IHttp {
 		 
 		StringBuilder sb = new StringBuilder();
 		if (rv.s("db") != null && rv.s("db").trim().length() > 0) {
-			String db = rv.s("db");
-			if (db.indexOf("'") >= 0 || db.indexOf(" ") >= 0) {
+			String db = rv.s("db").trim();
+			if (!db.matches("[a-zA-Z0-9_.]+")) {
 				response.setStatus(HttpServletResponse.SC_NOT_FOUND);
 				return "ha ha ha";
 			}
-			sb.append("SELECT * from " + db + ". sys_atts WHERE 1=1 \n");
+			sb.append("SELECT * from " + db + ".sys_atts WHERE 1=1 \n");
 		} else {
 			sb.append("SELECT * from sys_atts WHERE 1=1 \n");
 		}

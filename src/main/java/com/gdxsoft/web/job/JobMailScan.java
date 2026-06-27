@@ -212,13 +212,11 @@ public class JobMailScan extends JobBase {
 		sql.a(")");
 		String sql2 = sql.toString();
 		super._Conn.executeUpdateNoParameter(sql2);
-		super._Conn.close();
 
 		// 获取编号
 		sql.setLength(0);
 		sql.a("SELECT REQ_ID FROM OA_REQ WHERE REQ_UNID='" + unid + "'");
-		DTTable tb = DTTable.getJdbcTable(sql2, super._Conn);
-		super._Conn.close();
+		DTTable tb = DTTable.getJdbcTable(sql.toString(), super._Conn);
 
 		String reqId = tb.getCell(0, 0).toString();
 

@@ -121,7 +121,7 @@ public class BinToPhy {
 				if (ext == null || ext.equals("") || ext.equals(".")) {
 					ext = "bin";
 				}
-				if (ext == "zip") {
+				if ("zip".equals(ext)) {
 					ext = "docx";
 				}
 				md5 = Utils.md5(buf);

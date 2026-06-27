@@ -5,6 +5,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ThreadLocalRandom;
 
 import com.gdxsoft.easyweb.utils.Utils;
 
@@ -145,7 +146,7 @@ public class ShortUrl {
 			uid = this.chcekAndGetUnique(onlyNumber);
 			inc++;
 			if (inc > 10) {
-				return "太多次的尝试";
+				throw new RuntimeException("生成短地址UID失败，超过最大重试次数");
 			}
 		}
 		return uid;
@@ -159,17 +160,8 @@ public class ShortUrl {
 	 * @return 随机数生成字符串
 	 */
 	public String randomNumber(int length) {
-		StringBuilder sb = new StringBuilder();
-		char[] CHARS = "0123456789".toCharArray();
-
-		int max = CHARS.length;
-		for (int i = 0; i < length; i++) {
-			String a = Math.random() * max + "";
-			int b = Integer.parseInt(a.split("\\.")[0]);
-			char c = CHARS[b];
-			sb.append(c);
-		}
-		return sb.toString();
+		long max = (long) Math.pow(10, length);
+		return String.format("%0" + length + "d", ThreadLocalRandom.current().nextLong(max));
 	}
 
 	private String getRandomCode(int length, boolean onlyNumber) {
@@ -185,13 +177,11 @@ public class ShortUrl {
 		List<String> unids = new ArrayList<String>();
 		String firstUnid = null;
 
-		int inc = 0;
 		StringBuilder sb = new StringBuilder();
 		sb.append(" URL_STATUS='USED' AND URL_UID in (");
 
 		for (int i = 0; i < 50; i++) {
 			String uid = this.getRandomCode(4, onlyNumber);
-			firstUnid = uid;
 			unids.add(uid);
 			if (i == 0) {
 				firstUnid = uid;
@@ -245,9 +235,6 @@ public class ShortUrl {
 		ArrayList<UrlShort> exists = d1.getRecords(whereString, fields);
 		if (exists.size() == 0) {
 			return firstUnid;
-		}
-		if (exists.size() == inc) {
-			return null;
 		}
 		if (exists.size() == unids.size()) {
 			return null;

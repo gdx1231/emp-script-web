@@ -78,6 +78,7 @@ public class EwaDoc {
 			return _DocCnt.toString();
 
 		}
+		_Cnn.close();
 		return _DocCnt.toString();
 	}
 

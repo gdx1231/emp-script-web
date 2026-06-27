@@ -150,7 +150,7 @@ public class App {
 
 	public WebUser getWebUser(String usrUnid) {
 		WebUserDao d = new WebUserDao();
-		String w = "usr_unid='" + usrUnid.replace("'", "") + "'";
+		String w = "usr_unid='" + usrUnid.replace("'", "''") + "'";
 		ArrayList<WebUser> al = d.getRecords(w);
 		if (al.size() == 0) {
 			return null;
@@ -171,7 +171,7 @@ public class App {
 		if (agunid == null || agunid.trim().length() == 0) {
 			agunid = defaultAgentUnid;
 		}
-		String where = " sup_unid='" + agunid.replace("'", "") + "'";
+		String where = " sup_unid='" + agunid.replace("'", "''") + "'";
 		ArrayList<SupMain> supMains = d.getRecords(where);
 
 		if (supMains.size() == 0) {

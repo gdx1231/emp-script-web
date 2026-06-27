@@ -401,7 +401,7 @@ public class DocCreate {
 				int idx = r.getTable().getColumns().getNameIndex(para);
 				String v = r.getCell(idx).getString();
 				if (para.equals("DAY_INC") && rv.getString("OUT_DATE") != null) {
-					String sql = "SELECT dbo.fn_ymd_usa(CONVERT(DATETIME,'" + rv.getString("OUT_DATE") + "') + " + v
+					String sql = "SELECT dbo.fn_ymd_usa(CONVERT(DATETIME,'" + rv.getString("OUT_DATE").replace("'", "''") + "') + " + v
 							+ "-1) A";
 					DTTable dt = DTTable.getJdbcTable(sql, this._Conn);
 					if (dt.getCount() > 0) {
