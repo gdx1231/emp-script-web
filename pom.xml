@@ -233,18 +233,8 @@
 				</exclusion>
 			</exclusions>
 		</dependency>
-		<!-- https://mvnrepository.com/artifact/org.mnode.ical4j/ical4j -->
-		<dependency>
-			<groupId>org.mnode.ical4j</groupId>
-			<artifactId>ical4j</artifactId>
-			<version>4.1.1</version>
-		</dependency>
+		<!-- 日历邀请 (.ics) 已改用纯字符串拼接，不再依赖 ical4j -->
 
-		<dependency>
-			<groupId>com.google.guava</groupId>
-			<artifactId>guava</artifactId>
-			<version>32.0.0-jre</version>
-		</dependency>
 		<dependency>
 			<groupId>io.swagger</groupId>
 			<artifactId>swagger-annotations</artifactId>
@@ -256,36 +246,9 @@
 			<version>4.4.0</version>
 		</dependency>
 
-		<!--
-		https://mvnrepository.com/artifact/com.tencentcloudapi/tencentcloud-sdk-java-sms -->
-		<!-- 腾讯短信接口 -->
-		<dependency>
-			<groupId>com.tencentcloudapi</groupId>
-			<artifactId>tencentcloud-sdk-java-sms</artifactId>
-			<version>3.1.893</version>
-		</dependency>
+		<!-- 腾讯短信接口 (已改用纯 HTTP + TC3-HMAC-SHA256 签名) -->
 
 
-		<!-- https://mvnrepository.com/artifact/com.aliyun/aliyun-java-sdk-core -->
-		<dependency>
-			<groupId>com.aliyun</groupId>
-			<artifactId>aliyun-java-sdk-core</artifactId>
-			<version>4.7.3</version>
-		</dependency>
-		<!-- 阿里云域名 -->
-		<dependency>
-			<groupId>com.aliyun</groupId>
-			<artifactId>aliyun-java-sdk-alidns</artifactId>
-			<version>3.0.7</version>
-		</dependency>
-
-		<!--
-		https://mvnrepository.com/artifact/com.aliyun/aliyun-java-sdk-dysmsapi -->
-		<dependency>
-			<groupId>com.aliyun</groupId>
-			<artifactId>aliyun-java-sdk-dysmsapi</artifactId>
-			<version>1.1.0</version>
-		</dependency>
 		<!-- https://mvnrepository.com/artifact/com.google.zxing/core -->
 		<dependency>
 			<groupId>com.google.zxing</groupId>
@@ -308,15 +271,7 @@
 			<scope>provided</scope>
 		</dependency>
 
-		<!-- commons-exec: used by WeiXinMediaUtils (org.apache.commons.exec.*) -->
-		<dependency>
-			<groupId>org.apache.commons</groupId>
-			<artifactId>commons-exec</artifactId>
-			<version>1.5.0</version>
-		</dependency>
-
-		<!--
-		https://mvnrepository.com/artifact/org.junit.jupiter/junit-jupiter-api -->
+		<!-- https://mvnrepository.com/artifact/org.junit.jupiter/junit-jupiter-api -->
 		<dependency>
 			<groupId>org.junit.jupiter</groupId>
 			<artifactId>junit-jupiter-api</artifactId>

@@ -3,13 +3,12 @@ package com.gdxsoft.web.message.email;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.text.ParseException;
-import java.time.Duration;
+import java.nio.charset.StandardCharsets;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Date;
+import java.util.UUID;
 
 import jakarta.activation.DataHandler;
 import jakarta.mail.Message;
@@ -28,132 +27,104 @@ import com.gdxsoft.easyweb.utils.UPath;
 import com.gdxsoft.easyweb.utils.Utils;
 import com.gdxsoft.easyweb.utils.Mail.SmtpCfgs;
 
-import net.fortuna.ical4j.data.CalendarOutputter;
-import net.fortuna.ical4j.data.ParserException;
-import net.fortuna.ical4j.model.Calendar;
-import net.fortuna.ical4j.model.TimeZone;
-import net.fortuna.ical4j.model.TimeZoneRegistry;
-import net.fortuna.ical4j.model.TimeZoneRegistryFactory;
-import net.fortuna.ical4j.model.component.VAlarm;
-import net.fortuna.ical4j.model.component.VEvent;
-import net.fortuna.ical4j.model.component.VTimeZone;
-import net.fortuna.ical4j.model.parameter.Cn;
-import net.fortuna.ical4j.model.parameter.Role;
-import net.fortuna.ical4j.model.property.Attendee;
-import net.fortuna.ical4j.model.property.Description;
-import net.fortuna.ical4j.model.property.Location;
-import net.fortuna.ical4j.model.property.Organizer;
-import net.fortuna.ical4j.model.property.ProdId;
-import net.fortuna.ical4j.model.property.Uid;
-import net.fortuna.ical4j.model.property.XProperty;
-import net.fortuna.ical4j.model.property.immutable.ImmutableAction;
-import net.fortuna.ical4j.model.property.immutable.ImmutableCalScale;
-import net.fortuna.ical4j.model.property.immutable.ImmutableMethod;
-import net.fortuna.ical4j.model.property.immutable.ImmutableVersion;
-import net.fortuna.ical4j.util.CompatibilityHints;
-import net.fortuna.ical4j.util.RandomUidGenerator;
-
+/**
+ * 生成 Outlook 日历会议邀请 (.ics) — 纯字符串拼接，零 ical4j 依赖
+ */
 public class Outlook {
-	private static Logger LOGGER = LoggerFactory.getLogger(Outlook.class);
+	private static final Logger LOGGER = LoggerFactory.getLogger(Outlook.class);
+
+	private static final DateTimeFormatter ICS_DATETIME = DateTimeFormatter.ofPattern("yyyyMMdd'T'HHmmss");
+	private static final ZoneId ZONE = ZoneId.of("Asia/Shanghai");
+
+	// Outlook/NOTES 兼容性 VTIMEZONE
+	private static final String VTIMEZONE = "BEGIN:VTIMEZONE\r\n"
+			+ "TZID:Asia/Shanghai\r\n"
+			+ "BEGIN:STANDARD\r\n"
+			+ "DTSTART:19700101T000000\r\n"
+			+ "TZOFFSETFROM:+0800\r\n"
+			+ "TZOFFSETTO:+0800\r\n"
+			+ "TZNAME:CST\r\n"
+			+ "END:STANDARD\r\n"
+			+ "END:VTIMEZONE\r\n";
 
 	public static byte[] attachBinaryAttachment(String subject, String content, String location, Date fromDate,
-			Date toDate, String mailTos)
-			throws IOException, ParserException, ParseException, URISyntaxException {
-		/**
-		 * 以下两步骤的处理也是为了防止outlook或者是notes将日历当做附件使用增加的
-		 */
-		CompatibilityHints.setHintEnabled(CompatibilityHints.KEY_OUTLOOK_COMPATIBILITY, true);
-		CompatibilityHints.setHintEnabled(CompatibilityHints.KEY_NOTES_COMPATIBILITY, true);
+			Date toDate, String mailTos) throws IOException {
+		ZonedDateTime start = fromDate.toInstant().atZone(ZONE);
+		ZonedDateTime end = toDate.toInstant().atZone(ZONE);
 
-		ZonedDateTime start = fromDate.toInstant().atZone(ZoneId.of("Asia/Shanghai"));
-		ZonedDateTime end = toDate.toInstant().atZone(ZoneId.of("Asia/Shanghai"));
+		StringBuilder ics = new StringBuilder(2048);
+		ics.append("BEGIN:VCALENDAR\r\n");
+		ics.append("PRODID:-//GDXSoft//Outlook Calendar//EN\r\n");
+		ics.append("VERSION:2.0\r\n");
+		ics.append("CALSCALE:GREGORIAN\r\n");
+		ics.append("METHOD:REQUEST\r\n");
+		ics.append(VTIMEZONE);
+		ics.append("BEGIN:VEVENT\r\n");
+		ics.append("DTSTART;TZID=Asia/Shanghai:").append(start.format(ICS_DATETIME)).append("\r\n");
+		ics.append("DTEND;TZID=Asia/Shanghai:").append(end.format(ICS_DATETIME)).append("\r\n");
 
-		VEvent meeting = new VEvent(start, end, subject);
-		meeting.getProperties().add(new Uid(new RandomUidGenerator().generateUid().getValue()));
+		String escapedSubject = escapeIcsText(subject);
+		String escapedContent = escapeIcsText(content);
+		String escapedLocation = escapeIcsText(location);
 
-		Organizer orger = new Organizer(URI.create("lei.guo@gyap.org"));
-		orger.getParameters().add(new Cn("郭磊"));
-		meeting.getProperties().add(orger);
+		ics.append("SUMMARY:").append(escapedSubject).append("\r\n");
+		ics.append("DESCRIPTION:").append(escapedContent).append("\r\n");
+		ics.append("LOCATION:").append(escapedLocation).append("\r\n");
+		ics.append("ORGANIZER;CN=").append(escapeIcsParam("郭磊"))
+				.append(":mailto:lei.guo@gyap.org\r\n");
 
-		// 设置时区
-		TimeZoneRegistry registry = TimeZoneRegistryFactory.getInstance().createRegistry();
-		TimeZone timezone = registry.getTimeZone("Asia/Shanghai");
-		VTimeZone tz = timezone.getVTimeZone();
-		meeting.getProperties().add(tz.getTimeZoneId());
+		ics.append("X-MICROSOFT-CDO-ALLDAYEVENT:TRUE\r\n");
+		ics.append("X-MICROSOFT-CDO-INTENDEDSTATUS:FREE\r\n");
+		ics.append("UID:").append(UUID.randomUUID().toString()).append("\r\n");
 
-		meeting.getProperties().add(new Location(location));
-		// meeting.getProperties().add(new Summary(subject));
-		meeting.getProperties().add(new Description(content));
-
-		meeting.getProperties().add(new XProperty("X-MICROSOFT-CDO-ALLDAYEVENT", "TRUE"));
-		meeting.getProperties().add(new XProperty("X-MICROSOFT-CDO-INTENDEDSTATUS", "FREE"));
-
-		// 添加参加人
+		// Attendees
 		String[] mails = mailTos.split(";");
-		for (int i = 0; i < mails.length; i++) {
-			String m = mails[i].trim();
-			if (m.length() == 0) {
+		for (String m : mails) {
+			m = m.trim();
+			if (m.isEmpty()) {
 				continue;
 			}
-			Attendee attendee = new Attendee(URI.create("mailto:" + m));
-			attendee.getParameters().add(Role.OPT_PARTICIPANT);
-			// attendee.getParameters().add(new Cn(m));
-			meeting.getProperties().add(attendee);
+			ics.append("ATTENDEE;ROLE=OPT-PARTICIPANT:mailto:").append(m).append("\r\n");
 		}
 
-		// 提醒
-		VAlarm reminder = new VAlarm(Duration.ofMinutes(-15));
-		// repeat reminder four (4) more times every fifteen (15) minutes..
+		// Reminder (15 min before)
+		ics.append("BEGIN:VALARM\r\n");
+		ics.append("TRIGGER:-PT15M\r\n");
+		ics.append("ACTION:DISPLAY\r\n");
+		ics.append("DESCRIPTION:").append(escapedSubject).append("\r\n");
+		ics.append("END:VALARM\r\n");
 
-		// reminder.getProperties().add(new Repeat(4));
-		// reminder.getProperties().add(new Duration(new Dur(1000 * 60 * 15)));
+		ics.append("END:VEVENT\r\n");
+		ics.append("END:VCALENDAR\r\n");
 
-		// display a message..
-
-		reminder.getProperties().add(ImmutableAction.DISPLAY);
-
-		reminder.getProperties().add(new Description(subject));
-		// alarm.
-		meeting.getAlarms().add(reminder);
-
-		Calendar calendar = new Calendar();
-		calendar.getProperties().add(new ProdId("-//OneWorld CC//iCal4j 1.0//EN"));
-		calendar.getProperties().add(ImmutableVersion.VERSION_2_0);
-		calendar.getProperties().add(ImmutableCalScale.GREGORIAN);
-		calendar.getProperties().add(ImmutableMethod.REQUEST);
-
-		calendar.getComponents().add(meeting);
-		// 验证
-		calendar.validate();
-		CalendarOutputter outputter = new CalendarOutputter();
-		ByteArrayOutputStream bout1 = new ByteArrayOutputStream();
+		ByteArrayOutputStream bout = new ByteArrayOutputStream();
 		try {
-			outputter.output(calendar, bout1);
-			return bout1.toByteArray();
-		} catch (Exception err) {
-			LOGGER.error(err.getMessage());
-			return null;
+			bout.write(ics.toString().getBytes(StandardCharsets.UTF_8));
+			return bout.toByteArray();
 		} finally {
-			bout1.close();
+			bout.close();
 		}
 	}
 
-	/**
-	 * 发送会议
-	 * 
-	 * @param subject  主题
-	 * @param content  内容
-	 * @param location 地点
-	 * @param fromDate 开始时间
-	 * @param toDate   截至时间
-	 * @param mailFrom 发件人
-	 * @param mailTos  收件人
-	 * @return
-	 */
+	// iCalendar text field escaping: \n → \\n, \\ → \\\\
+	private static String escapeIcsText(String s) {
+		if (s == null) {
+			return "";
+		}
+		return s.replace("\\", "\\\\").replace("\r\n", "\\n").replace("\n", "\\n").replace("\r", "\\n");
+	}
+
+	// iCalendar parameter value escaping
+	private static String escapeIcsParam(String s) {
+		if (s == null) {
+			return "";
+		}
+		return s.replace("\"", "'");
+	}
+
 	public static boolean sendCal(String subject, String content, String location, Date fromDate, Date toDate,
 			String mailFrom, String mailTos) {
 		try {
-
 			byte[] buf = attachBinaryAttachment(subject, content, location, fromDate, toDate, mailTos);
 
 			String name = Utils.getGuid() + ".ics";
@@ -167,7 +138,6 @@ public class Outlook {
 			String[] tos = mailTos.split(";");
 
 			InternetAddress[] iaToList = new InternetAddress[tos.length];
-
 			for (int i = 0; i < iaToList.length; i++) {
 				iaToList[i] = new InternetAddress(tos[i].trim());
 			}
@@ -175,9 +145,8 @@ public class Outlook {
 
 			Multipart multipart = new MimeMultipart();
 			MimeBodyPart iCalAttachment = new MimeBodyPart();
-
-			iCalAttachment.setDataHandler(new DataHandler(new ByteArrayDataSource(new ByteArrayInputStream(buf),
-					"text/calendar;method=REQUEST;charset=\"UTF-8\"")));
+			iCalAttachment.setDataHandler(new DataHandler(new ByteArrayDataSource(
+					new ByteArrayInputStream(buf), "text/calendar;method=REQUEST;charset=\"UTF-8\"")));
 			multipart.addBodyPart(iCalAttachment);
 			mimeMessage.setContent(multipart);
 
@@ -193,5 +162,4 @@ public class Outlook {
 			return false;
 		}
 	}
-
 }

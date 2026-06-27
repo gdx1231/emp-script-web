@@ -1,108 +1,84 @@
 package com.gdxsoft.web.domain;
 
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
+import java.text.SimpleDateFormat;
+import java.util.Base64;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.TimeZone;
+import java.util.TreeMap;
+import java.util.UUID;
+
+import javax.crypto.Mac;
+import javax.crypto.spec.SecretKeySpec;
+
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.aliyuncs.DefaultAcsClient;
-import com.aliyuncs.IAcsClient;
-import com.aliyuncs.alidns.model.v20150109.*;
-import com.aliyuncs.alidns.model.v20150109.DescribeDomainRecordsResponse.Record;
-import com.aliyuncs.exceptions.ClientException;
-import com.aliyuncs.profile.DefaultProfile;
+import com.gdxsoft.easyweb.utils.UNet;
 
 /**
- * 基于阿里云DNS服务进行域名解析记录管理的工具类。
+ * 基于阿里云DNS服务进行域名解析记录管理的工具类 (纯 HTTP 实现，零 SDK 依赖)
  */
 public class DomainAli implements IDomain {
 	public static final String PROVIDER = "ALI";
-	/**
-	 * 阿里云默认区域ID
-	 */
-	public static final String DEF_REGION_ID = "cn-hangzhou";
+
+	private static final String ENDPOINT = "https://alidns.aliyuncs.com/";
+	private static final String API_VERSION = "2015-01-09";
+	private static final String SIGNATURE_METHOD = "HMAC-SHA1";
+	private static final String SIGNATURE_VERSION = "1.0";
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(DomainAli.class);
-	private IAcsClient client;
 
-	/**
-	 * 返回实例(regionId = cn-hangzhou)。
-	 *
-	 * @param accessKeyId     阿里云AccessKey ID
-	 * @param accessKeySecret 阿里云AccessKey Secret
-	 */
+	private String accessKeyId;
+	private String accessKeySecret;
+
+	public DomainAli() {
+	}
+
+	public void init(String accessKeyId, String accessKeySecret) {
+		this.accessKeyId = accessKeyId;
+		this.accessKeySecret = accessKeySecret;
+	}
+
+	public void init(String accessKeyId, String accessKeySecret, String regionId) {
+		this.accessKeyId = accessKeyId;
+		this.accessKeySecret = accessKeySecret;
+	}
+
 	public static DomainAli getInstance(String accessKeyId, String accessKeySecret) {
 		DomainAli d = new DomainAli();
 		d.init(accessKeyId, accessKeySecret);
 		return d;
 	}
 
-	/**
-	 * 返回实例
-	 *
-	 * @param accessKeyId     阿里云AccessKey ID
-	 * @param accessKeySecret 阿里云AccessKey Secret
-	 * @param regionId        阿里云区域ID，例如"cn-hangzhou"
-	 */
 	public static DomainAli getInstance(String accessKeyId, String accessKeySecret, String regionId) {
 		DomainAli d = new DomainAli();
 		d.init(accessKeyId, accessKeySecret, regionId);
 		return d;
 	}
 
-	/**
-	 * 构造函数初始化客户端
-	 */
-	public DomainAli() {
-	}
-
-	/**
-	 * 初始化客户端(regionId = cn-hangzhou)。
-	 *
-	 * @param accessKeyId     阿里云AccessKey ID
-	 * @param accessKeySecret 阿里云AccessKey Secret
-	 */
-	public void init(String accessKeyId, String accessKeySecret) {
-		this.init(accessKeyId, accessKeySecret, DEF_REGION_ID);
-	}
-
-	/**
-	 * 初始化客户端。
-	 *
-	 * @param accessKeyId     阿里云AccessKey ID
-	 * @param accessKeySecret 阿里云AccessKey Secret
-	 * @param regionId        阿里云区域ID，例如"cn-hangzhou"
-	 */
-	public void init(String accessKeyId, String accessKeySecret, String regionId) {
-		this.client = new DefaultAcsClient(DefaultProfile.getProfile(regionId, accessKeyId, accessKeySecret));
-	}
-
-	/**
-	 * 添加新的域名解析记录。
-	 *
-	 * @param domainName 域名
-	 * @param rr         主机记录（如"www"）
-	 * @param type       记录类型（如"A", "CNAME"）
-	 * @param value      记录值（如IP地址或域名）
-	 * @return 包含操作结果的JSONObject对象，成功时RST为true，失败时RST为false且包含错误信息
-	 */
 	@Override
 	public JSONObject addSubDomainRecord(String domainName, String rr, String type, String value) {
 		JSONObject result = new JSONObject();
-		AddDomainRecordRequest request = new AddDomainRecordRequest();
-		request.setDomainName(domainName);
-		request.setRR(rr);
-		request.setType(type);
-		request.setValue(value);
+		TreeMap<String, String> params = buildCommonParams();
+		params.put("Action", "AddDomainRecord");
+		params.put("DomainName", domainName);
+		params.put("RR", rr);
+		params.put("Type", type);
+		params.put("Value", value);
 
 		try {
-			LOGGER.debug("Attempting to add domain record: {} with RR: {}, Type: {}, Value: {}", domainName, rr, type,
-					value);
-			AddDomainRecordResponse response = client.getAcsResponse(request);
+			LOGGER.debug("Attempting to add domain record: {} with RR: {}, Type: {}, Value: {}", domainName, rr, type, value);
+			JSONObject response = doSignedPost(params);
 			result.put("RST", true);
-			result.put("RecordId", response.getRecordId());
-			LOGGER.info("Successfully added domain record with RecordId: {}", response.getRecordId());
-		} catch (ClientException e) {
+			result.put("RecordId", response.optString("RecordId"));
+			LOGGER.info("Successfully added domain record with RecordId: {}", response.optString("RecordId"));
+		} catch (Exception e) {
 			result.put("RST", false);
 			result.put("ERR", e.getMessage());
 			LOGGER.error("Failed to add domain record due to error: {}", e.getMessage(), e);
@@ -110,32 +86,24 @@ public class DomainAli implements IDomain {
 		return result;
 	}
 
-	/**
-	 * 修改已有的域名解析记录。
-	 *
-	 * @param recordId 解析记录ID
-	 * @param rr       主机记录
-	 * @param type     记录类型
-	 * @param value    记录值
-	 * @return 包含操作结果的JSONObject对象
-	 */
 	@Override
 	public JSONObject updateSubDomainRecord(String recordId, String rr, String type, String value) {
 		JSONObject result = new JSONObject();
-		UpdateDomainRecordRequest request = new UpdateDomainRecordRequest();
-		request.setRecordId(recordId);
-		request.setRR(rr);
-		request.setType(type);
-		request.setValue(value);
+		TreeMap<String, String> params = buildCommonParams();
+		params.put("Action", "UpdateDomainRecord");
+		params.put("RecordId", recordId);
+		params.put("RR", rr);
+		params.put("Type", type);
+		params.put("Value", value);
 
 		try {
 			LOGGER.debug("Attempting to update domain record with RecordId: {} to RR: {}, Type: {}, Value: {}",
 					recordId, rr, type, value);
-			UpdateDomainRecordResponse response = client.getAcsResponse(request);
+			JSONObject response = doSignedPost(params);
 			result.put("RST", true);
-			result.put("RecordId", response.getRecordId());
-			LOGGER.info("Successfully updated domain record with RecordId: {}", response.getRecordId());
-		} catch (ClientException e) {
+			result.put("RecordId", response.optString("RecordId"));
+			LOGGER.info("Successfully updated domain record with RecordId: {}", response.optString("RecordId"));
+		} catch (Exception e) {
 			result.put("RST", false);
 			result.put("ERR", e.getMessage());
 			LOGGER.error("Failed to update domain record due to error: {}", e.getMessage(), e);
@@ -143,74 +111,51 @@ public class DomainAli implements IDomain {
 		return result;
 	}
 
-	/**
-	 * 暂停特定的域名解析记录。
-	 *
-	 * @param recordId 解析记录ID
-	 * @return 包含操作结果的JSONObject对象
-	 */
 	@Override
 	public JSONObject setSubDomainRecordStatusToPause(String recordId) {
 		return this.setSubDomainRecordStatus(recordId, true);
 	}
 
-	/**
-	 * 开通特定的域名解析记录。
-	 *
-	 * @param recordId 解析记录ID
-	 * @return 包含操作结果的JSONObject对象
-	 */
 	@Override
 	public JSONObject setSubDomainRecordStatusToEnable(String recordId) {
 		return this.setSubDomainRecordStatus(recordId, false);
 	}
 
-	/**
-	 * 设定域名的使用状态 disable/enable
-	 * 
-	 * @param recordId
-	 * @param disable
-	 * @return
-	 */
 	public JSONObject setSubDomainRecordStatus(String recordId, boolean disable) {
 		JSONObject result = new JSONObject();
-		SetDomainRecordStatusRequest request = new SetDomainRecordStatusRequest();
-		request.setRecordId(recordId);
-		request.setStatus(disable ? "DISABLE" : "ENABLE");
+		TreeMap<String, String> params = buildCommonParams();
+		params.put("Action", "SetDomainRecordStatus");
+		params.put("RecordId", recordId);
+		params.put("Status", disable ? "DISABLE" : "ENABLE");
 
 		try {
-			LOGGER.debug("Attempting to pause domain record with RecordId: {}", recordId);
-			SetDomainRecordStatusResponse response = client.getAcsResponse(request);
+			LOGGER.debug("Attempting to set domain record status, RecordId: {}, disable: {}", recordId, disable);
+			JSONObject response = doSignedPost(params);
 			result.put("RST", true);
-			result.put("RecordId", response.getRecordId());
-			LOGGER.info("Successfully paused domain record with RecordId: {}", response.getRecordId());
-		} catch (ClientException e) {
+			result.put("RecordId", response.optString("RecordId"));
+			LOGGER.info("Successfully set domain record status, RecordId: {}", response.optString("RecordId"));
+		} catch (Exception e) {
 			result.put("RST", false);
 			result.put("ERR", e.getMessage());
-			LOGGER.error("Failed to pause domain record due to error: {}", e.getMessage(), e);
+			LOGGER.error("Failed to set domain record status due to error: {}", e.getMessage(), e);
 		}
 		return result;
 	}
 
-	/**
-	 * 删除指定的域名解析记录。
-	 *
-	 * @param recordId 解析记录ID
-	 * @return 包含操作结果的JSONObject对象
-	 */
 	@Override
 	public JSONObject deleteSubDomainRecord(String recordId) {
 		JSONObject result = new JSONObject();
-		DeleteDomainRecordRequest request = new DeleteDomainRecordRequest();
-		request.setRecordId(recordId);
+		TreeMap<String, String> params = buildCommonParams();
+		params.put("Action", "DeleteDomainRecord");
+		params.put("RecordId", recordId);
 
 		try {
 			LOGGER.debug("Attempting to delete domain record with RecordId: {}", recordId);
-			DeleteDomainRecordResponse response = client.getAcsResponse(request);
+			JSONObject response = doSignedPost(params);
 			result.put("RST", true);
-			result.put("RequestId", response.getRequestId());
-			LOGGER.info("Successfully deleted domain record with RequestId: {}", response.getRequestId());
-		} catch (ClientException e) {
+			result.put("RequestId", response.optString("RequestId"));
+			LOGGER.info("Successfully deleted domain record with RequestId: {}", response.optString("RequestId"));
+		} catch (Exception e) {
 			result.put("RST", false);
 			result.put("ERR", e.getMessage());
 			LOGGER.error("Failed to delete domain record due to error: {}", e.getMessage(), e);
@@ -218,39 +163,32 @@ public class DomainAli implements IDomain {
 		return result;
 	}
 
-	/**
-	 * 获取单个子域名的详细信息。
-	 *
-	 * @param domainName 主域名
-	 * @param rr         子域名前缀（如"www"）
-	 * @param type       记录类型（如"A", "CNAME"）
-	 * @return 包含操作结果的JSONObject对象，成功时RST为true，失败时RST为false且包含错误信息
-	 */
 	public JSONObject getSubdomainInfo(String domainName, String rr, String type) {
 		JSONObject result = new JSONObject();
-		DescribeDomainRecordsRequest request = new DescribeDomainRecordsRequest();
-		request.setDomainName(domainName);
-		request.setRRKeyWord(rr); // 使用RRKeyWord来过滤主机记录
-		request.setTypeKeyWord(type); // 使用TypeKeyWord来过滤记录类型
+		TreeMap<String, String> params = buildCommonParams();
+		params.put("Action", "DescribeDomainRecords");
+		params.put("DomainName", domainName);
+		params.put("RRKeyWord", rr);
+		params.put("TypeKeyWord", type);
 
 		try {
 			LOGGER.debug("Attempting to get subdomain info for: {}.{} with Type: {}", rr, domainName, type);
-			DescribeDomainRecordsResponse response = client.getAcsResponse(request);
+			JSONObject response = doSignedPost(params);
+			JSONObject domainRecords = response.optJSONObject("DomainRecords");
+			JSONArray recordList = domainRecords != null ? domainRecords.optJSONArray("Record") : null;
 
-			if (response.getDomainRecords() != null && !response.getDomainRecords().isEmpty()) {
-				Record record = response.getDomainRecords().get(0); // 假设只取第一个匹配项
-				JSONObject subdomainInfoJson = this.createRecord(record);
+			if (recordList != null && recordList.length() > 0) {
+				JSONObject record = recordList.getJSONObject(0);
+				JSONObject subdomainInfoJson = createRecordJson(record);
 				subdomainInfoJson.put("RST", true);
-
 				LOGGER.info("Successfully retrieved subdomain info for {}.{}", rr, domainName);
-
 				return subdomainInfoJson;
 			} else {
 				result.put("RST", false);
 				result.put("ERR", "No matching records found.");
 				LOGGER.warn("No matching records found for {}.{} with Type: {}", rr, domainName, type);
 			}
-		} catch (ClientException e) {
+		} catch (Exception e) {
 			result.put("RST", false);
 			result.put("ERR", e.getMessage());
 			LOGGER.error("Failed to get subdomain info for {}.{} due to error: {}", rr, domainName, e.getMessage(), e);
@@ -258,44 +196,29 @@ public class DomainAli implements IDomain {
 		return result;
 	}
 
-	private JSONObject createRecord(Record record) {
-		JSONObject recordJson = new JSONObject();
-		recordJson.put("RecordId", record.getRecordId());
-		recordJson.put("RR", record.getRR());
-		recordJson.put("Value", record.getValue());
-		recordJson.put("Locked", record.getLocked());
-		recordJson.put("Status", record.getStatus());
-		recordJson.put("DomainName", record.getDomainName());
-		recordJson.put("DomainType", record.getType());
-		recordJson.put("TTL", record.getTTL());
-
-		return recordJson;
-	}
-
-	/**
-	 * 查询域名解析记录。
-	 *
-	 * @param domainName 域名
-	 * @return 包含操作结果的JSONObject对象
-	 */
 	@Override
 	public JSONObject describeSubDomainRecords(String domainName) {
 		JSONObject result = new JSONObject();
-		DescribeDomainRecordsRequest request = new DescribeDomainRecordsRequest();
-		request.setDomainName(domainName);
+		TreeMap<String, String> params = buildCommonParams();
+		params.put("Action", "DescribeDomainRecords");
+		params.put("DomainName", domainName);
 
 		try {
 			LOGGER.debug("Attempting to query domain records for domain: {}", domainName);
-			DescribeDomainRecordsResponse response = client.getAcsResponse(request);
+			JSONObject response = doSignedPost(params);
+			JSONObject domainRecords = response.optJSONObject("DomainRecords");
+			JSONArray recordList = domainRecords != null ? domainRecords.optJSONArray("Record") : new JSONArray();
+
 			JSONArray recordsArray = new JSONArray();
-			response.getDomainRecords().forEach(record -> {
-				JSONObject recordJson = this.createRecord(record);
-				recordsArray.put(recordJson);
-			});
+			if (recordList != null) {
+				for (int i = 0; i < recordList.length(); i++) {
+					recordsArray.put(createRecordJson(recordList.getJSONObject(i)));
+				}
+			}
 			result.put("RST", true);
 			result.put("Records", recordsArray);
 			LOGGER.info("Successfully queried domain records for domain: {}", domainName);
-		} catch (ClientException e) {
+		} catch (Exception e) {
 			result.put("RST", false);
 			result.put("ERR", e.getMessage());
 			LOGGER.error("Failed to query domain records due to error: {}", e.getMessage(), e);
@@ -303,35 +226,109 @@ public class DomainAli implements IDomain {
 		return result;
 	}
 
-	/**
-	 * 获取单个域名的详细信息。
-	 *
-	 * @param domainName 要查询的域名
-	 * @return 包含操作结果的JSONObject对象，成功时RST为true，失败时RST为false且包含错误信息
-	 */
 	public JSONObject getDomainInfo(String domainName) {
 		JSONObject result = new JSONObject();
-		DescribeDomainInfoRequest request = new DescribeDomainInfoRequest();
-		request.setDomainName(domainName);
+		TreeMap<String, String> params = buildCommonParams();
+		params.put("Action", "DescribeDomainInfo");
+		params.put("DomainName", domainName);
 
 		try {
 			LOGGER.debug("Attempting to get domain info for: {}", domainName);
-			DescribeDomainInfoResponse response = client.getAcsResponse(request);
+			JSONObject response = doSignedPost(params);
 			JSONObject domainInfoJson = new JSONObject();
-			domainInfoJson.put("DomainName", response.getDomainName());
-			domainInfoJson.put("InstanceId", response.getInstanceId());
-			domainInfoJson.put("RegistrationDate", response.getCreateTime());
-			domainInfoJson.put("JsonStr", response.getRecordLineTreeJson());
-			// 根据需要添加更多字段
+			domainInfoJson.put("DomainName", response.optString("DomainName"));
+			domainInfoJson.put("InstanceId", response.optString("InstanceId"));
+			domainInfoJson.put("RegistrationDate", response.optString("CreateTime"));
+			domainInfoJson.put("JsonStr", response.optString("RecordLineTreeJson"));
 
 			result.put("RST", true);
 			result.put("DomainInfo", domainInfoJson);
 			LOGGER.info("Successfully retrieved domain info for: {}", domainName);
-		} catch (ClientException e) {
+		} catch (Exception e) {
 			result.put("RST", false);
 			result.put("ErrorMessage", e.getMessage());
 			LOGGER.error("Failed to get domain info for {} due to error: {}", domainName, e.getMessage(), e);
 		}
 		return result;
+	}
+
+	private static JSONObject createRecordJson(JSONObject record) {
+		JSONObject recordJson = new JSONObject();
+		recordJson.put("RecordId", record.optString("RecordId"));
+		recordJson.put("RR", record.optString("RR"));
+		recordJson.put("Value", record.optString("Value"));
+		recordJson.put("Locked", record.optBoolean("Locked"));
+		recordJson.put("Status", record.optString("Status"));
+		recordJson.put("DomainName", record.optString("DomainName"));
+		recordJson.put("DomainType", record.optString("Type"));
+		recordJson.put("TTL", record.optLong("TTL"));
+		return recordJson;
+	}
+
+	// ---- 签名 & HTTP ----
+
+	private TreeMap<String, String> buildCommonParams() {
+		TreeMap<String, String> params = new TreeMap<>();
+		params.put("AccessKeyId", accessKeyId);
+		params.put("Format", "JSON");
+		params.put("SignatureMethod", SIGNATURE_METHOD);
+		params.put("SignatureNonce", UUID.randomUUID().toString());
+		params.put("SignatureVersion", SIGNATURE_VERSION);
+		SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'");
+		sdf.setTimeZone(TimeZone.getTimeZone("UTC"));
+		params.put("Timestamp", sdf.format(new Date()));
+		params.put("Version", API_VERSION);
+		return params;
+	}
+
+	private JSONObject doSignedPost(TreeMap<String, String> params) throws Exception {
+		String queryString = buildQueryString(params);
+		String stringToSign = "POST" + "&" + percentEncode("/") + "&" + percentEncode(queryString);
+		String signature = hmacSha1(stringToSign, accessKeySecret + "&");
+
+		params.put("Signature", signature);
+
+		UNet net = new UNet();
+		HashMap<String, String> postParams = new HashMap<>(params);
+		String body = net.doPost(ENDPOINT, postParams);
+		JSONObject json = new JSONObject(body);
+
+		// 阿里云 API 错误响应包含 Code 字段，成功响应不含
+		if (json.has("Code")) {
+			throw new RuntimeException(json.optString("Code") + ": " + json.optString("Message"));
+		}
+		return json;
+	}
+
+	private static String buildQueryString(TreeMap<String, String> params)
+			throws UnsupportedEncodingException {
+		StringBuilder sb = new StringBuilder();
+		for (Map.Entry<String, String> entry : params.entrySet()) {
+			if (sb.length() > 0) {
+				sb.append("&");
+			}
+			sb.append(percentEncode(entry.getKey()));
+			sb.append("=");
+			sb.append(percentEncode(entry.getValue()));
+		}
+		return sb.toString();
+	}
+
+	private static String percentEncode(String value) throws UnsupportedEncodingException {
+		if (value == null) {
+			return "";
+		}
+		return URLEncoder.encode(value, "UTF-8")
+				.replace("+", "%20")
+				.replace("*", "%2A")
+				.replace("%7E", "~");
+	}
+
+	private static String hmacSha1(String data, String key) throws Exception {
+		Mac mac = Mac.getInstance("HmacSHA1");
+		SecretKeySpec keySpec = new SecretKeySpec(key.getBytes("UTF-8"), "HmacSHA1");
+		mac.init(keySpec);
+		byte[] raw = mac.doFinal(data.getBytes("UTF-8"));
+		return Base64.getEncoder().encodeToString(raw);
 	}
 }

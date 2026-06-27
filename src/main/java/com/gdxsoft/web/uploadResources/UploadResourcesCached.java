@@ -1,80 +1,81 @@
 package com.gdxsoft.web.uploadResources;
 
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.cache.Cache;
-import com.google.common.cache.CacheBuilder;
-import com.google.common.cache.RemovalCause;
-import com.google.common.cache.RemovalListener;
-import com.google.common.cache.RemovalNotification;
-
 public class UploadResourcesCached {
-	/**
-	 * 
-	 */
-	private static Logger LOGGER = LoggerFactory.getLogger(UploadResourcesCached.class);
+	private static final Logger LOGGER = LoggerFactory.getLogger(UploadResourcesCached.class);
 
-	private static UploadResourcesCached INST;
+	private static final UploadResourcesCached INST = new UploadResourcesCached();
+
+	private final ConcurrentHashMap<String, Entry> cache = new ConcurrentHashMap<>();
+	private final ScheduledExecutorService cleaner;
+
+	private static class Entry {
+		final UploadResource value;
+		volatile long expireAt; // System.nanoTime()
+
+		Entry(UploadResource value, long ttlNanos) {
+			this.value = value;
+			this.expireAt = System.nanoTime() + ttlNanos;
+		}
+
+		void touch(long ttlNanos) {
+			this.expireAt = System.nanoTime() + ttlNanos;
+		}
+	}
+
+	private UploadResourcesCached() {
+		cleaner = Executors.newSingleThreadScheduledExecutor(r -> {
+			Thread t = new Thread(r, "upload-cache-cleaner");
+			t.setDaemon(true);
+			return t;
+		});
+		cleaner.scheduleAtFixedRate(this::evict, 1, 1, TimeUnit.MINUTES);
+	}
+
+	private void evict() {
+		long now = System.nanoTime();
+		for (var entry : cache.entrySet()) {
+			if (entry.getValue().expireAt < now) {
+				String key = entry.getKey();
+				cache.compute(key, (k, v) -> {
+					if (v != null && v.expireAt < now) {
+						LOGGER.debug("{} expired", k);
+						return null;
+					}
+					return v;
+				});
+			}
+		}
+	}
 
 	public static UploadResourcesCached getInstance() {
 		return INST;
 	}
 
-	static {
-		INST = new UploadResourcesCached();
-		INST.init();
-	}
-
-	private Cache<String, UploadResource> cached;
-	private RemovalListener<String, UploadResource> removalListener;
-
-	private UploadResourcesCached() {
-
-	}
-
-	private void init() {
-
-		// 移除key-value监听器
-		removalListener = new RemovalListener<String, UploadResource>() {
-
-			@Override
-			public void onRemoval(RemovalNotification<String, UploadResource> notification) {
-				RemovalCause cause = notification.getCause();// EXPLICIT、REPLACED、COLLECTED、EXPIRED、SIZE
-				LOGGER.info("{}被移除 {}", notification.getKey(), cause);
-
-			}
-		};
-		cached = CacheBuilder.newBuilder() //
-				.maximumSize(100) // 表示cache中保存的key的最大条数
-				.removalListener(removalListener) //
-				.expireAfterAccess(10, TimeUnit.MINUTES)
-				.recordStats() // 记录统计信息
-				.build();
-	}
-
-	/**
-	 * 放缓存
-	 * 
-	 * @param value
-	 */
 	public void putCache(String key, UploadResource value) {
 		LOGGER.info("put cached: {}: {}", key, value);
-		cached.put(key, value);
-
+		cache.put(key, new Entry(value, TimeUnit.MINUTES.toNanos(10)));
 	}
 
-	/**
-	 * 获取缓存
-	 * 
-	 * @param key
-	 * @return
-	 */
 	public UploadResource getCache(String key) {
-		UploadResource v = cached.getIfPresent(key);
-		return v;
+		Entry entry = cache.get(key);
+		if (entry == null) {
+			return null;
+		}
+		// 惰性过期
+		if (entry.expireAt < System.nanoTime()) {
+			cache.remove(key, entry);
+			return null;
+		}
+		// 访问时刷新 TTL
+		entry.touch(TimeUnit.MINUTES.toNanos(10));
+		return entry.value;
 	}
-
 }
