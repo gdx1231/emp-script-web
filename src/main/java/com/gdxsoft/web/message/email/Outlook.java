@@ -6,6 +6,9 @@ import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.text.ParseException;
+import java.time.Duration;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.util.Date;
 
 import jakarta.activation.DataHandler;
@@ -28,48 +31,45 @@ import com.gdxsoft.easyweb.utils.Mail.SmtpCfgs;
 import net.fortuna.ical4j.data.CalendarOutputter;
 import net.fortuna.ical4j.data.ParserException;
 import net.fortuna.ical4j.model.Calendar;
-import net.fortuna.ical4j.model.DateTime;
-import net.fortuna.ical4j.model.Dur;
 import net.fortuna.ical4j.model.TimeZone;
 import net.fortuna.ical4j.model.TimeZoneRegistry;
 import net.fortuna.ical4j.model.TimeZoneRegistryFactory;
-import net.fortuna.ical4j.model.ValidationException;
 import net.fortuna.ical4j.model.component.VAlarm;
 import net.fortuna.ical4j.model.component.VEvent;
 import net.fortuna.ical4j.model.component.VTimeZone;
 import net.fortuna.ical4j.model.parameter.Cn;
 import net.fortuna.ical4j.model.parameter.Role;
-import net.fortuna.ical4j.model.property.Action;
 import net.fortuna.ical4j.model.property.Attendee;
-import net.fortuna.ical4j.model.property.CalScale;
 import net.fortuna.ical4j.model.property.Description;
 import net.fortuna.ical4j.model.property.Location;
-import net.fortuna.ical4j.model.property.Method;
 import net.fortuna.ical4j.model.property.Organizer;
 import net.fortuna.ical4j.model.property.ProdId;
 import net.fortuna.ical4j.model.property.Uid;
-import net.fortuna.ical4j.model.property.Version;
 import net.fortuna.ical4j.model.property.XProperty;
+import net.fortuna.ical4j.model.property.immutable.ImmutableAction;
+import net.fortuna.ical4j.model.property.immutable.ImmutableCalScale;
+import net.fortuna.ical4j.model.property.immutable.ImmutableMethod;
+import net.fortuna.ical4j.model.property.immutable.ImmutableVersion;
 import net.fortuna.ical4j.util.CompatibilityHints;
-import net.fortuna.ical4j.util.UidGenerator;
+import net.fortuna.ical4j.util.RandomUidGenerator;
 
 public class Outlook {
 	private static Logger LOGGER = LoggerFactory.getLogger(Outlook.class);
 
 	public static byte[] attachBinaryAttachment(String subject, String content, String location, Date fromDate,
 			Date toDate, String mailTos)
-			throws IOException, ParserException, ValidationException, ParseException, URISyntaxException {
+			throws IOException, ParserException, ParseException, URISyntaxException {
 		/**
 		 * 以下两步骤的处理也是为了防止outlook或者是notes将日历当做附件使用增加的
 		 */
 		CompatibilityHints.setHintEnabled(CompatibilityHints.KEY_OUTLOOK_COMPATIBILITY, true);
 		CompatibilityHints.setHintEnabled(CompatibilityHints.KEY_NOTES_COMPATIBILITY, true);
 
-		DateTime start = new DateTime(fromDate.getTime());
-		DateTime end = new DateTime(toDate.getTime());
+		ZonedDateTime start = fromDate.toInstant().atZone(ZoneId.of("Asia/Shanghai"));
+		ZonedDateTime end = toDate.toInstant().atZone(ZoneId.of("Asia/Shanghai"));
 
 		VEvent meeting = new VEvent(start, end, subject);
-		meeting.getProperties().add(new Uid(new UidGenerator("iCal4j").generateUid().getValue()));
+		meeting.getProperties().add(new Uid(new RandomUidGenerator().generateUid().getValue()));
 
 		Organizer orger = new Organizer(URI.create("lei.guo@gyap.org"));
 		orger.getParameters().add(new Cn("郭磊"));
@@ -102,7 +102,7 @@ public class Outlook {
 		}
 
 		// 提醒
-		VAlarm reminder = new VAlarm(new Dur("-PT15M"));
+		VAlarm reminder = new VAlarm(Duration.ofMinutes(-15));
 		// repeat reminder four (4) more times every fifteen (15) minutes..
 
 		// reminder.getProperties().add(new Repeat(4));
@@ -110,7 +110,7 @@ public class Outlook {
 
 		// display a message..
 
-		reminder.getProperties().add(Action.DISPLAY);
+		reminder.getProperties().add(ImmutableAction.DISPLAY);
 
 		reminder.getProperties().add(new Description(subject));
 		// alarm.
@@ -118,9 +118,9 @@ public class Outlook {
 
 		Calendar calendar = new Calendar();
 		calendar.getProperties().add(new ProdId("-//OneWorld CC//iCal4j 1.0//EN"));
-		calendar.getProperties().add(Version.VERSION_2_0);
-		calendar.getProperties().add(CalScale.GREGORIAN);
-		calendar.getProperties().add(Method.REQUEST);
+		calendar.getProperties().add(ImmutableVersion.VERSION_2_0);
+		calendar.getProperties().add(ImmutableCalScale.GREGORIAN);
+		calendar.getProperties().add(ImmutableMethod.REQUEST);
 
 		calendar.getComponents().add(meeting);
 		// 验证
