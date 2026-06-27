@@ -148,7 +148,12 @@ public class SpiderNewsContent extends SpiderBase {
 	 */
 	private String getPartJs(String s1, String js) {
 		ScriptEngineManager mgr = new ScriptEngineManager();
-		ScriptEngine engine = mgr.getEngineByName("JavaScript");
+		// JDK 15+: Nashorn removed; use GraalVM JS (org.graalvm.js:js-scriptengine)
+		ScriptEngine engine = mgr.getEngineByName("graal.js");
+		if (engine == null) {
+			// fallback to ECMAScript if graal.js not registered
+			engine = mgr.getEngineByName("ECMAScript");
+		}
 
 		// 添加全局变量
 		JSONObject jsonGlobal = new JSONObject();

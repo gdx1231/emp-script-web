@@ -4,8 +4,8 @@
 	<url>https://github.com/gdx1231/emp-script-web</url>
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>com.gdxsoft.easyweb</groupId>
-	<artifactId>emp-script-web</artifactId>
-	<version>1.1.10</version>
+	<artifactId>emp-script-web-jdk17</artifactId>
+	<version>1.1.10-jdk17</version>
 	<name>Easy Web Appliaction Web</name>
 	<description>Web系统快速成型系统 - 模块部分</description>
 
@@ -45,6 +45,7 @@
 		<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 	</properties>
 	<build>
+		<directory>target17</directory>
 		<sourceDirectory>src/main/java</sourceDirectory>
 		<resources>
 			<resource>
@@ -62,8 +63,7 @@
 				<artifactId>maven-compiler-plugin</artifactId>
 				<version>3.11.0</version>
 				<configuration>
-					<source>1.8</source>
-					<target>1.8</target>
+					<release>17</release>
 				</configuration>
 			</plugin>
 			<!--<plugin>
@@ -158,9 +158,9 @@
 							<goal>copy</goal>
 						</goals>
 						<configuration>
-							<sourceFile>target/${project.build.finalName}.jar</sourceFile>
+							<sourceFile>${project.build.directory}/${project.build.finalName}.jar</sourceFile>
 							<destinationFile>
-								target/${project.artifactId}-last.jar</destinationFile>
+								${project.build.directory}/${project.artifactId}-last.jar</destinationFile>
 						</configuration>
 					</execution>
 				</executions>
@@ -171,12 +171,26 @@
 		<dependency>
 			<groupId>com.gdxsoft.easyweb</groupId>
 			<artifactId>emp-script-utils</artifactId>
-			<version>1.1.10</version>
+			<version>1.1.10-jdk17</version>
 		</dependency>
 		<dependency>
 			<groupId>com.gdxsoft.easyweb</groupId>
 			<artifactId>emp-script</artifactId>
-			<version>1.1.10</version>
+			<version>1.1.10-jdk17</version>
+		</dependency>
+
+		<!-- JDK 11+: javax.activation removed from JDK (used by Outlook.java) -->
+		<dependency>
+			<groupId>com.sun.activation</groupId>
+			<artifactId>javax.activation</artifactId>
+			<version>1.2.0</version>
+		</dependency>
+
+		<!-- JDK 15+: Nashorn removed; use GraalVM JS as replacement -->
+		<dependency>
+			<groupId>org.graalvm.js</groupId>
+			<artifactId>js-scriptengine</artifactId>
+			<version>23.1.0</version>
 		</dependency>
 		<dependency>
 			<groupId>com.gdxsoft</groupId>

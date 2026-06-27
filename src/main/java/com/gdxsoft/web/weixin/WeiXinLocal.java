@@ -2,6 +2,7 @@ package com.gdxsoft.web.weixin;
 
 import java.io.BufferedReader;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.Date;
 import java.util.HashMap;
 
@@ -122,8 +123,8 @@ public class WeiXinLocal extends WeiXinBase {
 			sb.append(line);
 		}
 		// 将微信返回的消息解码
-		byte[] buf = sb.toString().getBytes("iso8859-1");
-		String str = new String(buf, "utf-8");
+		byte[] buf = sb.toString().getBytes(StandardCharsets.ISO_8859_1);
+		String str = new String(buf, StandardCharsets.UTF_8);
 		LOGGER.info(str);
 
 		WeiXinMsg m = new WeiXinMsg(str);

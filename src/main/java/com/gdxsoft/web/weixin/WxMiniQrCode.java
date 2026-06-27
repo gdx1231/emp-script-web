@@ -16,6 +16,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 
 import javax.imageio.ImageIO;
 
@@ -207,7 +208,7 @@ public class WxMiniQrCode {
 		 */
 		byte[] buf = net.postMsgAndDownload(url, postMsg);
 
-		String str = new String(buf, "utf-8");
+		String str = new String(buf, StandardCharsets.UTF_8);
 		JSONObject rst;
 		try {
 			// 只有出错的时候,才会出现 json,否则为图片的二进制
