@@ -182,11 +182,18 @@
 		<!-- JDK 11+: javax.mail / javax.activation removed from JDK.
 		     Migrated Outlook.java and JobMailScan.java to jakarta.mail.
 		     com.sun.mail:jakarta.mail bundles API + impl; angus-activation
-		     is the standalone Jakarta Activation 2.x provider. -->
+		     is the standalone Jakarta Activation 2.x provider.
+		     Exclude com.sun.activation (duplicate of angus-activation). -->
 		<dependency>
 			<groupId>com.sun.mail</groupId>
 			<artifactId>jakarta.mail</artifactId>
 			<version>2.0.1</version>
+			<exclusions>
+				<exclusion>
+					<groupId>com.sun.activation</groupId>
+					<artifactId>jakarta.activation</artifactId>
+				</exclusion>
+			</exclusions>
 		</dependency>
 		<dependency>
 			<groupId>org.eclipse.angus</groupId>
@@ -194,11 +201,23 @@
 			<version>2.0.2</version>
 		</dependency>
 
-		<!-- JDK 15+: Nashorn removed; use GraalVM JS as replacement -->
+		<!-- JDK 15+: Nashorn removed; use GraalVM JS as replacement.
+		     Exclude nativeimage + word SDK: only used for GraalVM Native Image
+		     toolchain, not for runtime JS evaluation. -->
 		<dependency>
 			<groupId>org.graalvm.js</groupId>
 			<artifactId>js-scriptengine</artifactId>
 			<version>23.1.0</version>
+			<exclusions>
+				<exclusion>
+					<groupId>org.graalvm.sdk</groupId>
+					<artifactId>nativeimage</artifactId>
+				</exclusion>
+				<exclusion>
+					<groupId>org.graalvm.sdk</groupId>
+					<artifactId>word</artifactId>
+				</exclusion>
+			</exclusions>
 		</dependency>
 		<dependency>
 			<groupId>com.gdxsoft</groupId>
