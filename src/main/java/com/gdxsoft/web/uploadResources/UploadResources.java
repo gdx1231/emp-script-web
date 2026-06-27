@@ -2,6 +2,9 @@ package com.gdxsoft.web.uploadResources;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Set;
 
 import org.apache.commons.io.FilenameUtils;
 import org.slf4j.Logger;
@@ -12,10 +15,20 @@ import com.gdxsoft.easyweb.utils.UFile;
 import com.gdxsoft.easyweb.utils.UPath;
 
 public class UploadResources {
-	/**
-	 * 
-	 */
 	private static Logger LOGGER = LoggerFactory.getLogger(UploadResources.class);
+
+	/**
+	 * 禁止下载的文件扩展名（小写），可在运行时修改
+	 */
+	public static Set<String> BLOCKED_EXTENSIONS = new HashSet<>(Arrays.asList(
+			"exe", "bat", "cmd", "sh", "dmg", "java", "jsp", "class", "jar", "properties",
+			"php", "py", "rb", "pl", "asp", "aspx", "war", "cer"));
+
+	/**
+	 * 文本类型扩展名（小写），以文本方式读取而非二进制，可在运行时修改
+	 */
+	public static Set<String> TEXT_EXTENSIONS = new HashSet<>(Arrays.asList(
+			"htm", "html", "txt", "csv", "json", "css", "xml"));
 
 	/**
 	 * Get the EWA static files, js, css, images ...
@@ -63,17 +76,14 @@ public class UploadResources {
 			LOGGER.error("Blank ext or directory. {}", r.toString());
 			return r;
 		}
-		if (ext.equalsIgnoreCase("exe") || ext.equalsIgnoreCase("bat") || ext.equalsIgnoreCase("cmd")
-				|| ext.equalsIgnoreCase("sh") || ext.equalsIgnoreCase("dmg") || ext.equalsIgnoreCase("java")
-				|| ext.equalsIgnoreCase("jsp") || ext.equalsIgnoreCase("class") || ext.equalsIgnoreCase("jar")
-				|| ext.equalsIgnoreCase("properties") || ext.equalsIgnoreCase("js")) {
+		if (BLOCKED_EXTENSIONS.contains(ext.toLowerCase())) {
 			r.setPath(path);
 			r.setStatus(500);
 			LOGGER.error("Invalid ext. {}", r.toString());
 			return r;
 		}
 
-		if (path.indexOf("ewa_conf") >= 0 || path.indexOf("appliaction.yml") >= 0) {
+		if (path.indexOf("ewa_conf") >= 0 || path.indexOf("application.yml") >= 0) {
 			r.setPath(path);
 			r.setStatus(501);
 			LOGGER.error("Invalid file. {}", r.toString());
@@ -89,24 +99,10 @@ public class UploadResources {
 			LOGGER.debug(r.toString());
 			return r;
 		}
-		boolean binary = true;
-		String fileType = FileOut.MAP.getOrDefault(ext.toLowerCase(), "application/octet-stream");
+		String extLower = ext.toLowerCase();
+		String fileType = FileOut.MAP.getOrDefault(extLower, "application/octet-stream");
 		r.setType(fileType);
-		if (ext.equalsIgnoreCase("js")) {
-			binary = false;
-		} else if (ext.equalsIgnoreCase("htm") || ext.equalsIgnoreCase("html")) {
-			binary = false;
-		} else if (ext.equalsIgnoreCase("txt") || ext.equalsIgnoreCase("csv")) {
-			binary = false;
-		} else if (ext.equalsIgnoreCase("json")) {
-			binary = false;
-		} else if (ext.equalsIgnoreCase("css")) {
-			binary = false;
-		} else if (ext.equalsIgnoreCase("xml")) {
-			binary = false;
-		} else {
-			binary = fileType.indexOf("text/") == -1;
-		}
+		boolean binary = !TEXT_EXTENSIONS.contains(extLower) && fileType.indexOf("text/") == -1;
 		r.setBinary(binary);
 
 		try {
