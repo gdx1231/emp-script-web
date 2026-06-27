@@ -8,7 +8,7 @@ import com.gdxsoft.web.dao.SiteMainDao;
 import com.gdxsoft.web.dao.SiteNavCat;
 import com.gdxsoft.web.dao.SiteNavCatDao;
 
-import javax.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpServletResponse;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -43,7 +43,7 @@ public class Site {
 				lang = "zhcn";
 			}
 			// 取消用户的语言设定 APP_LANG
-			javax.servlet.http.Cookie ck = new javax.servlet.http.Cookie("APP_LANG", "");
+			jakarta.servlet.http.Cookie ck = new jakarta.servlet.http.Cookie("APP_LANG", "");
 			ck.setMaxAge(0);
 			ck.setPath("/");
 

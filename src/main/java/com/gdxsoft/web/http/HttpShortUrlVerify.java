@@ -1,7 +1,7 @@
 package com.gdxsoft.web.http;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 
 import com.gdxsoft.easyweb.script.RequestValue;
 import com.gdxsoft.web.shortUrl.ShortUrl;

@@ -6,13 +6,13 @@ import java.util.Calendar;
 import java.util.List;
 import java.util.Properties;
 
-import javax.mail.Folder;
-import javax.mail.Message;
-import javax.mail.MessagingException;
-import javax.mail.Session;
-import javax.mail.Store;
-import javax.mail.Flags.Flag;
-import javax.mail.internet.MimeMessage;
+import jakarta.mail.Folder;
+import jakarta.mail.Message;
+import jakarta.mail.MessagingException;
+import jakarta.mail.Session;
+import jakarta.mail.Store;
+import jakarta.mail.Flags.Flag;
+import jakarta.mail.internet.MimeMessage;
 
 import com.gdxsoft.easyweb.data.DTTable;
 import com.gdxsoft.easyweb.datasource.DataConnection;

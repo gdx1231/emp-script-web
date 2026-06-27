@@ -170,20 +170,28 @@
 	<dependencies>
 		<dependency>
 			<groupId>com.gdxsoft.easyweb</groupId>
-			<artifactId>emp-script-utils</artifactId>
-			<version>1.1.10-jdk17</version>
+			<artifactId>emp-script-utils-jdk17</artifactId>
+			<version>1.1.10</version>
 		</dependency>
 		<dependency>
 			<groupId>com.gdxsoft.easyweb</groupId>
-			<artifactId>emp-script</artifactId>
-			<version>1.1.10-jdk17</version>
+			<artifactId>emp-script-jdk17</artifactId>
+			<version>1.1.10</version>
 		</dependency>
 
-		<!-- JDK 11+: javax.activation removed from JDK (used by Outlook.java) -->
+		<!-- JDK 11+: javax.mail / javax.activation removed from JDK.
+		     Migrated Outlook.java and JobMailScan.java to jakarta.mail.
+		     com.sun.mail:jakarta.mail bundles API + impl; angus-activation
+		     is the standalone Jakarta Activation 2.x provider. -->
 		<dependency>
-			<groupId>com.sun.activation</groupId>
-			<artifactId>javax.activation</artifactId>
-			<version>1.2.0</version>
+			<groupId>com.sun.mail</groupId>
+			<artifactId>jakarta.mail</artifactId>
+			<version>2.0.1</version>
+		</dependency>
+		<dependency>
+			<groupId>org.eclipse.angus</groupId>
+			<artifactId>angus-activation</artifactId>
+			<version>2.0.2</version>
 		</dependency>
 
 		<!-- JDK 15+: Nashorn removed; use GraalVM JS as replacement -->
@@ -196,6 +204,15 @@
 			<groupId>com.gdxsoft</groupId>
 			<artifactId>weixin</artifactId>
 			<version>[1.0.0,]</version>
+			<!-- weixin:1.0.0 transitively depends on the old (non-jdk17)
+			     emp-script-utils coordinate with a [1.1.1,) range. We supply
+			     the jdk17 version directly above; exclude the bad transitive. -->
+			<exclusions>
+				<exclusion>
+					<groupId>com.gdxsoft.easyweb</groupId>
+					<artifactId>emp-script-utils</artifactId>
+				</exclusion>
+			</exclusions>
 		</dependency>
 		<!-- https://mvnrepository.com/artifact/org.mnode.ical4j/ical4j -->
 		<dependency>
@@ -256,21 +273,27 @@
 			<artifactId>core</artifactId>
 			<version>3.3.3</version>
 		</dependency>
-		<!-- https://mvnrepository.com/artifact/javax.servlet/javax.servlet-api -->
+		<!-- Jakarta Servlet API 5 (matches emp-script-jdk17 transitive jakarta.servlet:5.0.0) -->
 		<dependency>
-			<groupId>javax.servlet</groupId>
-			<artifactId>javax.servlet-api</artifactId>
-			<version>4.0.1</version>
+			<groupId>jakarta.servlet</groupId>
+			<artifactId>jakarta.servlet-api</artifactId>
+			<version>5.0.0</version>
 			<scope>provided</scope>
 		</dependency>
 
-		<!--
-		https://mvnrepository.com/artifact/javax.websocket/javax.websocket-api -->
+		<!-- Jakarta WebSocket API 2 (matches emp-script-jdk17 transitive jakarta.websocket:2.0.0) -->
 		<dependency>
-			<groupId>javax.websocket</groupId>
-			<artifactId>javax.websocket-api</artifactId>
-			<version>1.1</version>
+			<groupId>jakarta.websocket</groupId>
+			<artifactId>jakarta.websocket-api</artifactId>
+			<version>2.0.0</version>
 			<scope>provided</scope>
+		</dependency>
+
+		<!-- commons-exec: used by WeiXinMediaUtils (org.apache.commons.exec.*) -->
+		<dependency>
+			<groupId>org.apache.commons</groupId>
+			<artifactId>commons-exec</artifactId>
+			<version>1.5.0</version>
 		</dependency>
 
 		<!--

@@ -11,8 +11,8 @@ import com.gdxsoft.easyweb.datasource.DataConnection;
 import com.gdxsoft.easyweb.script.RequestValue;
 import com.gdxsoft.easyweb.utils.UFile;
 import com.gdxsoft.easyweb.utils.UPath;
-import javax.mail.*;
-import javax.mail.internet.MimeMessage;
+import jakarta.mail.*;
+import jakarta.mail.internet.MimeMessage;
 
 public class JobMailBounce extends JobBase {
 	private String MailBoxPath;

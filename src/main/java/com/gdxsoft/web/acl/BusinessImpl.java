@@ -35,7 +35,7 @@ public class BusinessImpl extends AclBase implements IAcl {
 			try {
 				loginUrl = Login.gotoLogin(rv, loginUrl);
 			} catch (Exception err) {
-				// Cannot invoke "javax.servlet.http.HttpServletRequest.getContextPath()"
+				// Cannot invoke "jakarta.servlet.http.HttpServletRequest.getContextPath()"
 				// because the return value of
 				// "com.gdxsoft.easyweb.script.RequestValue.getRequest()" is null
 				// 当webscoket调用 ewa时出错

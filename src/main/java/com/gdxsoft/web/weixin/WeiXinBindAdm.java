@@ -2,7 +2,7 @@ package com.gdxsoft.web.weixin;
 
 import java.net.URLEncoder;
 
-import javax.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpServletResponse;
 
 import org.json.JSONObject;
 import org.slf4j.Logger;

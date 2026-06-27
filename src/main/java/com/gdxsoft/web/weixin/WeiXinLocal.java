@@ -6,7 +6,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.Date;
 import java.util.HashMap;
 
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -34,7 +34,7 @@ public class WeiXinLocal extends WeiXinBase {
 	 * @return
 	 * @throws Exception
 	 */
-	public static String handleWxMessage(javax.servlet.http.HttpServletRequest request) throws Exception {
+	public static String handleWxMessage(jakarta.servlet.http.HttpServletRequest request) throws Exception {
 		/**
 		 * 用于微信验证 （服务器配置(已启用)） URL(服务器地址) http 所在配置页面
 		 * https://mp.weixin.qq.com/advanced/advanced?action=dev&t=advanced/dev&token=1790916964&lang=zh_CN
