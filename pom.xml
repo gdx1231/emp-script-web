@@ -5,7 +5,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>com.gdxsoft.easyweb</groupId>
 	<artifactId>emp-script-web-jdk17</artifactId>
-	<version>1.1.10-jdk17</version>
+	<version>1.1.10</version>
 	<name>Easy Web Appliaction Web</name>
 	<description>Web系统快速成型系统 - 模块部分</description>
 
