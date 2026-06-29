@@ -2,6 +2,8 @@ package com.gdxsoft.chatRoom.sdk;
 
 import org.apache.commons.lang3.StringUtils;
 import org.json.JSONObject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.gdxsoft.easyweb.script.restful.RestfulResult;
 import com.gdxsoft.easyweb.utils.UNet;
@@ -27,6 +29,8 @@ public class ClientSdk {
 
 		return rr;
 	}
+
+	private static final Logger LOGGER = LoggerFactory.getLogger(ClientSdk.class);
 
 	private String restfulRoot;
 	private String userToken;
@@ -55,6 +59,7 @@ public class ClientSdk {
 
 		UNet net = this.createNet();
 		String rst = net.doGet(url);
+		this.logNon200Warning(net, "GET", url, null);
 
 		RestfulResult<Object> rr = new RestfulResult<>();
 		rr.parse(rst);
@@ -65,10 +70,12 @@ public class ClientSdk {
 	public RestfulResult<Object> newMessage(long chatRomId, JSONObject msg) {
 		String path = "/chatRooms/" + chatRomId + "/topics";
 		String url = this.createUrl(path);
+		String body = msg.optJSONObject("body").toString();
 		url = this.attacheParameters(url);
 
 		UNet net = this.createNet();
-		String rst = net.doPost(url, msg.optJSONObject("body").toString());
+		String rst = net.doPost(url, body);
+		this.logNon200Warning(net, "POST", url, body);
 
 		RestfulResult<Object> rr = new RestfulResult<>();
 		rr.parse(rst);
@@ -78,7 +85,7 @@ public class ClientSdk {
 
 	/**
 	 * 删除房间帖子内容
-	 * 
+	 *
 	 * @param chatRomId 房间号
 	 * @param messageId 帖子号码
 	 * @return
@@ -90,6 +97,7 @@ public class ClientSdk {
 
 		UNet net = this.createNet();
 		String rst = net.doDelete(url);
+		this.logNon200Warning(net, "DELETE", url, null);
 
 		RestfulResult<Object> rr = new RestfulResult<>();
 		rr.parse(rst);
@@ -140,6 +148,7 @@ public class ClientSdk {
 
 		UNet net = this.createNet();
 		String rst = net.doGet(url);
+		this.logNon200Warning(net, "GET", url, null);
 
 		RestfulResult<Object> rr = new RestfulResult<>();
 		rr.parse(rst);
@@ -157,6 +166,7 @@ public class ClientSdk {
 
 		UNet net = this.createNet();
 		String rst = net.doGet(url);
+		this.logNon200Warning(net, "GET", url, null);
 
 		RestfulResult<Object> rr = new RestfulResult<>();
 		rr.parse(rst);
@@ -166,7 +176,7 @@ public class ClientSdk {
 
 	/**
 	 * 退出房间
-	 * 
+	 *
 	 * @param chatRomId
 	 * @return
 	 */
@@ -177,6 +187,7 @@ public class ClientSdk {
 
 		UNet net = this.createNet();
 		String rst = net.doDelete(url);
+		this.logNon200Warning(net, "DELETE", url, null);
 
 		RestfulResult<Object> rr = new RestfulResult<>();
 		rr.parse(rst);
@@ -203,6 +214,7 @@ public class ClientSdk {
 
 		UNet net = this.createNet();
 		String rst = net.doGet(url);
+		this.logNon200Warning(net, "GET", url, null);
 
 		RestfulResult<Object> rr = new RestfulResult<>();
 		rr.parse(rst);
@@ -212,7 +224,7 @@ public class ClientSdk {
 
 	/**
 	 * 跟新房间信息
-	 * 
+	 *
 	 * @param chatRoomId 房间号
 	 * @param msg        更新的内容 cht_rom_name,cht_rom_memo,cht_rom_owner
 	 * @return
@@ -222,8 +234,11 @@ public class ClientSdk {
 		String url = this.createUrl(path);
 		url = this.attacheParameters(url);
 
+		String body = msg.getJSONObject("body").toString();
+
 		UNet net = this.createNet();
-		String rst = net.doPut(url, msg.getJSONObject("body").toString());
+		String rst = net.doPut(url, body);
+		this.logNon200Warning(net, "PUT", url, body);
 
 		RestfulResult<Object> rr = new RestfulResult<>();
 		rr.parse(rst);
@@ -234,7 +249,7 @@ public class ClientSdk {
 
 	/**
 	 * 获取房间
-	 * 
+	 *
 	 * @param chatRomId 房间号
 	 * @param search    房间名称查询
 	 * @return
@@ -253,6 +268,7 @@ public class ClientSdk {
 		UNet net = this.createNet();
 		net.setIsShowLog(true);
 		String rst = net.doGet(url);
+		this.logNon200Warning(net, "GET", url, null);
 
 		RestfulResult<Object> rr = new RestfulResult<>();
 		rr.parse(rst);
@@ -262,7 +278,7 @@ public class ClientSdk {
 
 	/**
 	 * 添加用户到房间里
-	 * 
+	 *
 	 * @param ids
 	 * @return
 	 */
@@ -279,6 +295,7 @@ public class ClientSdk {
 		UNet net = this.createNet();
 		net.setIsShowLog(true);
 		String rst = net.postMsg(url, bodyContent);
+		this.logNon200Warning(net, "POST", url, bodyContent);
 
 		RestfulResult<Object> rr = new RestfulResult<>();
 		rr.parse(rst);
@@ -288,7 +305,7 @@ public class ClientSdk {
 
 	/**
 	 * 删除房间成员
-	 * 
+	 *
 	 * @param chatRoomId
 	 * @param deleteUserIds 删除的成员 userId的字符串
 	 * @return
@@ -306,6 +323,7 @@ public class ClientSdk {
 		UNet net = this.createNet();
 		net.setIsShowLog(true);
 		String rst = net.doDelete(url, bodyContent);
+		this.logNon200Warning(net, "DELETE", url, bodyContent);
 
 		RestfulResult<Object> rr = new RestfulResult<>();
 
@@ -320,7 +338,7 @@ public class ClientSdk {
 
 	/**
 	 * 用户创建房间
-	 * 
+	 *
 	 * @param ids
 	 * @return
 	 */
@@ -342,6 +360,7 @@ public class ClientSdk {
 		UNet net = this.createNet();
 		net.setIsShowLog(true);
 		String rst = net.postMsg(url, bodyContent);
+		this.logNon200Warning(net, "POST", url, bodyContent);
 
 		RestfulResult<Object> rr = new RestfulResult<>();
 		rr.parse(rst);
@@ -351,7 +370,7 @@ public class ClientSdk {
 
 	/**
 	 * 获取房间的帖子内容
-	 * 
+	 *
 	 * @param chatRomId   房间号
 	 * @param lastTopicId 最后一个帖子号码
 	 * @return
@@ -364,6 +383,7 @@ public class ClientSdk {
 
 		UNet net = this.createNet();
 		String rst = net.doGet(url);
+		this.logNon200Warning(net, "GET", url, null);
 
 		RestfulResult<Object> rr = new RestfulResult<>();
 		rr.parse(rst);
@@ -373,7 +393,7 @@ public class ClientSdk {
 
 	/**
 	 * 获取我的信息
-	 * 
+	 *
 	 * @return
 	 */
 	public RestfulResult<Object> myInfo() {
@@ -383,11 +403,48 @@ public class ClientSdk {
 
 		UNet net = this.createNet();
 		String rst = net.doGet(url);
+		this.logNon200Warning(net, "GET", url, null);
 
 		RestfulResult<Object> rr = new RestfulResult<>();
 		rr.parse(rst);
 
 		return rr;
+	}
+
+	/**
+	 * 当 HTTP 状态码不为 200 时，输出 WARN 日志和对应的 curl 命令
+	 *
+	 * @param net    UNet 实例
+	 * @param method HTTP 方法 (GET/POST/PUT/DELETE)
+	 * @param url    请求 URL
+	 * @param body   请求体（可为 null）
+	 */
+	private void logNon200Warning(UNet net, String method, String url, String body) {
+		int statusCode = net.getLastStatusCode();
+		if (statusCode == 200) {
+			return;
+		}
+		LOGGER.warn("HTTP status code {} for {} {}", statusCode, method, url);
+
+		StringBuilder curl = new StringBuilder();
+		curl.append("curl -X ").append(method).append(" '").append(url).append("'");
+
+		if (StringUtils.isNotBlank(this.userToken)) {
+			curl.append(" -H 'Authorization: ").append(this.userToken).append("'");
+		}
+		if (StringUtils.isNotBlank(fromIp)) {
+			curl.append(" -H 'X-Forwarded-For: ").append(fromIp).append("'");
+		}
+		if (StringUtils.isNotBlank(this.fromUserAgent)) {
+			curl.append(" -H 'User-Agent: ").append(this.fromUserAgent).append("'");
+		}
+		if (StringUtils.isNotBlank(body)) {
+			// 转义 body 中的单引号，安全拼接
+			String escaped = body.replace("'", "'\\''");
+			curl.append(" -d '").append(escaped).append("'");
+		}
+
+		LOGGER.warn("Curl: {}", curl);
 	}
 
 	private String createUrl(String path) {

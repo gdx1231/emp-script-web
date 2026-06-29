@@ -6,6 +6,8 @@ import java.util.concurrent.ConcurrentHashMap;
 import org.apache.commons.lang3.StringUtils;
 import org.json.JSONArray;
 import org.json.JSONObject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.gdxsoft.api.Auth;
 import com.gdxsoft.chatRoom.dao.ChatUser;
@@ -17,6 +19,7 @@ import com.gdxsoft.web.dao.WebUserDao;
 
 public class ServerSdk {
 	private static Map<String, Auth> AUTHS = new ConcurrentHashMap<>();
+	private static final Logger LOGGER = LoggerFactory.getLogger(ServerSdk.class);
 
 	public static ServerSdk getInstanceBySupId(int supId) throws Exception {
 		String restfulRoot = UPath.getInitPara("chat_restful_server_root");
@@ -95,7 +98,9 @@ public class ServerSdk {
 
 		UNet net = getNet();
 		String url = getApiPath("chatRooms/" + chatRoomId+"/topics");
-		String result = net.postMsg(url, body.toString());
+		String bodyStr = body.toString();
+		String result = net.postMsg(url, bodyStr);
+		this.logNon200Warning(net, "POST", url, bodyStr);
 		// System.out.println(result);
 
 		RestfulResult<Object> rr = new RestfulResult<>();
@@ -114,6 +119,36 @@ public class ServerSdk {
 
 	public String getErrorMessage() {
 		return this.errorMessage;
+	}
+
+	/**
+	 * 当 HTTP 状态码不为 200 时，输出 WARN 日志和对应的 curl 命令
+	 *
+	 * @param net    UNet 实例
+	 * @param method HTTP 方法 (GET/POST/PUT/DELETE)
+	 * @param url    请求 URL
+	 * @param body   请求体（可为 null）
+	 */
+	private void logNon200Warning(UNet net, String method, String url, String body) {
+		int statusCode = net.getLastStatusCode();
+		if (statusCode == 200) {
+			return;
+		}
+		LOGGER.warn("HTTP status code {} for {} {}", statusCode, method, url);
+
+		StringBuilder curl = new StringBuilder();
+		curl.append("curl -X ").append(method).append(" '").append(url).append("'");
+
+		if (StringUtils.isNotBlank(this.serverToken)) {
+			curl.append(" -H 'Authorization: Bearer ").append(this.serverToken).append("'");
+		}
+		if (StringUtils.isNotBlank(body)) {
+			// 转义 body 中的单引号，安全拼接
+			String escaped = body.replace("'", "'\\''");
+			curl.append(" -d '").append(escaped).append("'");
+		}
+
+		LOGGER.warn("Curl: {}", curl);
 	}
 
 	public String getApiPath(String path) {
@@ -140,6 +175,7 @@ public class ServerSdk {
 		UNet net = getNet();
 		String url = getApiPath("chatUsers/" + chatUserId + "/tokens");
 		String result = net.postMsg(url, "{}");
+		this.logNon200Warning(net, "POST", url, "{}");
 
 		System.out.println(result);
 
@@ -183,6 +219,7 @@ public class ServerSdk {
 		UNet net = getNet();
 		String url = getApiPath("chatUsers");
 		String result = net.postMsg(url, body);
+		this.logNon200Warning(net, "POST", url, body);
 
 		System.out.println(result);
 
@@ -208,6 +245,7 @@ public class ServerSdk {
 		url += "?cht_usr_ref=web_user.usr_id&cht_usr_ref_id=" + userId;
 
 		String result = net.doGet(url);
+		this.logNon200Warning(net, "GET", url, null);
 		int code = net.getLastStatusCode();
 
 		this.result = result;
@@ -245,10 +283,12 @@ public class ServerSdk {
 		body.put("cht_rom_name", roomName == null ? "" : roomName);
 		body.put("cht_rom_name_en", roomNameEn == null ? "" : roomNameEn);
 
-		System.out.println(body);
+		LOGGER.info("{}", body);
 
-		String result = net.postMsg(url, body.toString());
-		System.out.println(result);
+		String bodyStr = body.toString();
+		String result = net.postMsg(url, bodyStr);
+		this.logNon200Warning(net, "POST", url, bodyStr);
+		LOGGER.info("{}", result);
 
 		RestfulResult<Object> rr = new RestfulResult<>();
 		rr.parse(result);
@@ -270,6 +310,7 @@ public class ServerSdk {
 		url += "?EWA_IS_SPLIT_PAGE=no&ref=" + roomType + "&ref_id=" + chatUserId + "&cht_usr_id=" + chatUserId;
 
 		String result = net.doGet(url);
+		this.logNon200Warning(net, "GET", url, null);
 		int code = net.getLastStatusCode();
 
 		this.result = result;
