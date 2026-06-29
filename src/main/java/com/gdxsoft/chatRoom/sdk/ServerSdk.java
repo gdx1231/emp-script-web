@@ -136,19 +136,20 @@ public class ServerSdk {
 		}
 		LOGGER.warn("HTTP status code {} for {} {}", statusCode, method, url);
 
-		StringBuilder curl = new StringBuilder();
-		curl.append("curl -X ").append(method).append(" '").append(url).append("'");
+		java.util.List<String> parts = new java.util.ArrayList<>();
+		parts.add("curl -X " + method + " '" + url + "'");
 
 		if (StringUtils.isNotBlank(this.serverToken)) {
-			curl.append(" -H 'Authorization: Bearer ").append(this.serverToken).append("'");
+			parts.add("  -H 'Authorization: Bearer " + this.serverToken + "'");
 		}
 		if (StringUtils.isNotBlank(body)) {
 			// 转义 body 中的单引号，安全拼接
 			String escaped = body.replace("'", "'\\''");
-			curl.append(" -d '").append(escaped).append("'");
+			parts.add("  -d '" + escaped + "'");
 		}
 
-		LOGGER.warn("Curl: {}", curl);
+		String curlStr = String.join(" \\\n", parts);
+		LOGGER.warn("Curl:\n{}", curlStr);
 	}
 
 	public String getApiPath(String path) {

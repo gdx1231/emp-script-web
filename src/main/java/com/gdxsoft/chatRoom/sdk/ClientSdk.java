@@ -426,25 +426,26 @@ public class ClientSdk {
 		}
 		LOGGER.warn("HTTP status code {} for {} {}", statusCode, method, url);
 
-		StringBuilder curl = new StringBuilder();
-		curl.append("curl -X ").append(method).append(" '").append(url).append("'");
+		java.util.List<String> parts = new java.util.ArrayList<>();
+		parts.add("curl -X " + method + " '" + url + "'");
 
 		if (StringUtils.isNotBlank(this.userToken)) {
-			curl.append(" -H 'Authorization: ").append(this.userToken).append("'");
+			parts.add("  -H 'Authorization: " + this.userToken + "'");
 		}
 		if (StringUtils.isNotBlank(fromIp)) {
-			curl.append(" -H 'X-Forwarded-For: ").append(fromIp).append("'");
+			parts.add("  -H 'X-Forwarded-For: " + fromIp + "'");
 		}
 		if (StringUtils.isNotBlank(this.fromUserAgent)) {
-			curl.append(" -H 'User-Agent: ").append(this.fromUserAgent).append("'");
+			parts.add("  -H 'User-Agent: " + this.fromUserAgent + "'");
 		}
 		if (StringUtils.isNotBlank(body)) {
 			// 转义 body 中的单引号，安全拼接
 			String escaped = body.replace("'", "'\\''");
-			curl.append(" -d '").append(escaped).append("'");
+			parts.add("  -d '" + escaped + "'");
 		}
 
-		LOGGER.warn("Curl: {}", curl);
+		String curlStr = String.join(" \\\n", parts);
+		LOGGER.warn("Curl:\n{}", curlStr);
 	}
 
 	private String createUrl(String path) {
