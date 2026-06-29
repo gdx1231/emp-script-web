@@ -17,6 +17,7 @@ import com.gdxsoft.web.dao.SupMain;
 import com.gdxsoft.web.dao.SupMainDao;
 
 public class Auth {
+	private static final long DEF_LIFE_SECONDS = 7200; // 默认两个小时
 	private static String DEF_DatabaseName;
 
 	/**
@@ -72,7 +73,10 @@ public class Auth {
 		this.databaseName = DEF_DatabaseName;
 		this.connectName = DEF_ConnectName;
 	}
-
+	public Auth(String databaseName, String connectName) {
+		this.databaseName = databaseName;
+		this.connectName = connectName;
+	}
 	/**
 	 * Create a supply token (7200s)
 	 * 
@@ -80,18 +84,38 @@ public class Auth {
 	 * @return
 	 */
 	public boolean createJwtToken(int supId) {
-		long defLife = 7200; // 默认两个小时
-		return this.createJwtToken(supId, defLife);
+		return this.createJwtToken(supId, DEF_LIFE_SECONDS);
+	}
+	/**
+	 * Create a supply token for user (7200s)
+	 * 
+	 * @param supId
+	 * @param userId
+	 * @return
+	 */
+	public boolean createJwtTokenUser(int supId, long userId	) {
+		return this.createJwtTokenUser(supId, userId, DEF_LIFE_SECONDS);
+	}
+	/**
+	 * Create a supply token for user
+	 * 
+	 * @param supId
+	 * @param userId
+	 * @param lifeSeconds
+	 * @return
+	 */
+	public boolean createJwtTokenUser(int supId, long userId, long lifeSeconds) {
+		boolean rst = this.createJwtToken(supId, lifeSeconds);
+		if(rst) {
+			AuthUser au = new AuthUser();
+			au.setSupId(supId);
+			au.setUserId(userId);
+			au.saveToken(jwtToken, new Date(endTime));
+		}
+		
+		return rst;
 	}
 
-	private void setDaoDefaults(IClassDao<?> d1) {
-		if (StringUtils.isNotBlank(connectName)) {
-			d1.setConfigName(this.connectName);
-		}
-		if (StringUtils.isNotBlank(databaseName)) {
-			d1.setDatabase(databaseName);
-		}
-	}
 
 	/**
 	 * Create a supply token
@@ -102,13 +126,13 @@ public class Auth {
 	 */
 	public boolean createJwtToken(int supId, long lifeSeconds) {
 		RequestValue rv1 = new RequestValue();
-		rv1.addOrUpdateValue("sup_id", supId);
+		rv1.addOrUpdateValue("g_sup_id", supId);
 
 		SupMainDao d1 = new SupMainDao();
 		this.setDaoDefaults(d1);
 		d1.setRv(rv1);
 
-		ArrayList<SupMain> al1 = d1.getRecords("sup_id = @sup_id");
+		ArrayList<SupMain> al1 = d1.getRecords("sup_id = @g_sup_id");
 		if (al1.size() == 0) {
 			errorMessage = "NO supmain info with sup_id. (" + supId + ")";
 			return false;
@@ -139,6 +163,7 @@ public class Auth {
 			jwtToken = JwtUtils.createJwtToken(apiKey, apiSecret, lifeSeconds);
 			// 结束时间早10秒
 			endTime = System.currentTimeMillis() + (lifeSeconds - 10) * 1000;
+			
 			return true;
 		} catch (IllegalArgumentException e) {
 			errorMessage = e.getMessage();
@@ -239,6 +264,15 @@ public class Auth {
 		return true;
 	}
 
+	private void setDaoDefaults(IClassDao<?> d1) {
+		if (StringUtils.isNotBlank(connectName)) {
+			d1.setConfigName(this.connectName);
+		}
+		if (StringUtils.isNotBlank(databaseName)) {
+			d1.setDatabase(databaseName);
+		}
+	}
+	
 	public String getErrorMessage() {
 		return errorMessage;
 	}

@@ -1,6 +1,9 @@
 package com.gdxsoft.api;
 
+import java.util.Date;
+
 import com.gdxsoft.easyweb.data.DTTable;
+import com.gdxsoft.easyweb.datasource.DataConnection;
 import com.gdxsoft.easyweb.script.RequestValue;
 
 public class AuthUser {
@@ -9,8 +12,34 @@ public class AuthUser {
 	private int supId;
 	private String userName;
 
+	/**
+	 * 保存用户的 token 到数据库
+	 * 
+	 * @param token      用户的 token
+	 * @param expireTime token 的过期时间
+	 * @param rv1        请求值对象，用于传递参数
+	 */
+	public void saveToken(String token, Date expireTime) {
+		RequestValue rv1 = new RequestValue();
+		String sql = "insert into chat_user_token(cht_usr_id, cht_token, cht_token_expire, cht_token_issued,cht_token_ip,cht_token_ua,cht_token_sup_id)"
+				+ " values(@userId, @token.md5, @expireTime, @sys_date, @sys_remoteip, @sys_useragent, @g_sup_id)";
+		
+		rv1.addOrUpdateValue("userId", this.userId);
+		rv1.addOrUpdateValue("g_sup_id", this.supId);
+		rv1.addOrUpdateValue("token", token);
+		rv1.addOrUpdateValue("expireTime", expireTime, "date", 30);
+
+		DataConnection.updateAndClose(sql, "", rv1);
+	}
+
+	/**
+	 * 根据 token 加载用户信息
+	 * 
+	 * @param token 用户的 token
+	 * @return 如果加载成功返回 true，否则返回 false
+	 */
 	public boolean loadUser(String token) {
-		String sql = "select * from chat_user_token where cht_token=@token";
+		String sql = "select * from chat_user_token where cht_token=@token.md5";
 		RequestValue rv1 = new RequestValue();
 		rv1.addOrUpdateValue("token", token);
 
@@ -42,15 +71,14 @@ public class AuthUser {
 			}
 			this.userId = tb1.getCell(0, "cht_usr_id").toLong();
 			this.supId = tb1.getCell(0, "cht_usr_sup_id").toInt();
-			this.userName= tb1.getCell(0, "cht_usr_name").toString();
-			
+			this.userName = tb1.getCell(0, "cht_usr_name").toString();
+
 			return true;
 		} catch (Exception e) {
 			errorMessage = e.getLocalizedMessage();
 			return false;
 		}
 
-		
 	}
 
 	public String getErrorMessage() {

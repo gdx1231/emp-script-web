@@ -4,7 +4,9 @@
       "Bash(do *)",
       "Bash(then *)",
       "Bash(fi)",
-      "Bash(done)"
+      "Bash(done)",
+      "Read(//Users/admin/java/com.gdxsoft/**)",
+      "Bash(mvn *)"
     ]
   },
   "$version": 4
