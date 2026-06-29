@@ -421,7 +421,7 @@ public class ClientSdk {
 	 */
 	private void logNon200Warning(UNet net, String method, String url, String body) {
 		int statusCode = net.getLastStatusCode();
-		if (statusCode == 200) {
+		if (statusCode >= 200 && statusCode < 300) {
 			return;
 		}
 		LOGGER.warn("HTTP status code {} for {} {}", statusCode, method, url);
