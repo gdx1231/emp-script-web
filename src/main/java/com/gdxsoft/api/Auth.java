@@ -69,6 +69,10 @@ public class Auth {
 
 	private long endTime;
 
+	private String ip = "";
+	private String userAgent = "";
+	
+	
 	public Auth() {
 		this.databaseName = DEF_DatabaseName;
 		this.connectName = DEF_ConnectName;
@@ -110,6 +114,8 @@ public class Auth {
 			AuthUser au = new AuthUser();
 			au.setSupId(supId);
 			au.setUserId(userId);
+			au.setIp(this.ip);
+			au.setUserAgent(this.userAgent);
 			au.saveToken(jwtToken, new Date(endTime));
 		}
 		
@@ -328,6 +334,22 @@ public class Auth {
 
 	public void setConnectName(String connectName) {
 		this.connectName = connectName;
+	}
+
+	public String getIp() {
+		return ip;
+	}
+
+	public void setIp(String ip) {
+		this.ip = ip;
+	}
+
+	public String getUserAgent() {
+		return userAgent;
+	}
+
+	public void setUserAgent(String userAgent) {
+		this.userAgent = userAgent;
 	}
 
 }

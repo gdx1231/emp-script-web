@@ -1,0 +1,8 @@
+com/gdxsoft/web/message/email/OutlookTest.class
+TestResourceConfig.class
+TestWs.class
+com/gdxsoft/web/domain/DomainAliTest.class
+com/gdxsoft/message/sms/SmsAliImplTest.class
+TestThreads.class
+TestJWT.class
+Test.class
