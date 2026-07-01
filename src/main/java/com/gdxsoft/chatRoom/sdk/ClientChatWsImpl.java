@@ -115,6 +115,23 @@ public class ClientChatWsImpl extends Thread implements IHandleMsg {
 		this.client.setFromIp(this.socket.getRv().s("SYS_REMOTEIP"));
 		this.client.setFromUserAgent(this.socket.getRv().s("SYS_USER_AGENT"));
 
+		// 从 WebSocket 握手时解析的 HttpSession 获取用户身份（服务端设置，不可伪造）
+		long resolvedUserId = 0;
+		String userIdStr = this.socket.getRv().s("chat_user_id");
+		if (userIdStr != null && !userIdStr.isEmpty()) {
+			try {
+				resolvedUserId = Long.parseLong(userIdStr);
+			} catch (NumberFormatException e) {
+				LOGGER.warn("Invalid chat_user_id in session: {}", userIdStr);
+			}
+		}
+		LOGGER.info("WebSocket action={}, chat_user_id from session={}, resolvedUserId={}", 
+				this.action, userIdStr, resolvedUserId);
+		if (resolvedUserId > 0) {
+			this.client.setChatUserId(resolvedUserId);
+			this.socket.getRv().addOrUpdateValue("cht_usr_id", resolvedUserId);
+		}
+
 		// 提交的附加参数
 		if (command.has("parameters")) {
 			client.setParames(command.optString("parameters"));
@@ -418,19 +435,35 @@ public class ClientChatWsImpl extends Thread implements IHandleMsg {
 	 */
 	private JSONObject actionPost() {
 		this.chatRoomId = command.getLong("chatRoomId");
-		ClientChatUserGroup.addUserToTopicGroup(this.chatRoomId, socket.getUnid());
 
 		RestfulResult<Object> rst = client.newMessage(chatRoomId, command);
 
-		// 原始数据
 		if (!rst.isSuccess()) {
 			return rst.toJson();
 		}
 
-		// 返回的data数据
-		JSONObject result = new JSONObject(rst.getRawData().toString());
+		// 新帖子的 swid
+		JSONObject postResult = new JSONObject(rst.getRawData().toString());
+		long newTopicId = postResult.optLong("swid");
+
+		// 重新获取完整帖子数据用于广播（OnNew SQL 只返回 swid，不含内容）
+		RestfulResult<Object> topicsRst = client.getChatRoomTopics(chatRoomId, null);
+		JSONObject fullData = null;
+		if (topicsRst.isSuccess() && topicsRst.getRawData() != null) {
+			JSONArray list = new JSONArray(topicsRst.getRawData().toString());
+			for (int i = 0; i < list.length(); i++) {
+				JSONObject item = list.getJSONObject(i);
+				if (item.optLong("cht_id") == newTopicId) {
+					fullData = item;
+					break;
+				}
+			}
+		}
+
 		// 广播这条消息
-		this.boradRoomMessage(result, CHAT_BROAD_MSG_ID, false);
+		if (fullData != null) {
+			this.boradRoomMessage(fullData, CHAT_BROAD_MSG_ID, false);
+		}
 
 		JSONObject returnJson = new JSONObject(rst.getReturnResult());
 		return returnJson;
@@ -533,6 +566,8 @@ public class ClientChatWsImpl extends Thread implements IHandleMsg {
 		}
 		// null 表示第一次进入房间
 		if (lastTopicId == null) {
+			// 自动创建 ACL 权限（幂等，已存在不报错）
+			this.client.joinRoom(this.chatRoomId);
 			// 添加活动用户进入房间组
 			ClientChatUserGroup.addUserToTopicGroup(this.chatRoomId, socket.getUnid());
 		}

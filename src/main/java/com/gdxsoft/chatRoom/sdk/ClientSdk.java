@@ -37,6 +37,7 @@ public class ClientSdk {
 	private String parames;
 	private String fromIp; // 客户端来源地址 ipv4/ipv6
 	private String fromUserAgent; // 客户端浏览器UA
+	private long chatUserId; // JWT 认证时传递 chat user id
 
 	public ClientSdk(String restfulRoot, String userToken) {
 		this.restfulRoot = restfulRoot;
@@ -117,14 +118,36 @@ public class ClientSdk {
 	 * @return
 	 */
 	private String attacheParameters(String url) {
-		if (StringUtils.isBlank(this.parames)) {
+		return attacheParameters(url, true);
+	}
+
+	private String attacheParametersWithoutUserId(String url) {
+		return attacheParameters(url, false);
+	}
+
+	private String attacheParameters(String url, boolean includeUserId) {
+		// JWT 认证时，自动附加 cht_usr_id 供 JwtAcl 读取
+		String userIdPara = "";
+		if (includeUserId && this.chatUserId > 0) {
+			userIdPara = "cht_usr_id=" + this.chatUserId;
+		}
+
+		String allParams = "";
+		if (StringUtils.isNotBlank(this.parames)) {
+			allParams = this.parames;
+		}
+		if (StringUtils.isNotBlank(userIdPara)) {
+			allParams = StringUtils.isBlank(allParams) ? userIdPara : allParams + "&" + userIdPara;
+		}
+
+		if (StringUtils.isBlank(allParams)) {
 			return url;
 		}
 
 		if (url.indexOf("?") > 0) {
-			url += "&" + this.parames;
+			url += "&" + allParams;
 		} else {
-			url += "?" + this.parames;
+			url += "?" + allParams;
 		}
 
 		return url;
@@ -162,7 +185,8 @@ public class ClientSdk {
 		if (limits != null && limits > 0) {
 			url += "?ewa_pagesize=" + limits;
 		}
-		url = this.attacheParameters(url);
+		// members 端点不附加 cht_usr_id，否则 SQL 只返回自己
+		url = this.attacheParametersWithoutUserId(url);
 
 		UNet net = this.createNet();
 		String rst = net.doGet(url);
@@ -205,6 +229,33 @@ public class ClientSdk {
 		notication.append("cht_type", "notication");
 
 		return this.newMessage(chatRomId, notication);
+	}
+
+	/**
+	 * 加入房间（自动创建 ACL 权限，幂等调用，已存在不报错）。
+	 * 新用户进入房间时必须先调用此方法，否则无法查看帖子和发帖。
+	 *
+	 * @param chatRoomId 房间 ID
+	 * @return 操作结果
+	 */
+	public RestfulResult<Object> joinRoom(long chatRoomId) {
+		String path = "/chatRooms/" + chatRoomId + "/members";
+		String url = this.createUrl(path);
+		url = this.attacheParameters(url);
+
+		JSONObject body = new JSONObject();
+		body.put("cht_acl_master", "N");
+		body.put("cht_acl_top", "N");
+		String bodyContent = body.toString();
+
+		UNet net = this.createNet();
+		String rst = net.postMsg(url, bodyContent);
+		this.logNon200Warning(net, "POST", url, bodyContent);
+
+		RestfulResult<Object> rr = new RestfulResult<>();
+		rr.parse(rst);
+
+		return rr;
 	}
 
 	public RestfulResult<Object> getChatRoom(long chatRoomId) {
@@ -255,7 +306,7 @@ public class ClientSdk {
 	 * @return
 	 */
 	public RestfulResult<Object> getChatRooms(String search) {
-		String path = "/chatRooms/";
+		String path = "/chatRooms";
 		String url = this.createUrl(path);
 		if (StringUtils.isNotBlank(search)) {
 			UUrl uu = new UUrl(url);
@@ -508,6 +559,14 @@ public class ClientSdk {
 	 */
 	public void setFromUserAgent(String fromUserAgent) {
 		this.fromUserAgent = fromUserAgent;
+	}
+
+	public long getChatUserId() {
+		return chatUserId;
+	}
+
+	public void setChatUserId(long chatUserId) {
+		this.chatUserId = chatUserId;
 	}
 
 }
