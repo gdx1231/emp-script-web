@@ -115,21 +115,20 @@ public class ClientChatWsImpl extends Thread implements IHandleMsg {
 		this.client.setFromIp(this.socket.getRv().s("SYS_REMOTEIP"));
 		this.client.setFromUserAgent(this.socket.getRv().s("SYS_USER_AGENT"));
 
-		// 从 WebSocket 握手时解析的 HttpSession 获取用户身份（服务端设置，不可伪造）
+		// 从 WebSocket 握手时 JWT payload 提取的用户身份（RvConfigure 写入 RequestValue）
 		long resolvedUserId = 0;
-		String userIdStr = this.socket.getRv().s("chat_user_id");
+		String userIdStr = this.socket.getRv().s("cht_usr_id");
 		if (userIdStr != null && !userIdStr.isEmpty()) {
 			try {
 				resolvedUserId = Long.parseLong(userIdStr);
 			} catch (NumberFormatException e) {
-				LOGGER.warn("Invalid chat_user_id in session: {}", userIdStr);
+				LOGGER.warn("Invalid cht_usr_id in RequestValue: {}", userIdStr);
 			}
 		}
-		LOGGER.info("WebSocket action={}, chat_user_id from session={}, resolvedUserId={}", 
+		LOGGER.info("WebSocket action={}, cht_usr_id={}, resolvedUserId={}",
 				this.action, userIdStr, resolvedUserId);
 		if (resolvedUserId > 0) {
 			this.client.setChatUserId(resolvedUserId);
-			this.socket.getRv().addOrUpdateValue("cht_usr_id", resolvedUserId);
 		}
 
 		// 提交的附加参数
@@ -188,6 +187,10 @@ public class ClientChatWsImpl extends Thread implements IHandleMsg {
 
 		if ("delete".equalsIgnoreCase(this.action)) {
 			return this.actionDelete();
+		}
+		// 获取所有房间未读计数
+		if ("unreadCounts".equalsIgnoreCase(this.action)) {
+			return this.actionUnreadCounts();
 		}
 
 		return notImplementsAction();
@@ -429,8 +432,51 @@ public class ClientChatWsImpl extends Thread implements IHandleMsg {
 	}
 
 	/**
+	 * 获取用户所有房间的未读消息计数
+	 */
+	private JSONObject actionUnreadCounts() {
+		JSONObject result = new JSONObject();
+		result.put("METHOD", METHOD);
+		result.put("ACTION", this.action);
+		result.put("ID", this.command.optString("ID"));
+		try {
+			if (this.client.getChatUserId() <= 0) {
+				result.put("RST", false);
+				result.put("ERR", "User not identified");
+				return result;
+			}
+
+			// 走 EWA RESTful API（GET /ewa-api/chat-user/v1/unreads）
+			RestfulResult<Object> apiRst = this.client.getUnreadCounts();
+			if (!apiRst.isSuccess()) {
+				result.put("RST", false);
+				result.put("ERR", apiRst.getMessage());
+				return result;
+			}
+			Object rawData = apiRst.getData();
+			JSONArray data;
+			if (rawData instanceof JSONArray) {
+				data = (JSONArray) rawData;
+			} else if (rawData instanceof JSONObject) {
+				data = ((JSONObject) rawData).optJSONArray("DATA");
+				if (data == null) {
+					data = new JSONArray();
+				}
+			} else {
+				data = new JSONArray();
+			}
+			result.put("RST", true);
+			result.put("DATA", data);
+		} catch (Exception e) {
+			LOGGER.error("查询未读计数失败", e);
+			result.put("RST", false);
+			result.put("ERR", "查询未读计数失败: " + e.getMessage());
+		}
+		return result;
+	}
+
+	/**
 	 * 提交新帖子
-	 * 
 	 * @return
 	 */
 	private JSONObject actionPost() {
@@ -568,9 +614,9 @@ public class ClientChatWsImpl extends Thread implements IHandleMsg {
 		if (lastTopicId == null) {
 			// 自动创建 ACL 权限（幂等，已存在不报错）
 			this.client.joinRoom(this.chatRoomId);
-			// 添加活动用户进入房间组
-			ClientChatUserGroup.addUserToTopicGroup(this.chatRoomId, socket.getUnid());
 		}
+		// 无论是否第一次进入，都加入广播组
+		ClientChatUserGroup.addUserToTopicGroup(this.chatRoomId, socket.getUnid());
 
 		RestfulResult<Object> rst = client.getChatRoomTopics(chatRoomId, lastTopicId);
 		// 原始数据
@@ -578,9 +624,14 @@ public class ClientChatWsImpl extends Thread implements IHandleMsg {
 			return rst.toJson();
 		}
 
+		// 更新 cht_acl_last_id（记录用户在该房间看到的最新消息 ID）
+		// updateLastSeenTopicId(rst);
+
 		JSONObject returnJson = new JSONObject(rst.getReturnResult());
 		return returnJson;
 	}
+
+	 
 
 	/**
 	 * 未实现的方法

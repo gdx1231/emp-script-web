@@ -45,8 +45,28 @@ public class ClientSdk {
 	}
 
 	/**
+	 * 获取所有房间未读消息计数
+	 *
+	 * @return 每个房间的 {cht_rom_id, unread} 列表
+	 */
+	public RestfulResult<Object> getUnreadCounts() {
+		String path = "/unreads";
+		String url = this.createUrl(path);
+		url = this.attacheParameters(url);
+
+		UNet net = this.createNet();
+		String rst = net.doGet(url);
+		this.logNon200Warning(net, "GET", url, null);
+
+		RestfulResult<Object> rr = new RestfulResult<>();
+		rr.parse(rst);
+
+		return rr;
+	}
+
+	/**
 	 * 获取我的好友关系
-	 * 
+	 *
 	 * @param relativeRoomId 关联在房间号码
 	 * @return
 	 */

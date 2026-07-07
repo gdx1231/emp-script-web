@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.Date;
 
 import org.apache.commons.lang3.StringUtils;
+import org.json.JSONObject;
 
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;
@@ -88,7 +89,9 @@ public class Auth {
 	 * @return
 	 */
 	public boolean createJwtToken(int supId) {
-		return this.createJwtToken(supId, DEF_LIFE_SECONDS);
+		JSONObject payload = new JSONObject();
+		payload.put("sup_id", supId);
+		return this.createJwtToken(supId, DEF_LIFE_SECONDS, payload);
 	}
 	/**
 	 * Create a supply token for user (7200s)
@@ -109,7 +112,10 @@ public class Auth {
 	 * @return
 	 */
 	public boolean createJwtTokenUser(int supId, long userId, long lifeSeconds) {
-		boolean rst = this.createJwtToken(supId, lifeSeconds);
+		JSONObject payload = new JSONObject();
+		payload.put("sup_id", supId);
+		payload.put("cht_usr_id", userId);
+		boolean rst = this.createJwtToken(supId, lifeSeconds, payload);
 		if(rst) {
 			AuthUser au = new AuthUser();
 			au.setSupId(supId);
@@ -118,19 +124,31 @@ public class Auth {
 			au.setUserAgent(this.userAgent);
 			au.saveToken(jwtToken, new Date(endTime));
 		}
-		
+
 		return rst;
 	}
 
 
 	/**
 	 * Create a supply token
-	 * 
+	 *
 	 * @param supId
 	 * @param lifeSeconds
 	 * @return
 	 */
 	public boolean createJwtToken(int supId, long lifeSeconds) {
+		return this.createJwtToken(supId, lifeSeconds, null);
+	}
+
+	/**
+	 * Create a supply token with extra payload claims
+	 *
+	 * @param supId
+	 * @param lifeSeconds
+	 * @param payload 额外的 claims（如 sup_id, cht_usr_id 等）
+	 * @return
+	 */
+	public boolean createJwtToken(int supId, long lifeSeconds, JSONObject payload) {
 		RequestValue rv1 = new RequestValue();
 		rv1.addOrUpdateValue("g_sup_id", supId);
 
@@ -166,7 +184,7 @@ public class Auth {
 		String apiSecret = this.apiMain.getApiSignCode();
 
 		try {
-			jwtToken = JwtUtils.createJwtToken(apiKey, apiSecret, lifeSeconds);
+			jwtToken = JwtUtils.createJwtToken(apiKey, apiSecret, lifeSeconds, payload);
 			// 结束时间早10秒
 			endTime = System.currentTimeMillis() + (lifeSeconds - 10) * 1000;
 			
