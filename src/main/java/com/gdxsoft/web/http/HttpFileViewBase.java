@@ -324,18 +324,26 @@ public class HttpFileViewBase {
 		String fileType = FileOut.MAP.getOrDefault(ext.toLowerCase(), "");
 
 		UUrl uu = new UUrl(request);
-		uu.add("inline", "1");
-		String url = uu.getUrl(true);
 		if (HttpFileViewBase.isDocuement(ext)) {
+			uu.add("inline", "1");
+			String url = uu.getUrl(true);
 			// return this.viewDocument(file, ext, title, url, skipHeader);
 			return this.viewDocumentAsPdf(file, ext, title, url, skipHeader);
 		} else if (HttpFileViewBase.isImage(ext)) {
+			uu.add("inline", "1");
+			String url = uu.getUrl(true);
 			return this.viewImage(title, url, skipHeader);
 		} else if (HttpFileViewBase.isVideo(ext)) { // 视频
+			uu.add("inline", "1");
+			String url = uu.getUrl(true);
 			return this.viewVideo(title, url, skipHeader);
 		} else if (HttpFileViewBase.isPdf(ext)) {
+			uu.add("inline", "1");
+			String url = uu.getUrl(true);
 			return this.viewPdf(title, url, skipHeader);
 		} else if (HttpFileViewBase.isAudio(ext)) { // 音频
+			uu.add("inline", "1");
+			String url = uu.getUrl(true);
 			return this.viewAudio(title, url, skipHeader);
 		} else { // 下载文件
 			if (!allowDownload) {
@@ -612,17 +620,17 @@ public class HttpFileViewBase {
 
 		Elements eles = doc.getElementsByTag("body");
 		String html1 = eles.get(0).html();
-		StringBuilder sbHtml = new StringBuilder( this.createHtml(title));
+		StringBuilder sbHtml = new StringBuilder(this.createHtml(title));
 		sbHtml.append("<div class='oa-doc-view EWA_TABLE' id='doc-view' style='width:760px;margin:0 auto'>");
 		sbHtml.append(html1);
 		sbHtml.append("</div>");
-		//sbHtml.append(skipHeader ? "" : "</div></body></html>");
+		// sbHtml.append(skipHeader ? "" : "</div></body></html>");
 		sbHtml.append(createFooterHtml());
 		return sbHtml.toString();
 	}
 
 	public String viewImage(String title, String url, boolean skipHeader) {
-		StringBuilder sbHtml = new StringBuilder( this.createHtml(title));
+		StringBuilder sbHtml = new StringBuilder(this.createHtml(title));
 
 		sbHtml.append("<style type=\"text/css\">\n");
 		sbHtml.append("body {\n");
@@ -793,14 +801,12 @@ public class HttpFileViewBase {
 		if (!this.skipHeader) {
 			sbHtml.append("</body></html>");
 		}
-		
 
 		return sbHtml.toString();
 	}
-	
 
 	public String viewVideo(String title, String url, boolean skipHeader) {
-		StringBuilder sbHtml = new StringBuilder(  this.createHtml(title));
+		StringBuilder sbHtml = new StringBuilder(this.createHtml(title));
 		sbHtml.append("<div class='file-view-vod EWA_TABLE' id='doc-view'>");
 		sbHtml.append("<div style='text-align:center'><video src=\"" + url + "\" controls=\"controls\"></video></div>");
 		sbHtml.append("</div>");
@@ -809,7 +815,7 @@ public class HttpFileViewBase {
 	}
 
 	public String viewAudio(String title, String url, boolean skipHeader) {
-		StringBuilder sbHtml = new StringBuilder(  this.createHtml(title));
+		StringBuilder sbHtml = new StringBuilder(this.createHtml(title));
 		sbHtml.append("<div class='file-view-audio EWA_TABLE' id='audio-view'>");
 		sbHtml.append("<div style='text-align:center'><audio src=\"" + url + "\" controls=\"controls\"></audio></div>");
 		sbHtml.append("</div>");
@@ -818,7 +824,8 @@ public class HttpFileViewBase {
 	}
 
 	public String viewPdf(String title, String url, boolean skipHeader) {
-		StringBuilder sbHtml = new StringBuilder( this.createHtml(title));
+		// url+="#toolbar=0"; // 隐藏 PDF 查看器顶部/底部工具栏
+		StringBuilder sbHtml = new StringBuilder(this.createHtml(title));
 		String id = "pdf_" + System.currentTimeMillis();
 
 		sbHtml.append("<div id='" + id + "' style='height:100%; overflow:hidden'>");
@@ -826,7 +833,8 @@ public class HttpFileViewBase {
 		String embed = "<embed src=\"" + url + "\" class=\"pdfobject\" type=\"application/pdf\" title=\""
 				+ Utils.textToInputValue(title) + "\" style=\"overflow: auto; width: 100%; height: 100%;\">";
 		// firefox pdf.js viewer.html?file=xxx.pdf
-		String u = this.pdfJs + (this.pdfJs.indexOf("?") > 0 ? "&" : "?") + "file=" + Utils.textToUrl(url);
+		String u = this.pdfJs + (this.pdfJs.indexOf("?") > 0 ? "&" : "?") + "file=" + Utils.textToUrl(url)
+			+"&name="+Utils.textToUrl(title);
 		String pdfJs = "<iframe id=\"fra_pdf\" height=\"100%\" frameborder=\"0\" width=\"100%\" src=\"" + u
 				+ "\"></iframe>";
 		sbHtml.append("<script>(function(){");
@@ -885,14 +893,14 @@ public class HttpFileViewBase {
 
 	public String createHtml(String title) {
 		StringBuilder sb = new StringBuilder();
-		if(this.skipHeader) {
+		if (this.skipHeader) {
 			if (this.htmlTop != null) {
 				sb.append(this.htmlTop);
 			}
-			
+
 			return sb.toString();
 		}
-		
+
 		sb.append("<!DOCTYPE HTML>\n");
 		sb.append("<html>\n");
 		sb.append("<head>\n");
