@@ -5,9 +5,9 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>com.gdxsoft.easyweb</groupId>
 	<artifactId>emp-script-web</artifactId>
-	<version>1.1.10</version>
+	<version>1.1.12</version>
 	<name>Easy Web Appliaction Web</name>
-	<description>Web系统快速成型系统 - 模块部分</description>
+	<description>Shared business module library of the EWA (Easy Web Application) ecosystem - authentication, JWT and ACL, document management, file preview and upload, QR code and short URL, WeChat/mini-program/App helpers, messaging, task scheduling and generic DAO/CRUD</description>
 
 	<developers>
 		<developer>
@@ -171,12 +171,12 @@
 		<dependency>
 			<groupId>com.gdxsoft.easyweb</groupId>
 			<artifactId>emp-script-utils</artifactId>
-			<version>1.1.10</version>
+			<version>1.1.12</version>
 		</dependency>
 		<dependency>
 			<groupId>com.gdxsoft.easyweb</groupId>
 			<artifactId>emp-script</artifactId>
-			<version>1.1.10</version>
+			<version>1.1.12</version>
 		</dependency>
 		<dependency>
 			<groupId>com.gdxsoft</groupId>
