@@ -2,11 +2,6 @@ package com.gdxsoft.web.log;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicInteger;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -64,33 +59,11 @@ public class EwaScriptLog extends LogBase implements ILog {
 	private static Logger LOGGER = LoggerFactory.getLogger(EwaScriptLog.class);
 
 	/**
-	 * 写入数据库的细节长度最大值，默认4k，和表 log_detail.det_description对应
-	 */
-	public static final int MAX_DETAIL_LENGTH = 4096;
-	/**
-	 * 写入数据库的细节长度，默认4k，设为0则不限制，和表 log_detail.det_description对应
-	 */
-	public static final AtomicInteger DETAIL_MAX_SIZE_ATOM = new AtomicInteger(MAX_DETAIL_LENGTH);
-	/**
-	 * 写入日志数据库的连接池名称
-	 */
-	public static String CONN_CONFIG_NAME = "";
-	/**
-	 * 日志写入线程池核心线程数
-	 */
-	public static int EXECUTOR_CORE_POOL_SIZE = 2;
-	/**
-	 * 日志写入任务队列容量，超出后丢弃并打 warn 日志。
-	 * 不宜过大：每个任务持有一个 DataConnection（含 JDBC 连接），
-	 * 队列深度应 ≤ 数据库连接池大小。
-	 */
-	public static int EXECUTOR_QUEUE_CAPACITY = 33;
-	/**
 	 * 写入数据库的细节长度，默认4k，设为0则不限制，和表 log_detail.det_description对应
 	 * 
 	 * @deprecated Use DETAIL_MAX_SIZE_ATOM
 	 */
-	public static int DETAIL_MAX_SIZE = MAX_DETAIL_LENGTH; // 兼容旧代码
+	public static int DETAIL_MAX_SIZE = LogBase.getDetailMaxSize(); // 兼容旧代码
 
 	private static final String SQL_MAIN;
 	private static final String SQL_DETAIL;
@@ -124,32 +97,141 @@ public class EwaScriptLog extends LogBase implements ILog {
 	 * </ul>
 	 */
 	public static void setDetailUnlimitSize() {
-		setDetailMaxSize(0);
+		LogBase.setDetailUnlimitSize();
 	}
 
 	public static void setDetailMaxSize(int size) {
-		DETAIL_MAX_SIZE_ATOM.set(size);
+		LogBase.setDetailMaxSize(size);
 	}
 
-	private static final ExecutorService EXECUTOR = new ThreadPoolExecutor(
-			EXECUTOR_CORE_POOL_SIZE, Math.max(EXECUTOR_CORE_POOL_SIZE, Runtime.getRuntime().availableProcessors()),
-			60L, TimeUnit.SECONDS,
-			new LinkedBlockingQueue<>(EXECUTOR_QUEUE_CAPACITY),
-			r -> {
-				Thread t = new Thread(r, "ewa-script-log-writer");
-				t.setDaemon(true);
-				return t;
-			},
-			(r, executor) -> LOGGER.warn("Log queue full, task dropped. Queue size: {}", executor.getQueue().size()));
+	public static void setConnConfigName(String name) {
+		LogBase.setConnConfigName(name);
+	}
+
+	public static String getConnConfigName() {
+		return LogBase.getConnConfigName();
+	}
+
+	/**
+	 * 设置日志写入线程池的核心线程数，运行时动态生效。
+	 *
+	 * @param size 核心线程数
+	 */
+	public static void setExecutorCorePoolSize(int size) {
+		LogBase.setExecutorCorePoolSize(size);
+	}
+
+	/**
+	 * 获取日志写入线程池的核心线程数。
+	 *
+	 * @return 核心线程数
+	 */
+	public static int getExecutorCorePoolSize() {
+		return LogBase.getDetailMaxSize();
+	}
+
+	/**
+	 * 设置日志写入任务队列容量。
+	 * <p>
+	 * 注意：队列容量在 {@code EXECUTOR} 初始化时固定，运行时修改仅更新原子值， 不影响已创建的
+	 * {@code LinkedBlockingQueue} 的实际容量。
+	 *
+	 * @param capacity 队列容量
+	 */
+	public static void setExecutorQueueCapacity(int capacity) {
+		LogBase.setExecutorQueueCapacity(capacity);
+	}
+
+	/**
+	 * 获取日志写入任务队列容量（配置值）。
+	 *
+	 * @return 队列容量配置值
+	 */
+	public static int getExecutorQueueCapacity() {
+		return LogBase.getExecutorQueueCapacity();
+	}
 
 	@Override
 	public void write() {
-		RequestValue rv = new RequestValue();
-		DataConnection cnn = new DataConnection(CONN_CONFIG_NAME, rv);
-		List<String> sqls = this.preprocessingData(cnn, rv);
+		Log log = super.getLog();
+		String logMsg = log.getMsg();
+		if (logMsg == null  ) {
+			return;
+		}
 
+		// 在请求线程中提取必要数据，避免持有整个 HtmlCreator 引用导致内存占用过高
+		final String description = log.getDescription();
+		final String ip = log.getIp();
+		final String xmlName = UserConfig.filterXmlNameByJdbc(log.getXmlName());
+		final String itemName = log.getItemName();
+		final Long runTime = log.getRunTime();
+		final String actionName = log.getActionName();
+		final String url = log.getUrl();
+		final String refererUrl = log.getRefererUrl();
+		final String queryAll = super.getCreator().getRequestValue().s("EWA_QUERY_ALL");
+		final String admId = super.getCreator().getRequestValue().s("g_adm_id");
+		final String supId = super.getCreator().getRequestValue().s("g_sup_id");
+		final String userAgent = super.getCreator().getRequestValue().s(RequestValue.SYS_USER_AGENT);
+
+		// 提取 DebugFrames 数据到数组（只保存必要字段，不持有对象引用）
+		DebugFrames frames = super.getCreator().getDebugFrames();
+		final long startTime = frames.getCurrentTime();
+		final int frameCount = frames.size();
+		final long[] frameTimes = new long[frameCount];
+		final String[] frameEvents = new String[frameCount];
+		final String[] frameDescriptions = new String[frameCount];
+		for (int i = 0; i < frameCount; i++) {
+			DebugFrame df = frames.get(i);
+			frameTimes[i] = df.getCurrentTime();
+			frameEvents[i] = df.getEventName();
+			frameDescriptions[i] = df.getDesscription();
+		}
+		final int maxSize = LogBase.getDetailMaxSize();
 		EXECUTOR.execute(() -> {
+			RequestValue rv = new RequestValue();
+			rv.addValueByTruncate("__tmp_LOG_QUERIES", queryAll, 2000);
+			rv.addValueByTruncate("__tmp_LOG_DES", description, 200);
+			rv.addValueByTruncate("__tmp_LOG_MSG", logMsg, 4096);
+			rv.addValue("__tmp_LOG_IP", ip);
+			rv.addValueByTruncate("__tmp_LOG_XMLNAME", xmlName, 200);
+			rv.addValueByTruncate("__tmp_LOG_ITEMNAME", itemName, 200);
+			rv.addValue("__tmp_LOG_RUNTIME", runTime);
+			rv.addValueByTruncate("__tmp_LOG_ACTION", actionName, 233);
+			rv.addValueByTruncate("__tmp_LOG_URL", url, 1500);
+			rv.addValueByTruncate("__tmp_LOG_REFERER", refererUrl, 2000);
+			rv.addOrUpdateValue("__tmp_g_adm_id", admId);
+			rv.addOrUpdateValue("__tmp_g_sup_id", supId);
+			rv.addValueByTruncate("__tmp_log_ua", userAgent, 2000);
+
+			DataConnection cnn = new DataConnection(LogBase.getConnConfigName(), rv);
+			
+			long prevTime = startTime;
 			try {
+				List<String> sqls = new ArrayList<>();
+				for (int i = 0; i < frameCount; i++) {
+					StringBuilder sb2 = new StringBuilder();
+					sb2.append(",").append(i);
+
+					long runMs = frameTimes[i] - prevTime;
+					prevTime = frameTimes[i];
+					sb2.append(",").append(runMs);
+
+					long totalMs = frameTimes[i] - startTime;
+					sb2.append(",").append(totalMs);
+
+					sb2.append(",").append(cnn.sqlParameterStringExp(frameEvents[i]));
+
+					String des = frameDescriptions[i];
+
+					if (maxSize > 0 && des.length() > maxSize) {
+						des = des.substring(0, maxSize);
+					}
+
+					sb2.append(",").append(cnn.sqlParameterStringExp(des));
+					sb2.append(")");
+					sqls.add(sb2.toString());
+				}
+
 				this.writeToLog(cnn, sqls);
 			} catch (Exception err) {
 				LOGGER.error(err.getMessage());
@@ -159,78 +241,7 @@ public class EwaScriptLog extends LogBase implements ILog {
 		});
 	}
 
-	/**
-	 * 预处理数据
-	 *
-	 * @param cnn
-	 * @param rv
-	 * @return SQL detail list
-	 */
-	private List<String> preprocessingData(DataConnection cnn, RequestValue rv) {
-		Log log = super.getLog();
-		String logMsg = log.getMsg();
-		if (logMsg == null || logMsg.trim().length() == 0) {
-			// return;
-		}
-		long startTime = super.getCreator().getDebugFrames().getCurrentTime();
-
-		// 查询字符串
-		String EWA_QUERY_ALL = super.getCreator().getRequestValue().s("EWA_QUERY_ALL");
-		rv.addValueByTruncate("__tmp_LOG_QUERIES", EWA_QUERY_ALL, 2000);
-
-		rv.addValueByTruncate("__tmp_LOG_DES", log.getDescription(), 200);
-		rv.addValueByTruncate("__tmp_LOG_MSG", logMsg, 4096);
-		rv.addValue("__tmp_LOG_IP", log.getIp());
-
-		rv.addValueByTruncate("__tmp_LOG_XMLNAME", UserConfig.filterXmlNameByJdbc(log.getXmlName()), 200);
-		rv.addValueByTruncate("__tmp_LOG_ITEMNAME", log.getItemName(), 200);
-
-		rv.addValue("__tmp_LOG_RUNTIME", log.getRunTime());
-
-		rv.addValueByTruncate("__tmp_LOG_ACTION", log.getActionName(), 233);
-		rv.addValueByTruncate("__tmp_LOG_URL", log.getUrl(), 1500);
-		rv.addValueByTruncate("__tmp_LOG_REFERER", log.getRefererUrl(), 2000);
-
-		rv.addOrUpdateValue("__tmp_g_adm_id", super.getCreator().getRequestValue().s("g_adm_id"));
-		rv.addOrUpdateValue("__tmp_g_sup_id", super.getCreator().getRequestValue().s("g_sup_id"));
-		// user agent
-		rv.addValueByTruncate("__tmp_log_ua", super.getCreator().getRequestValue().s(RequestValue.SYS_USER_AGENT),
-				2000);
-
-		long prevTime = startTime;
-		List<String> sqls = new ArrayList<>();
-		DebugFrames frames = super.getCreator().getDebugFrames();
-		for (int i = 0; i < frames.size(); i++) {
-			DebugFrame df = frames.get(i);
-			StringBuilder sb2 = new StringBuilder();
-			// 不包含id，后面处理
-			sb2.append(",").append(i);
-
-			long runMs = df.getCurrentTime() - prevTime;
-			prevTime = df.getCurrentTime();
-			sb2.append(",").append(runMs);
-
-			long totalMs = df.getCurrentTime() - startTime;
-			sb2.append(",").append(totalMs);
-
-			sb2.append(",").append(cnn.sqlParameterStringExp(df.getEventName()));
-
-			String des = df.getDesscription();
-			// 限制细节长度
-			int maxSize = DETAIL_MAX_SIZE_ATOM.get();
-			if (maxSize > 0 && des.length() > maxSize) {
-				des = des.substring(0, maxSize);
-			}
-
-			sb2.append(",").append(cnn.sqlParameterStringExp(des));
-			sb2.append(")");
-			sqls.add(sb2.toString());
-		}
-
-		return sqls;
-	}
-
-	public void writeToLog(DataConnection cnn, List<String> sqls) {
+	private void writeToLog(DataConnection cnn, List<String> sqls) {
 		Object autoInc = cnn.executeUpdateReturnAutoIncrementObject(SQL_MAIN);
 		List<String> sqls1 = new ArrayList<>();
 
