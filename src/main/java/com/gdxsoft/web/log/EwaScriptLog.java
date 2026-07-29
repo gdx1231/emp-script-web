@@ -127,7 +127,7 @@ public class EwaScriptLog extends LogBase implements ILog {
 	 * @return 核心线程数
 	 */
 	public static int getExecutorCorePoolSize() {
-		return LogBase.getDetailMaxSize();
+		return LogBase.getExecutorCorePoolSize();
 	}
 
 	/**
