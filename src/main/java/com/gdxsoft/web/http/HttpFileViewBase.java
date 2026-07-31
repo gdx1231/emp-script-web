@@ -22,6 +22,7 @@ import com.gdxsoft.easyweb.utils.UFile;
 import com.gdxsoft.easyweb.utils.UImages;
 import com.gdxsoft.easyweb.utils.UPath;
 import com.gdxsoft.easyweb.utils.UUrl;
+import com.gdxsoft.easyweb.utils.UVideo;
 import com.gdxsoft.easyweb.utils.Utils;
 import com.gdxsoft.easyweb.utils.fileConvert.File2Html;
 import com.gdxsoft.easyweb.utils.fileConvert.File2Pdf;
@@ -67,6 +68,11 @@ public class HttpFileViewBase {
 	public final static String INLINE = "inline";
 
 	/**
+	 * 视频封面
+	 */
+	public final static String COVER = "cover";
+
+	/**
 	 * 缩略图
 	 */
 	public final static String SMALL = "SMALL";
@@ -74,6 +80,8 @@ public class HttpFileViewBase {
 	 * 缩略图，错误的拼写，兼容用
 	 */
 	public final static String SMAILL = "SMAILL";
+
+	public final static Dimension SMALL_SIZE = new Dimension(128, 128);
 
 	/**
 	 * 数据不存在消息
@@ -240,6 +248,7 @@ public class HttpFileViewBase {
 	private boolean small; // 是否为缩略图
 	private boolean download; // 是否为下载模式
 	private boolean inline; // 是否为inline模式
+	private boolean videoCover; // 是否为视频封面
 
 	private boolean supportAvif = false;
 	private boolean supportWebp = true;
@@ -262,10 +271,14 @@ public class HttpFileViewBase {
 
 	public void initParameters() {
 		small = rv.s("SMAILL") != null || rv.s("SMALL") != null;
+		if (small) {
+			this.resize = SMALL_SIZE;
+		}
 		skipHeader = rv.s(FrameParameters.EWA_APP) != null || rv.s(FrameParameters.EWA_AJAX) != null;
 		en = rv.isEn();
 		this.download = rv.s(DOWNLOAD) != null || rv.s(DOWNLOAD_FILE) != null;
 		this.inline = rv.s(INLINE) != null;
+		this.videoCover = rv.s(COVER) != null;
 
 		if (rv.isNotBlank(RESIZE)) {
 			resize = UImages.parseSize(rv.s(RESIZE));
@@ -290,6 +303,10 @@ public class HttpFileViewBase {
 		if (this.resize != null && isImage(ext) && !small) {
 			File resizedFile = this.createResized(file, resize.width, resize.height, 70);
 			file = resizedFile;
+		}
+		if (this.isVideoCover() && isVideo(ext)) {
+			// 输出视频封面图片
+			return this.outputVideoCover(file);
 		}
 		if (this.isDownload()) {
 			if (!allowDownload) {
@@ -364,7 +381,7 @@ public class HttpFileViewBase {
 		// EmpScriptV2 静态文件默认目录
 		String emp = UPath.getEmpScriptV2Path();
 		if (HttpFileViewBase.isImage(ext)) {
-			File thumbnail = this.createResized(file, 128, 128, 71);
+			File thumbnail = this.createResized(file, SMALL_SIZE.width, SMALL_SIZE.height, 71);
 			if (thumbnail == null) {
 				response.sendRedirect(emp + "/EWA_STYLE/images/transparent.png");
 				return;
@@ -429,17 +446,7 @@ public class HttpFileViewBase {
 	 * @return 缩略图
 	 */
 	public File createResized(File orginalFile, int width, int height, int quality) {
-		String accept = this.rv.getRequest().getHeader("accept"); // 获取请求头中的accept字段
-		String imgExt = "jpeg"; // 默认图片格式为jpeg
-		if (UImages.checkImageMagick() && accept != null) { // 如果accept字段不为空
-			if (supportAvif && accept.indexOf("image/avif") >= 0) { // ms edge 暂时不支持
-				imgExt = "avif"; // 如果支持avif格式并且accept字段包含image/avif，就选择avif格式
-			} else if (supportWebp && accept.indexOf("image/webp") >= 0) {
-				imgExt = "webp"; // 如果支持webp格式并且accept字段包含image/webp，就选择webp格式
-			} else if (supportHeic && accept.indexOf("image/heic") >= 0) {
-				imgExt = "heic"; // 如果支持heic格式并且accept字段包含image/heic，就选择heic格式
-			}
-		}
+		String imgExt = queryDefaultImageExt();
 		// 根据原始文件和缩放参数生成一个新的文件名
 		String exitspic = UImages.getResizedImageName(orginalFile, width, height, imgExt);
 		// 创建一个新的文件对象
@@ -458,6 +465,65 @@ public class HttpFileViewBase {
 			return null; // 返回空值
 		}
 
+	}
+
+	private String queryDefaultImageExt() {
+		String ext = "jpeg"; // 默认图片格式为jpeg
+		if (this.rv == null || this.rv.getRequest() == null || this.rv.getRequest().getHeader("accept") == null) {
+			return ext;
+		}
+		// 根据浏览器accept头确定封面图片格式，avif/webp需要开启supportAvif/supportWebp
+		String accept = this.rv.getRequest().getHeader("accept");
+
+		if (supportAvif && accept.indexOf("image/avif") >= 0) {
+			ext = "avif";
+		} else if (supportWebp && accept.indexOf("image/webp") >= 0) {
+			ext = "webp";
+		}
+
+		return ext;
+	}
+
+	/**
+	 * 输出视频封面图片，使用ffmpeg提取视频第1关键帧<br>
+	 * 封面文件生成在视频文件旁边，命名为 视频文件.cover[.宽x高].扩展名，已存在则直接使用<br>
+	 * 扩展名根据浏览器accept头确定（avif/webp/jpeg），avif/webp需要开启supportAvif/supportWebp<br>
+	 * 如果设置了resize参数，封面按照该尺寸缩放，文件名中附加宽x高<br>
+	 * 生成失败时跳转到默认的视频图标
+	 *
+	 * @param videoFile 视频文件
+	 * @return null
+	 * @throws IOException
+	 */
+	public String outputVideoCover(File videoFile) throws IOException {
+		String coverExt = queryDefaultImageExt();
+		// 封面文件名：视频文件.cover[.宽x高].扩展名
+		StringBuilder sbCoverPath = new StringBuilder(videoFile.getAbsolutePath());
+		sbCoverPath.append(".cover.");
+		if (this.resize != null) {
+			sbCoverPath.append(this.resize.width).append("x").append(this.resize.height).append(".");
+		}
+		sbCoverPath.append(coverExt);
+		String coverPath = sbCoverPath.toString();
+
+		File cover = new File(coverPath);
+		if (!cover.exists()) {
+			UVideo uv = new UVideo(videoFile.getAbsolutePath());
+			uv.setCoverExt(coverExt);
+			if (this.resize != null) {
+				uv.setSize(this.resize.width, this.resize.height);
+			}
+			String created = uv.createVideoCoverByKeyFrame(coverPath);
+			if (created == null) {
+				LOGGER.error("创建视频封面失败 {}", videoFile.getAbsolutePath());
+				// EmpScriptV2 静态文件默认目录
+				String emp = UPath.getEmpScriptV2Path();
+				response.sendRedirect(emp + "/EWA_STYLE/images/file_png/vod.png");
+				return null;
+			}
+			cover = new File(created);
+		}
+		return this.inlineFile(cover, request, response);
 	}
 
 	/**
@@ -833,8 +899,8 @@ public class HttpFileViewBase {
 		String embed = "<embed src=\"" + url + "\" class=\"pdfobject\" type=\"application/pdf\" title=\""
 				+ Utils.textToInputValue(title) + "\" style=\"overflow: auto; width: 100%; height: 100%;\">";
 		// firefox pdf.js viewer.html?file=xxx.pdf
-		String u = this.pdfJs + (this.pdfJs.indexOf("?") > 0 ? "&" : "?") + "file=" + Utils.textToUrl(url)
-			+"&name="+Utils.textToUrl(title);
+		String u = this.pdfJs + (this.pdfJs.indexOf("?") > 0 ? "&" : "?") + "file=" + Utils.textToUrl(url) + "&name="
+				+ Utils.textToUrl(title);
 		String pdfJs = "<iframe id=\"fra_pdf\" height=\"100%\" frameborder=\"0\" width=\"100%\" src=\"" + u
 				+ "\"></iframe>";
 		sbHtml.append("<script>(function(){");
@@ -1080,6 +1146,24 @@ public class HttpFileViewBase {
 	 */
 	public void setInline(boolean inline) {
 		this.inline = inline;
+	}
+
+	/**
+	 * 是否为视频封面模式
+	 * 
+	 * @return the videoCover
+	 */
+	public boolean isVideoCover() {
+		return videoCover;
+	}
+
+	/**
+	 * 是否为视频封面模式
+	 * 
+	 * @param videoCover the videoCover to set
+	 */
+	public void setVideoCover(boolean videoCover) {
+		this.videoCover = videoCover;
 	}
 
 	/**
