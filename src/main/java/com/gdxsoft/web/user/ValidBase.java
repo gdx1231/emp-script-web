@@ -121,7 +121,7 @@ public class ValidBase {
 		java.util.Date end_date = new java.util.Date(System.currentTimeMillis() + maxWaitMinitus * 1000 * 60);
 
 		RequestValue rv = new RequestValue();
-		rv.addValue("USR_ID", usrId);
+		rv.addValue("USR_ID", usrId, "long", 100);
 		rst.put("USR_ID", usrId);
 
 		rv.addValue("FP_VALIDCODE", validCode);
@@ -275,7 +275,7 @@ public class ValidBase {
 		rv.addValue("FP_UNID", fpUnid);
 		rv.addValue("FP_TYPE", validType);
 		rv.addValue("FP_RESULT", validSucess ? "Y" : "N");
-		rv.addValue("FP_INC", trys);
+		rv.addValue("FP_INC", trys, "int", 100);
 
 		DataConnection.updateAndClose(sb, "", rv);
 	}

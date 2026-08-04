@@ -29,6 +29,7 @@ public class Login {
 
 	/**
 	 * 根据loginToke创建登录验证
+	 * 
 	 * @param encryptedLoginToken 加密的LoginToken
 	 * @return
 	 * @throws Exception
@@ -41,14 +42,14 @@ public class Login {
 		if (System.currentTimeMillis() - t > 10000) {
 			throw new Exception("Token overtime");
 		}
-		int admId = token.getInt("adm_id");
+		long admId = token.getLong("adm_id");
 		String admUnid = token.getString("adm_unid");
-		
+
 		RequestValue rv = new RequestValue();
-		rv.addOrUpdateValue("adm_id", admId);
-		rv.addOrUpdateValue("adm_unid", admUnid);
+		rv.addOrUpdateValue("adm_id", admId, "long", 100);
+		rv.addOrUpdateValue("adm_unid", admUnid, "uuid", 100);
 		String sql = "select adm_id from adm_user where adm_id=@adm_id and adm_unid=@adm_unid";
-		
+
 		DTTable tbAdm = DTTable.getJdbcTable(sql);
 		if (tbAdm.getCount() == 0) {
 			throw new Exception("Invalid token no adm_user");
@@ -57,9 +58,9 @@ public class Login {
 		ValidBase vb = new ValidBase(null);
 		String validCode = vb.randomNumberCode(20);
 		JSONObject rst = vb.createValidRecord(admId, validCode, ValidBase.VALID_TYPE_ADM_LOGIN, 10, "自动登录数据");
-		
+
 		rst.put("VALID_CODE", validCode);
-		
+
 		return rst;
 	}
 
@@ -71,6 +72,47 @@ public class Login {
 	 * @throws Exception
 	 */
 	public static String createAdminLoginToken(int admId) throws Exception {
+		String admUnid = getAdmUnid(admId);
+		if (admUnid == null) {
+			return null;
+		}
+		return createAdminLoginToken(admId, admUnid);
+	}
+
+	/**
+	 * 创建管理员登录凭证，通过系统默认的AES加密
+	 * 
+	 * @param admId 管理员ID
+	 * @return
+	 * @throws Exception
+	 */
+	public static String createLongAdminLoginToken(Long admId) throws Exception {
+		String admUnid = getAdmUnid(admId);
+		if (admUnid == null) {
+			return null;
+		}
+		return createLongAdminLoginToken(admId, admUnid);
+	}
+
+	/**
+	 * 创建管理员登录凭证，通过系统默认的AES加密
+	 * 
+	 * @param admId   管理员ID
+	 * @param admUnid 管理员UNID
+	 * @return
+	 * @throws Exception
+	 */
+	public static String createLongAdminLoginToken(long admId, String admUnid) throws Exception {
+		return createAdminLoginTokenInner(admId, admUnid);
+	}
+
+	/**
+	 * 获取用户的adm_unid
+	 * 
+	 * @param admId Integer/Long
+	 * @return
+	 */
+	private static String getAdmUnid(Object admId) {
 		String sql = "select  adm_unid from adm_user where adm_id=" + admId;
 		DTTable tb = DTTable.getJdbcTable(sql);
 		// 如果tb没有记录，说明没有岗位信息
@@ -78,7 +120,19 @@ public class Login {
 			return null;
 		}
 		String admUnid = tb.getCell(0, 0).toString();
-		return createAdminLoginToken(admId, admUnid);
+		return admUnid;
+	}
+
+	private static String createAdminLoginTokenInner(Object admId, String admUnid) throws Exception {
+		JSONObject login_token = new JSONObject();
+		login_token.put("adm_id", admId);
+		login_token.put("adm_unid", admUnid);
+		login_token.put("t", System.currentTimeMillis());
+
+		IUSymmetricEncyrpt symmetric = ConfSecurities.getInstance().getDefaultSecurity().createSymmetric();
+		String encode = symmetric.encrypt(login_token.toString());
+
+		return encode;
 	}
 
 	/**
@@ -90,15 +144,7 @@ public class Login {
 	 * @throws Exception
 	 */
 	public static String createAdminLoginToken(int admId, String admUnid) throws Exception {
-		JSONObject login_token = new JSONObject();
-		login_token.put("adm_id", admId);
-		login_token.put("adm_unid", admUnid);
-		login_token.put("t", System.currentTimeMillis());
-
-		IUSymmetricEncyrpt symmetric = ConfSecurities.getInstance().getDefaultSecurity().createSymmetric();
-		String encode = symmetric.encrypt(login_token.toString());
-
-		return encode;
+		return createAdminLoginTokenInner(admId, admUnid);
 	}
 
 	/**
@@ -300,17 +346,53 @@ public class Login {
 	 * @return
 	 */
 	public static boolean isSupplyLogined(RequestValue rv) {
-		Integer supId = getLoginedSupId(rv);
+		Long supId = getLongLoginedSupId(rv);
 		if (supId == null) {
 			return false;
 		}
-		Integer admId = getLoginedAdmId(rv);
+		Long admId = getLongLoginedAdmId(rv);
 		if (admId == null) {
 			return false;
 		}
 
 		return true;
 
+	}
+
+	/**
+	 * 商户(G_SUP_ID)在session 或 COOKIE_ENCYRPT
+	 * 
+	 * @param rv
+	 * @return
+	 */
+	public static Long getLongLoginedSupId(RequestValue rv) {
+		String v = getLoginedParameter(rv, "G_SUP_ID");
+		if (v != null) {
+			try {
+				return Long.parseLong(v);
+			} catch (Exception err) {
+				return null;
+			}
+		}
+		return null;
+	}
+
+	/**
+	 * 管理员(G_ADM_ID)在session 或 COOKIE_ENCYRPT
+	 * 
+	 * @param rv
+	 * @return
+	 */
+	public static Long getLongLoginedAdmId(RequestValue rv) {
+		String v = getLoginedParameter(rv, "G_ADM_ID");
+		if (v != null) {
+			try {
+				return Long.parseLong(v);
+			} catch (Exception err) {
+				return null;
+			}
+		}
+		return null;
 	}
 
 	/**
