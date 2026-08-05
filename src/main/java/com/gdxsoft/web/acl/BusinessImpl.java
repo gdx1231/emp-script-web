@@ -17,8 +17,8 @@ public class BusinessImpl extends AclBase implements IAcl {
 	 * @return yes or no
 	 */
 	public static boolean isLogined(RequestValue rv) {
-		int iAdmId = AclBase.getId(rv, "G_ADM_ID");
-		int iSupId = AclBase.getId(rv, "G_SUP_ID");
+		long iAdmId = AclBase.getLongId(rv, "G_ADM_ID");
+		long iSupId = AclBase.getLongId(rv, "G_SUP_ID");
 
 		if (iAdmId < 0 || iSupId < 0) {
 			return false;
