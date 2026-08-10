@@ -22,8 +22,8 @@ import com.gdxsoft.easyweb.script.userConfig.UserConfig;
  * <pre>
 CREATE TABLE _ewa_log_main (
   log_id bigint NOT NULL AUTO_INCREMENT COMMENT '日志编号',
-  adm_id int COMMENT '管理员',
-  sup_id int COMMENT '商户',
+  adm_id bigint COMMENT '管理员',
+  sup_id bigint COMMENT '商户',
   log_time datetime NOT NULL COMMENT '开始时间',
   log_msg varchar(4096) COMMENT '消息',
   log_xmlname varchar(200) CHARACTER SET latin1  NOT NULL COMMENT 'xmlname',
@@ -195,12 +195,12 @@ public class EwaScriptLog extends LogBase implements ILog {
 			rv.addValue("__tmp_LOG_IP", ip);
 			rv.addValueByTruncate("__tmp_LOG_XMLNAME", xmlName, 200);
 			rv.addValueByTruncate("__tmp_LOG_ITEMNAME", itemName, 200);
-			rv.addValue("__tmp_LOG_RUNTIME", runTime);
+			rv.addValue("__tmp_LOG_RUNTIME", runTime, "int", 20);
 			rv.addValueByTruncate("__tmp_LOG_ACTION", actionName, 233);
 			rv.addValueByTruncate("__tmp_LOG_URL", url, 1500);
 			rv.addValueByTruncate("__tmp_LOG_REFERER", refererUrl, 2000);
-			rv.addOrUpdateValue("__tmp_g_adm_id", admId);
-			rv.addOrUpdateValue("__tmp_g_sup_id", supId);
+			rv.addOrUpdateValue("__tmp_g_adm_id", admId, "bigint", 20);
+			rv.addOrUpdateValue("__tmp_g_sup_id", supId, "bigint", 20);
 			rv.addValueByTruncate("__tmp_log_ua", userAgent, 2000);
 
 			DataConnection cnn = new DataConnection(LogBase.getConnConfigName(), rv);
