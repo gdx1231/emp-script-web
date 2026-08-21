@@ -55,7 +55,7 @@ public class ShortUrl {
 	 * @param admId
 	 * @return
 	 */
-	public static ArrayList<UrlShort> getUrls(String url, int admId) {
+	public static ArrayList<UrlShort> getUrls(String url, long admId) {
 		String md5 = Utils.md5(url);
 		UrlShortDao d1 = new UrlShortDao();
 		String where = " URL_MD5 = '" + md5 + "' and adm_id=" + admId + " order by URL_ID desc";
@@ -63,14 +63,79 @@ public class ShortUrl {
 	}
 
 	/**
-	 * 添加URL，返回数字和文字短地址
-	 * 
+	 * 添加URL，指定urlId，返回数字和文字短地址
+	 *
+	 * @param urlId
 	 * @param url
 	 * @param supId
 	 * @param admId
 	 * @return
 	 */
-	public UrlShort addUrl(String url, Integer supId, Integer admId) {
+	public UrlShort addUrl(long urlId, String url, Long supId, Long admId) {
+		UrlShortDao d1 = new UrlShortDao();
+
+		UrlShort o = new UrlShort();
+
+		o.setUrlId(urlId);
+		o.setAdmId(admId);
+		o.setSupId(supId);
+		o.setUrlCdate(new Date());
+		o.setUrlFull(url);
+		o.setUrlStatus("USED");
+		String paraUrlUid = this.createUid();
+		o.setUrlUid(paraUrlUid);
+
+		String md5 = Utils.md5(url);
+
+		o.setUrlMd5(md5);
+
+		d1.newRecord(o);
+
+		return o;
+	}
+
+	/**
+	 * 添加URL，指定urlId
+	 *
+	 * @param urlId
+	 * @param url
+	 * @param supId
+	 * @param admId
+	 * @param onlyNumber 是否仅数字
+	 * @return
+	 */
+	public UrlShort addUrl(long urlId, String url, Long supId, Long admId, boolean onlyNumber) {
+		UrlShortDao d1 = new UrlShortDao();
+
+		UrlShort o = new UrlShort();
+
+		o.setUrlId(urlId);
+		o.setAdmId(admId);
+		o.setSupId(supId);
+		o.setUrlCdate(new Date());
+		o.setUrlFull(url);
+		o.setUrlStatus("USED");
+		String paraUrlUid = this.createUid(onlyNumber);
+		o.setUrlUid(paraUrlUid);
+
+		String md5 = Utils.md5(url);
+
+		o.setUrlMd5(md5);
+
+		d1.newRecord(o);
+
+		return o;
+	}
+
+	/**
+	 * 添加URL，返回数字和文字短地址
+	 *
+	 * @param url
+	 * @param supId
+	 * @param admId
+	 * @return
+	 */
+	public UrlShort addUrl(String url, Long supId, Long admId) {
 		UrlShortDao d1 = new UrlShortDao();
 
 		UrlShort o = new UrlShort();
@@ -101,7 +166,7 @@ public class ShortUrl {
 	 * @param onlyNumber 是否仅数字
 	 * @return
 	 */
-	public UrlShort addUrl(String url, Integer supId, Integer admId, boolean onlyNumber) {
+	public UrlShort addUrl(String url, Long supId, Long admId, boolean onlyNumber) {
 		UrlShortDao d1 = new UrlShortDao();
 
 		UrlShort o = new UrlShort();

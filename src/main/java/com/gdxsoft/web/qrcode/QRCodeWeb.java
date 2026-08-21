@@ -246,8 +246,8 @@ public class QRCodeWeb {
 		List<UrlShort> al = ShortUrl.getUrls(longUrl);
 		if (al.size() == 0) {
 			ShortUrl su = new ShortUrl();
-			Integer supId = rv.isNotNull("g_sup_id") ? rv.getInt("g_sup_id") : null;
-			Integer admId = rv.isNotNull("g_adm_Id") ? rv.getInt("g_adm_Id") : null;
+			Long supId = rv.isNotNull("g_sup_id") ? rv.getLong("g_sup_id") : null;
+			Long admId = rv.isNotNull("g_adm_Id") ? rv.getLong("g_adm_Id") : null;
 			us = su.addUrl(longUrl, supId, admId, onlyNumber);
 		} else {
 			us = al.get(0);

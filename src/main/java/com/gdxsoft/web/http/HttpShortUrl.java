@@ -27,8 +27,8 @@ public class HttpShortUrl implements IHttp {
 		}
 
 		ShortUrl su = new ShortUrl();
-		int admId = rv.getInt("g_adm_id");
-		int supId = rv.getInt("g_sup_id");
+		long admId = rv.getLong("g_adm_id");
+		long supId = rv.getLong("g_sup_id");
 		UrlShort result = su.addUrl(u, admId, supId);
 
 		result.getUrlFull();

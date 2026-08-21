@@ -16,8 +16,8 @@ public class UrlShort extends ClassBase {
 	private String urlStatus_; // url_status
 	private Date urlCdate_; // url_cdate
 	private Date urlVdate_; // url_vdate
-	private Integer supId_; // sup_id
-	private Integer admId_; // adm_id
+	private Long supId_; // sup_id
+	private Long admId_; // adm_id
 
 	/**
 	 * 获取 url_id
@@ -164,17 +164,17 @@ public class UrlShort extends ClassBase {
 	 *
 	 * @return sup_id
 	 */
-	public Integer getSupId() {
+	public Long getSupId() {
 		return this.supId_;
 	}
 
 	/**
 	 * 赋值 sup_id
-	 * 
+	 *
 	 * @param paraSupId sup_id
 	 */
 
-	public void setSupId(Integer paraSupId) {
+	public void setSupId(Long paraSupId) {
 		super.recordChanged("sup_id", this.supId_, paraSupId);
 		this.supId_ = paraSupId;
 	}
@@ -184,17 +184,17 @@ public class UrlShort extends ClassBase {
 	 *
 	 * @return adm_id
 	 */
-	public Integer getAdmId() {
+	public Long getAdmId() {
 		return this.admId_;
 	}
 
 	/**
 	 * 赋值 adm_id
-	 * 
+	 *
 	 * @param paraAdmId adm_id
 	 */
 
-	public void setAdmId(Integer paraAdmId) {
+	public void setAdmId(Long paraAdmId) {
 		super.recordChanged("adm_id", this.admId_, paraAdmId);
 		this.admId_ = paraAdmId;
 	}
