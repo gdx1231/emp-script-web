@@ -314,7 +314,7 @@ public class HttpFileViewBase {
 			}
 			return this.downloadFile(file, title, request, response);
 		}
-		if (this.isInline()) {
+		if (!small && this.isInline()) {
 			if (rv.s("pdf") != null) { // 查看文档转换的pdf文件
 				file = new File(file.getAbsolutePath() + ".pdf");
 			}
